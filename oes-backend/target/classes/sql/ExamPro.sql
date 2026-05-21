@@ -18,8 +18,7 @@ SET FOREIGN_KEY_CHECKS=0;
 -- ----------------------------
 -- Table structure for exam_answer
 -- ----------------------------
-DROP TABLE IF EXISTS `exam_answer`;
-CREATE TABLE `exam_answer` (
+CREATE TABLE IF NOT EXISTS `exam_answer` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '答题ID',
   `record_id` bigint(20) NOT NULL COMMENT '考试记录ID',
   `question_id` bigint(20) NOT NULL COMMENT '题目ID',
@@ -45,8 +44,7 @@ CREATE TABLE `exam_answer` (
 -- ----------------------------
 -- Table structure for exam_exam
 -- ----------------------------
-DROP TABLE IF EXISTS `exam_exam`;
-CREATE TABLE `exam_exam` (
+CREATE TABLE IF NOT EXISTS `exam_exam` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '考试ID',
   `title` varchar(200) NOT NULL COMMENT '考试标题',
   `paper_id` bigint(20) NOT NULL COMMENT '关联试卷ID',
@@ -78,8 +76,7 @@ CREATE TABLE `exam_exam` (
 -- ----------------------------
 -- Table structure for exam_exam_record
 -- ----------------------------
-DROP TABLE IF EXISTS `exam_exam_record`;
-CREATE TABLE `exam_exam_record` (
+CREATE TABLE IF NOT EXISTS `exam_exam_record` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '考试记录ID',
   `exam_id` bigint(20) NOT NULL COMMENT '考试ID',
   `student_id` bigint(20) NOT NULL COMMENT '学生ID',
@@ -111,8 +108,7 @@ CREATE TABLE `exam_exam_record` (
 -- ----------------------------
 -- Table structure for exam_knowledge_point
 -- ----------------------------
-DROP TABLE IF EXISTS `exam_knowledge_point`;
-CREATE TABLE `exam_knowledge_point` (
+CREATE TABLE IF NOT EXISTS `exam_knowledge_point` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '知识点ID',
   `name` varchar(100) NOT NULL COMMENT '知识点名称',
   `subject_id` bigint(20) NOT NULL COMMENT '所属科目',
@@ -127,20 +123,19 @@ CREATE TABLE `exam_knowledge_point` (
 -- ----------------------------
 -- Records of exam_knowledge_point
 -- ----------------------------
-INSERT INTO `exam_knowledge_point` VALUES ('1', '数组', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `exam_knowledge_point` VALUES ('2', '链表', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `exam_knowledge_point` VALUES ('3', '栈', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `exam_knowledge_point` VALUES ('4', '队列', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `exam_knowledge_point` VALUES ('5', '树', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `exam_knowledge_point` VALUES ('6', '图', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `exam_knowledge_point` VALUES ('7', '排序算法', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `exam_knowledge_point` VALUES ('8', '查找算法', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `exam_knowledge_point` VALUES ('1', '数组', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `exam_knowledge_point` VALUES ('2', '链表', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `exam_knowledge_point` VALUES ('3', '栈', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `exam_knowledge_point` VALUES ('4', '队列', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `exam_knowledge_point` VALUES ('5', '树', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `exam_knowledge_point` VALUES ('6', '图', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `exam_knowledge_point` VALUES ('7', '排序算法', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `exam_knowledge_point` VALUES ('8', '查找算法', '1', null, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
 
 -- ----------------------------
 -- Table structure for exam_paper
 -- ----------------------------
-DROP TABLE IF EXISTS `exam_paper`;
-CREATE TABLE `exam_paper` (
+CREATE TABLE IF NOT EXISTS `exam_paper` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '试卷ID',
   `title` varchar(200) NOT NULL COMMENT '试卷标题',
   `subject_id` bigint(20) DEFAULT NULL COMMENT '所属科目',
@@ -168,8 +163,7 @@ CREATE TABLE `exam_paper` (
 -- ----------------------------
 -- Table structure for exam_question
 -- ----------------------------
-DROP TABLE IF EXISTS `exam_question`;
-CREATE TABLE `exam_question` (
+CREATE TABLE IF NOT EXISTS `exam_question` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '题目ID',
   `subject_id` bigint(20) NOT NULL COMMENT '所属科目',
   `type` varchar(20) NOT NULL COMMENT '题目类型: SINGLE_MULTIPLE/CHOICE/MULTIPLE_CHOICE/JUDGMENT/FILL_BLANK/ESSAY/PROGRAMMING',
@@ -199,8 +193,7 @@ CREATE TABLE `exam_question` (
 -- ----------------------------
 -- Table structure for exam_statistics
 -- ----------------------------
-DROP TABLE IF EXISTS `exam_statistics`;
-CREATE TABLE `exam_statistics` (
+CREATE TABLE IF NOT EXISTS `exam_statistics` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '统计ID',
   `exam_id` bigint(20) NOT NULL COMMENT '考试ID',
   `total_students` int(11) DEFAULT '0' COMMENT '总考生数',
@@ -223,8 +216,7 @@ CREATE TABLE `exam_statistics` (
 -- ----------------------------
 -- Table structure for exam_subject
 -- ----------------------------
-DROP TABLE IF EXISTS `exam_subject`;
-CREATE TABLE `exam_subject` (
+CREATE TABLE IF NOT EXISTS `exam_subject` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '科目ID',
   `name` varchar(100) NOT NULL COMMENT '科目名称',
   `code` varchar(50) DEFAULT NULL COMMENT '科目代码',
@@ -239,15 +231,14 @@ CREATE TABLE `exam_subject` (
 -- ----------------------------
 -- Records of exam_subject
 -- ----------------------------
-INSERT INTO `exam_subject` VALUES ('1', '数据结构与算法', 'DSA', '1', '数据结构与算法设计', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `exam_subject` VALUES ('2', '操作系统原理', 'OS', '1', '操作系统原理与应用', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `exam_subject` VALUES ('3', '计算机网络', 'CN', '1', '计算机网络基础', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `exam_subject` VALUES ('1', '数据结构与算法', 'DSA', '1', '数据结构与算法设计', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `exam_subject` VALUES ('2', '操作系统原理', 'OS', '1', '操作系统原理与应用', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `exam_subject` VALUES ('3', '计算机网络', 'CN', '1', '计算机网络基础', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
 
 -- ----------------------------
 -- Table structure for exam_wrong_question
 -- ----------------------------
-DROP TABLE IF EXISTS `exam_wrong_question`;
-CREATE TABLE `exam_wrong_question` (
+CREATE TABLE IF NOT EXISTS `exam_wrong_question` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '错题ID',
   `student_id` bigint(20) NOT NULL COMMENT '学生ID',
   `question_id` bigint(20) NOT NULL COMMENT '题目ID',
@@ -271,33 +262,33 @@ CREATE TABLE `exam_wrong_question` (
 -- ----------------------------
 -- Table structure for sys_class
 -- ----------------------------
-DROP TABLE IF EXISTS `sys_class`;
-CREATE TABLE `sys_class` (
+CREATE TABLE IF NOT EXISTS `sys_class` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '班级ID',
   `name` varchar(100) NOT NULL COMMENT '班级名称',
   `code` varchar(50) DEFAULT NULL COMMENT '班级代码',
   `department_id` bigint(20) DEFAULT NULL COMMENT '所属院系ID',
   `grade` varchar(20) DEFAULT NULL COMMENT '年级',
+  `invite_code` varchar(20) DEFAULT NULL COMMENT '邀请码（群号）',
   `deleted` tinyint(4) DEFAULT '0' COMMENT '删除标记',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  KEY `idx_department_id` (`department_id`)
+  KEY `idx_department_id` (`department_id`),
+  KEY `idx_invite_code` (`invite_code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='班级表';
 
 -- ----------------------------
 -- Records of sys_class
 -- ----------------------------
-INSERT INTO `sys_class` VALUES ('1', '计算机21级1班', 'CS2021-1', '1', '2021', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `sys_class` VALUES ('2', '计算机21级2班', 'CS2021-2', '1', '2021', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `sys_class` VALUES ('3', '软件21级1班', 'SE2021-1', '3', '2021', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `sys_class` VALUES ('4', '信息21级1班', 'IE2021-1', '2', '2021', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `sys_class` VALUES ('1', '计算机21级1班', 'CS2021-1', '1', '2021', NULL, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `sys_class` VALUES ('2', '计算机21级2班', 'CS2021-2', '1', '2021', NULL, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `sys_class` VALUES ('3', '软件21级1班', 'SE2021-1', '3', '2021', NULL, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `sys_class` VALUES ('4', '信息21级1班', 'IE2021-1', '2', '2021', NULL, '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
 
 -- ----------------------------
 -- Table structure for sys_department
 -- ----------------------------
-DROP TABLE IF EXISTS `sys_department`;
-CREATE TABLE `sys_department` (
+CREATE TABLE IF NOT EXISTS `sys_department` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '院系ID',
   `name` varchar(100) NOT NULL COMMENT '院系名称',
   `code` varchar(50) DEFAULT NULL COMMENT '院系代码',
@@ -312,15 +303,14 @@ CREATE TABLE `sys_department` (
 -- ----------------------------
 -- Records of sys_department
 -- ----------------------------
-INSERT INTO `sys_department` VALUES ('1', '计算机科学学院', 'CS', null, '1', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `sys_department` VALUES ('2', '信息工程学院', 'IE', null, '2', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `sys_department` VALUES ('3', '软件工程学院', 'SE', null, '3', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `sys_department` VALUES ('1', '计算机科学学院', 'CS', null, '1', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `sys_department` VALUES ('2', '信息工程学院', 'IE', null, '2', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `sys_department` VALUES ('3', '软件工程学院', 'SE', null, '3', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
 
 -- ----------------------------
 -- Table structure for sys_log
 -- ----------------------------
-DROP TABLE IF EXISTS `sys_log`;
-CREATE TABLE `sys_log` (
+CREATE TABLE IF NOT EXISTS `sys_log` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '日志ID',
   `username` varchar(50) DEFAULT NULL COMMENT '操作用户',
   `operation` varchar(100) DEFAULT NULL COMMENT '操作描述',
@@ -340,8 +330,7 @@ CREATE TABLE `sys_log` (
 -- ----------------------------
 -- Table structure for sys_user
 -- ----------------------------
-DROP TABLE IF EXISTS `sys_user`;
-CREATE TABLE `sys_user` (
+CREATE TABLE IF NOT EXISTS `sys_user` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '用户ID',
   `username` varchar(50) NOT NULL COMMENT '用户名',
   `password` varchar(100) NOT NULL COMMENT '密码',
@@ -361,9 +350,55 @@ CREATE TABLE `sys_user` (
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
-INSERT INTO `sys_user` VALUES ('1', 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt7lCPO', '系统管理员', 'admin@oes.com', null, null, 'ADMIN', '1', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `sys_user` VALUES ('2', 'teacher1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt7lCPO', '张教授', 'teacher1@oes.com', null, null, 'TEACHER', '1', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `sys_user` VALUES ('4', 'student1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt7lCPO', '王小明', 'student1@oes.com', null, null, 'STUDENT', '1', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT INTO `sys_user` VALUES ('7', 's', '$2a$10$dJe2H25mue3bYssjH5G0MOwyJmP3FrGMSL7bJeJs9IaE0zIKHU5ui', '丁真珍珠', '111@ex.com', '1145141919810', null, 'STUDENT', '1', '0', '2026-04-23 22:45:05', '2026-04-23 22:45:05');
-INSERT INTO `sys_user` VALUES ('8', 't', '$2a$10$ISZAOF.J5BydJ/jzjcDPX.6Vxs8AIjU/imCA8UKL7TjpcQFaAnBCi', '范教授', '222@ex.com', '1919810', null, 'TEACHER', '1', '0', '2026-04-27 19:14:11', '2026-04-27 19:14:11');
-INSERT INTO `sys_user` VALUES ('9', 'a', '$2a$10$LCoumND.3G44LOletcd08OnGdm7I3mfPybtoxa9L4C0aNr5PH8zKG', 'Administrator', '333@ex.com', '123456789', null, 'ADMIN', '1', '0', '2026-04-27 19:15:02', '2026-04-27 19:15:02');
+INSERT IGNORE INTO `sys_user` VALUES ('1', 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt7lCPO', '系统管理员', 'admin@oes.com', null, null, 'ADMIN', '1', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `sys_user` VALUES ('2', 'teacher1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt7lCPO', '张教授', 'teacher1@oes.com', null, null, 'TEACHER', '1', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `sys_user` VALUES ('4', 'student1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt7lCPO', '王小明', 'student1@oes.com', null, null, 'STUDENT', '1', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `sys_user` VALUES ('7', 's', '$2a$10$dJe2H25mue3bYssjH5G0MOwyJmP3FrGMSL7bJeJs9IaE0zIKHU5ui', '丁真珍珠', '111@ex.com', '1145141919810', null, 'STUDENT', '1', '0', '2026-04-23 22:45:05', '2026-04-23 22:45:05');
+INSERT IGNORE INTO `sys_user` VALUES ('8', 't', '$2a$10$ISZAOF.J5BydJ/jzjcDPX.6Vxs8AIjU/imCA8UKL7TjpcQFaAnBCi', '范教授', '222@ex.com', '1919810', null, 'TEACHER', '1', '0', '2026-04-27 19:14:11', '2026-04-27 19:14:11');
+INSERT IGNORE INTO `sys_user` VALUES ('9', 'a', '$2a$10$LCoumND.3G44LOletcd08OnGdm7I3mfPybtoxa9L4C0aNr5PH8zKG', 'Administrator', '333@ex.com', '123456789', null, 'ADMIN', '1', '0', '2026-04-27 19:15:02', '2026-04-27 19:15:02');
+
+-- ----------------------------
+-- Table structure for sys_class_member
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `sys_class_member` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '成员ID',
+  `class_id` bigint(20) NOT NULL COMMENT '班级ID',
+  `user_id` bigint(20) NOT NULL COMMENT '用户ID',
+  `role` varchar(20) NOT NULL DEFAULT 'MEMBER' COMMENT '角色: OWNER-所有者/ADMIN-管理员/MEMBER-普通成员',
+  `mute_until` datetime DEFAULT NULL COMMENT '禁言截止时间',
+  `joined_at` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '加入时间',
+  `deleted` tinyint(4) DEFAULT '0' COMMENT '删除标记',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_class_user` (`class_id`, `user_id`),
+  KEY `idx_class_id` (`class_id`),
+  KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='班级成员关系表';
+
+-- ----------------------------
+-- Records of sys_class_member
+-- ----------------------------
+
+-- ----------------------------
+-- Table structure for sys_class_message
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `sys_class_message` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '消息ID',
+  `class_id` bigint(20) NOT NULL COMMENT '班级ID',
+  `sender_id` bigint(20) NOT NULL COMMENT '发送者ID',
+  `content` text NOT NULL COMMENT '消息内容',
+  `type` varchar(20) DEFAULT 'TEXT' COMMENT '消息类型: TEXT-文本/FILE-文件/IMAGE-图片',
+  `file_url` varchar(255) DEFAULT NULL COMMENT '文件/图片URL',
+  `deleted` tinyint(4) DEFAULT '0' COMMENT '删除标记',
+  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '发送时间',
+  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_class_id` (`class_id`),
+  KEY `idx_sender_id` (`sender_id`),
+  KEY `idx_create_time` (`create_time`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='班级聊天记录表';
+
+-- ----------------------------
+-- Records of sys_class_message
+-- ----------------------------

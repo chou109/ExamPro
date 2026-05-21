@@ -17,8 +17,8 @@
                 <el-col :span="12">
                   <el-form-item label="性别">
                     <el-radio-group v-model="formData.gender">
-                      <el-radio label="男">男</el-radio>
-                      <el-radio label="女">女</el-radio>
+                      <el-radio value="男">男</el-radio>
+                      <el-radio value="女">女</el-radio>
                     </el-radio-group>
                   </el-form-item>
                 </el-col>
@@ -70,6 +70,7 @@
                 :show-file-list="false"
                 :on-success="handleAvatarSuccess"
                 :before-upload="beforeAvatarUpload"
+                :headers="{ Authorization: `Bearer ${userStore.token}` }"
               >
                 <el-button type="danger">上传新头像</el-button>
               </el-upload>
@@ -109,7 +110,7 @@
                 <el-form-item label="手机号">
                   <div class="verification-input">
                     <el-input v-model="verificationForm.phone" placeholder="请输入手机号后六位" />
-                    <el-button type="danger" plain @click="sendVerificationCode" :disabled="countdown > 0">
+                    <el-button type="danger" @click="sendVerificationCode" :disabled="countdown > 0">
                       {{ countdown > 0 ? `${countdown}秒后重发` : '发送验证码' }}
                     </el-button>
                   </div>
@@ -183,25 +184,18 @@ const resetForm = () => {
 }
 
 const handleAvatarSuccess = async (response, file) => {
-  console.log('上传响应:', response)
   if (response.code === 200) {
-    console.log('头像URL:', response.data)
     formData.avatar = response.data
     // 更新用户信息到store
     if (userStore.userInfo) {
-      console.log('当前用户信息:', userStore.userInfo)
       userStore.userInfo.avatar = response.data
-      console.log('更新后用户信息:', userStore.userInfo)
     }
     // 调用API更新数据库中的头像
     try {
       const updateData = { id: userStore.userInfo?.userId, avatar: response.data }
-      console.log('更新数据:', updateData)
-      const updateResponse = await userApi.update(updateData)
-      console.log('更新响应:', updateResponse)
+      await userApi.update(updateData)
       ElMessage.success('头像上传成功')
     } catch (error) {
-      console.error('更新失败:', error)
       ElMessage.error('头像保存失败：' + error.message)
     }
   } else {
@@ -299,7 +293,7 @@ onMounted(async () => {
   border-radius: 12px;
   
   :deep(.el-tabs__header) {
-    background: linear-gradient(135deg, #FF6A6A, #CD5C5C);
+    background: linear-gradient(135deg, #dc2626, #991b1b);
     margin: 0;
     border-radius: 12px 12px 0 0;
   }
@@ -313,22 +307,23 @@ onMounted(async () => {
   }
   
   :deep(.el-tabs__item) {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.8) !important;
     font-size: 15px;
     font-weight: 500;
     height: 50px;
     line-height: 50px;
     padding: 0 30px;
     border: none;
+    background: transparent;
     
     &:hover {
-      color: #fff;
+      color: #fff !important;
     }
     
     &.is-active {
-      color: #fff;
+      color: #fff !important;
       font-weight: 600;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.2) !important;
     }
   }
   
@@ -357,7 +352,7 @@ onMounted(async () => {
     width: 150px;
     height: 150px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #FF6A6A, #CD5C5C);
+    background: linear-gradient(135deg, #dc2626, #991b1b);
     font-size: 48px;
     font-weight: 600;
     border: 3px solid #fff;
@@ -367,7 +362,7 @@ onMounted(async () => {
 }
 
 .big-avatar {
-  background: linear-gradient(135deg, #FF6A6A, #CD5C5C) !important;
+  background: linear-gradient(135deg, #dc2626, #991b1b) !important;
   font-size: 48px;
   font-weight: 600;
   border: 3px solid #fff;
@@ -402,32 +397,53 @@ onMounted(async () => {
   }
   
   :deep(.el-radio__input.is-checked .el-radio__inner) {
-    background-color: #FF6A6A;
-    border-color: #FF6A6A;
+    background-color: #dc2626;
+    border-color: #dc2626;
   }
   
   :deep(.el-radio__input.is-checked + .el-radio__label) {
-    color: #FF6A6A;
+    color: #dc2626;
   }
   
   :deep(.el-radio__inner:hover) {
-    border-color: #FF6A6A;
+    border-color: #dc2626;
   }
   
   :deep(.el-button--danger) {
-    background: linear-gradient(135deg, #FF6A6A, #CD5C5C);
+    background: linear-gradient(135deg, #dc2626, #991b1b);
     border: none;
     border-radius: 8px;
     padding: 10px 25px;
+    color: #fff !important;
     
     &:hover {
-      background: linear-gradient(135deg, #FF5252, #C44040);
+      background: linear-gradient(135deg, #b91c1c, #7f1d1d);
+    }
+    
+    &:disabled {
+      background: #d1d5db;
+      color: #9ca3af !important;
     }
   }
   
   :deep(.el-button) {
     border-radius: 8px;
     padding: 10px 25px;
+    border-color: #dc2626;
+    background: #dc2626;
+    color: #fff !important;
+
+    &:hover {
+      background: rgba(220, 38, 38, 0.15);
+      border-color: #dc2626;
+      color: #dc2626 !important;
+    }
+
+    &:active, &.is-active {
+      background: rgba(220, 38, 38, 0.15);
+      border-color: #dc2626;
+      color: #dc2626 !important;
+    }
   }
 }
 
@@ -440,7 +456,7 @@ onMounted(async () => {
     color: #333;
     margin-bottom: 20px;
     padding-left: 10px;
-    border-left: 3px solid #FF6A6A;
+    border-left: 3px solid #dc2626;
   }
 }
 
@@ -453,7 +469,7 @@ onMounted(async () => {
     color: #333;
     margin-bottom: 20px;
     padding-left: 10px;
-    border-left: 3px solid #FF6A6A;
+    border-left: 3px solid #dc2626;
   }
 }
 

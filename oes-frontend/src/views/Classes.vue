@@ -35,6 +35,12 @@
         <el-table-column prop="id" label="班级ID" width="80" />
         <el-table-column prop="className" label="班级名称" />
         <el-table-column prop="departmentName" label="所属院系" />
+        <el-table-column prop="inviteCode" label="群号" width="120">
+          <template #default="{ row }">
+            <span v-if="row.inviteCode">{{ row.inviteCode }}</span>
+            <span v-else class="text-gray">-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="studentCount" label="学生人数" width="100" />
         <el-table-column prop="createTime" label="创建时间" width="180" />
         <el-table-column label="操作" width="200">
@@ -140,7 +146,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
+import { useUserStore } from '../store'
 import { classApi, userApi, departmentApi } from '../utils/api'
+
+const userStore = useUserStore()
 
 const classes = ref([])
 const departments = ref([])
@@ -229,7 +238,8 @@ const saveClass = async () => {
   try {
     let res
     if (dialogType.value === 'create') {
-      res = await classApi.create(form.value)
+      const userId = userStore.userInfo?.userId || localStorage.getItem('userId')
+      res = await classApi.create(form.value, userId)
     } else {
       res = await classApi.update(form.value)
     }

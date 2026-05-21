@@ -34,13 +34,13 @@ public class SysDepartmentController {
 
     @PostMapping
     public R<Void> create(@RequestBody SysDepartment department) {
-        sysDepartmentService.save(department);
+        sysDepartmentService.saveWithAutoSortOrder(department);
         return R.ok();
     }
 
     @PutMapping
     public R<Void> update(@RequestBody SysDepartment department) {
-        sysDepartmentService.updateById(department);
+        sysDepartmentService.updateWithAutoSortOrder(department);
         return R.ok();
     }
 

@@ -42,4 +42,9 @@ public class SysClassService extends ServiceImpl<SysClassMapper, SysClass> {
         }
         return listByIds(ids);
     }
+
+    public SysClass getByInviteCode(String inviteCode) {
+        return getOne(new LambdaQueryWrapper<SysClass>()
+                .eq(SysClass::getInviteCode, inviteCode));
+    }
 }

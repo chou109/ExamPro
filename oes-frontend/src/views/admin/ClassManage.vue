@@ -19,6 +19,12 @@
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="name" label="班级名称" />
         <el-table-column prop="code" label="班级代码" width="150" />
+        <el-table-column prop="inviteCode" label="群号" width="120">
+          <template #default="{ row }">
+            <span v-if="row.inviteCode">{{ row.inviteCode }}</span>
+            <span v-else class="text-gray">-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="departmentId" label="所属院系" width="180">
           <template #default="{ row }">
             {{ getDepartmentName(row.departmentId) }}

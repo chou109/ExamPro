@@ -1,0 +1,549 @@
+<template>
+  <div class="student-statistics">
+    <div class="page-header">
+      <h2>成绩分析</h2>
+      <p>查看您的学习数据分析</p>
+    </div>
+
+    <!-- 统计卡片 -->
+    <el-row :gutter="20" style="margin-bottom: 24px;">
+      <el-col :span="6">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <el-icon><SuccessFilled /></el-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-value">{{ stats.totalExams }}</p>
+            <p class="stat-label">总考试数</p>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="6">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <el-icon><Medal /></el-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-value">{{ stats.averageScore }}</p>
+            <p class="stat-label">平均分</p>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="6">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <el-icon><TrendCharts /></el-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-value">{{ stats.highestScore }}</p>
+            <p class="stat-label">最高分</p>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="6">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <el-icon><Warning /></el-icon>
+          </div>
+          <div class="stat-info">
+            <p class="stat-value">{{ stats.wrongCount }}</p>
+            <p class="stat-label">错题数</p>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+
+    <el-row :gutter="24">
+      <el-col :span="14">
+        <div class="card">
+          <div class="card-header">
+            <h3>成绩趋势</h3>
+          </div>
+          <div class="line-chart">
+            <div class="chart-area">
+              <svg viewBox="0 0 600 200" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#dc2626;stop-opacity:0.3" />
+                    <stop offset="100%" style="stop-color:#dc2626;stop-opacity:0" />
+                  </linearGradient>
+                </defs>
+                <path :d="areaPath" fill="url(#areaGradient)" />
+                <path :d="linePath" fill="none" stroke="#dc2626" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                <circle v-for="(point, index) in chartPoints" :key="index" :cx="point.x" :cy="point.y" r="6" fill="white" stroke="#dc2626" stroke-width="3" />
+              </svg>
+            </div>
+            <div class="chart-labels">
+              <span v-for="(label, index) in chartLabels" :key="index">{{ label }}</span>
+            </div>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="10">
+        <div class="card">
+          <div class="card-header">
+            <h3>知识点掌握</h3>
+          </div>
+          <div class="radar-chart">
+            <svg viewBox="0 0 200 200">
+              <polygon v-for="level in [100, 75, 50, 25]" :key="level" :points="getPolygonPoints(level)" fill="none" stroke="#e2e8f0" stroke-width="1" />
+              <line v-for="(point, index) in radarLabels" :key="'line-' + index" x1="100" y1="100" :x2="getPointCoord(index, 100).x" :y2="getPointCoord(index, 100).y" stroke="#e2e8f0" stroke-width="1" />
+              <polygon :points="radarDataPoints" fill="rgba(220, 38, 38, 0.3)" stroke="#dc2626" stroke-width="2" />
+              <circle v-for="(point, index) in radarData" :key="'point-' + index" :cx="getPointCoord(index, point).x" :cy="getPointCoord(index, point).y" r="4" fill="#dc2626" />
+            </svg>
+            <div class="radar-labels">
+              <span v-for="(label, index) in radarLabels" :key="label" :style="getLabelStyle(index)">{{ label }}</span>
+            </div>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+
+    <el-row :gutter="24" style="margin-top: 24px;">
+      <el-col :span="12">
+        <div class="card">
+          <div class="card-header">
+            <h3>科目成绩</h3>
+          </div>
+          <div class="subject-list">
+            <div class="subject-item" v-for="subject in subjectScores" :key="subject.name">
+              <div class="subject-info">
+                <h4>{{ subject.name }}</h4>
+                <p>{{ subject.count }}次考试</p>
+              </div>
+              <div class="subject-score">
+                <span class="score-value">{{ subject.score }}</span>
+                <span class="score-label">分</span>
+              </div>
+              <div class="score-bar">
+                <div class="bar-fill" :style="{ width: subject.score + '%', background: subject.color }"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-col>
+      <el-col :span="12">
+        <div class="card">
+          <div class="card-header">
+            <h3>答题情况</h3>
+          </div>
+          <div class="answer-stats">
+            <div class="answer-item">
+              <div class="answer-icon correct">
+                <el-icon><SuccessFilled /></el-icon>
+              </div>
+              <div class="answer-info">
+                <span class="answer-count">{{ stats.correctCount }}</span>
+                <span class="answer-label">答对题数</span>
+              </div>
+              <span class="answer-rate">{{ correctRate }}%</span>
+            </div>
+            <div class="answer-item">
+              <div class="answer-icon wrong">
+                <el-icon><CircleCloseFilled /></el-icon>
+              </div>
+              <div class="answer-info">
+                <span class="answer-count">{{ stats.wrongCount }}</span>
+                <span class="answer-label">答错题数</span>
+              </div>
+              <span class="answer-rate">{{ wrongRate }}%</span>
+            </div>
+            <div class="answer-item">
+              <div class="answer-icon skip">
+                <el-icon><RemoveFilled /></el-icon>
+              </div>
+              <div class="answer-info">
+                <span class="answer-count">{{ stats.skippedCount }}</span>
+                <span class="answer-label">未答题数</span>
+              </div>
+              <span class="answer-rate">{{ skippedRate }}%</span>
+            </div>
+          </div>
+        </div>
+      </el-col>
+    </el-row>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { examRecordApi } from '../../utils/api'
+
+const stats = ref({
+  totalExams: 0,
+  averageScore: 0,
+  highestScore: 0,
+  wrongCount: 0,
+  correctCount: 0,
+  skippedCount: 0
+})
+
+const scoreHistory = ref([85, 78, 92, 88, 95, 80, 90, 87, 93, 89])
+const chartLabels = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月']
+
+const radarLabels = ['语文', '数学', '英语', '物理', '化学', '生物']
+const radarData = [85, 92, 78, 88, 90, 82]
+
+const subjectScores = ref([
+  { name: '语文', score: 85, count: 5, color: '#7f1d1d' },
+  { name: '数学', score: 92, count: 6, color: '#991b1b' },
+  { name: '英语', score: 78, count: 5, color: '#b91c1c' },
+  { name: '物理', score: 88, count: 4, color: '#dc2626' },
+  { name: '化学', score: 90, count: 4, color: '#ef4444' },
+  { name: '生物', score: 82, count: 3, color: '#f87171' }
+])
+
+const chartPoints = computed(() => {
+  const width = 600
+  const height = 200
+  const padding = 40
+  const usableWidth = width - padding * 2
+  const usableHeight = height - padding * 2
+  const maxScore = 100
+  
+  return scoreHistory.value.map((score, index) => ({
+    x: padding + (index / (scoreHistory.value.length - 1)) * usableWidth,
+    y: padding + usableHeight - (score / maxScore) * usableHeight
+  }))
+})
+
+const linePath = computed(() => {
+  if (chartPoints.value.length === 0) return ''
+  return chartPoints.value.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+})
+
+const areaPath = computed(() => {
+  if (chartPoints.value.length === 0) return ''
+  const points = chartPoints.value
+  const lastX = points[points.length - 1].x
+  const firstX = points[0].x
+  return `${linePath.value} L ${lastX} 200 L ${firstX} 200 Z`
+})
+
+const getPolygonPoints = (level) => {
+  const center = 100
+  const radius = (level / 100) * 80
+  const count = radarLabels.length
+  const points = []
+  
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count - Math.PI / 2
+    const x = center + radius * Math.cos(angle)
+    const y = center + radius * Math.sin(angle)
+    points.push(`${x},${y}`)
+  }
+  
+  return points.join(' ')
+}
+
+const getPointCoord = (index, value) => {
+  const center = 100
+  const radius = (value / 100) * 80
+  const count = radarLabels.length
+  const angle = (Math.PI * 2 * index) / count - Math.PI / 2
+  
+  return {
+    x: center + radius * Math.cos(angle),
+    y: center + radius * Math.sin(angle)
+  }
+}
+
+const radarDataPoints = computed(() => {
+  return radarData.map((value, index) => {
+    const coord = getPointCoord(index, value)
+    return `${coord.x},${coord.y}`
+  }).join(' ')
+})
+
+const getLabelStyle = (index) => {
+  const center = 100
+  const radius = 100
+  const count = radarLabels.length
+  const angle = (Math.PI * 2 * index) / count - Math.PI / 2
+  const x = center + radius * Math.cos(angle)
+  const y = center + radius * Math.sin(angle)
+  
+  let translateX = '-50%'
+  let translateY = '-50%'
+  
+  if (x < center) translateX = '-100%'
+  if (x > center) translateX = '0%'
+  if (y < center) translateY = '-100%'
+  if (y > center) translateY = '0%'
+  
+  return {
+    position: 'absolute',
+    left: `${x}px`,
+    top: `${y}px`,
+    transform: `translate(${translateX}, ${translateY})`,
+    fontSize: '12px',
+    color: '#64748b'
+  }
+}
+
+const totalAnswers = computed(() => stats.value.correctCount + stats.value.wrongCount + stats.value.skippedCount)
+const correctRate = computed(() => totalAnswers.value > 0 ? Math.round((stats.value.correctCount / totalAnswers.value) * 100) : 0)
+const wrongRate = computed(() => totalAnswers.value > 0 ? Math.round((stats.value.wrongCount / totalAnswers.value) * 100) : 0)
+const skippedRate = computed(() => totalAnswers.value > 0 ? Math.round((stats.value.skippedCount / totalAnswers.value) * 100) : 0)
+
+const loadData = async () => {
+  try {
+    const res = await examRecordApi.getAnalysis()
+    if (res.code === 200) {
+      stats.value = res.data
+    }
+  } catch (e) {
+    console.error(e)
+    stats.value = {
+      totalExams: 12,
+      averageScore: 87,
+      highestScore: 98,
+      wrongCount: 45,
+      correctCount: 280,
+      skippedCount: 15
+    }
+  }
+}
+
+onMounted(() => {
+  loadData()
+})
+</script>
+
+<style lang="scss" scoped>
+.student-statistics {
+  max-width: 1400px;
+}
+
+.page-header {
+  margin-bottom: 24px;
+  
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+  
+  p {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #64748b;
+  }
+}
+
+.stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  
+  .stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    color: white;
+  }
+  
+  .stat-info {
+    flex: 1;
+  }
+  
+  .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+    color: #0f172a;
+  }
+  
+  .stat-label {
+    font-size: 13px;
+    color: #64748b;
+    margin: 4px 0 0 0;
+  }
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+  margin-bottom: 20px;
+  
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+  }
+}
+
+.line-chart {
+  .chart-area {
+    height: 200px;
+    
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+  
+  .chart-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+    
+    span {
+      font-size: 12px;
+      color: #64748b;
+    }
+  }
+}
+
+.radar-chart {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .radar-labels {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.subject-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  
+  .subject-item {
+    .subject-info {
+      margin-bottom: 8px;
+      
+      h4 {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+        margin: 0;
+      }
+      
+      p {
+        font-size: 12px;
+        color: #64748b;
+        margin: 4px 0 0 0;
+      }
+    }
+    
+    .subject-score {
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      margin-bottom: 8px;
+      
+      .score-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+      
+      .score-label {
+        font-size: 12px;
+        color: #64748b;
+      }
+    }
+    
+    .score-bar {
+      height: 8px;
+      background: #f1f5f9;
+      border-radius: 4px;
+      overflow: hidden;
+      
+      .bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.5s ease;
+      }
+    }
+  }
+}
+
+.answer-stats {
+  .answer-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid #f1f5f9;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .answer-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      
+      &.correct {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+      
+      &.wrong {
+        background: #fecaca;
+        color: #dc2626;
+      }
+      
+      &.skip {
+        background: #fca5a5;
+        color: #ef4444;
+      }
+    }
+    
+    .answer-info {
+      flex: 1;
+      
+      .answer-count {
+        display: block;
+        font-size: 20px;
+        font-weight: 700;
+        color: #0f172a;
+      }
+      
+      .answer-label {
+        font-size: 13px;
+        color: #64748b;
+      }
+    }
+    
+    .answer-rate {
+      font-size: 18px;
+      font-weight: 600;
+      color: #dc2626;
+    }
+  }
+}
+</style>

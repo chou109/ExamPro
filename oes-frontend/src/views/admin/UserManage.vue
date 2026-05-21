@@ -95,7 +95,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { userApi } from '../../utils/api'
 
@@ -110,6 +111,9 @@ const dialogVisible = ref(false)
 const isEdit = ref(false)
 const formRef = ref()
 
+const router = useRouter()
+const route = useRoute()
+
 const form = reactive({
   id: null,
   username: '',
@@ -119,6 +123,15 @@ const form = reactive({
   email: '',
   phone: ''
 })
+
+const handleRouteChange = () => {
+  const routeRole = route.query.role
+  if (routeRole && (routeRole === 'STUDENT' || routeRole === 'TEACHER')) {
+    role.value = routeRole
+    current.value = 1
+    loadData()
+  }
+}
 
 const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
@@ -199,7 +212,13 @@ const handleDelete = async (row) => {
 }
 
 onMounted(() => {
+  handleRouteChange()
   loadData()
+  router.afterEach(handleRouteChange)
+})
+
+onUnmounted(() => {
+  router.afterEach(() => {})
 })
 </script>
 

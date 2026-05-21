@@ -6,6 +6,8 @@ import com.oes.entity.SysLog;
 import com.oes.service.SysLogService;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/logs")
 public class SysLogController {
@@ -23,5 +25,11 @@ public class SysLogController {
             @RequestParam(required = false) String username,
             @RequestParam(required = false) String operation) {
         return R.ok(sysLogService.page(current, size, username, operation));
+    }
+
+    @GetMapping("/recent")
+    public R<List<SysLog>> getRecentLogs(
+            @RequestParam(defaultValue = "10") Integer limit) {
+        return R.ok(sysLogService.getRecentLogs(limit));
     }
 }

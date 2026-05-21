@@ -1,9 +1,13 @@
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '../store'
 
 const request = axios.create({
   baseURL: '/api',
-  timeout: 10000
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json;charset=UTF-8'
+  }
 })
 
 request.interceptors.request.use(config => {
@@ -12,16 +16,41 @@ request.interceptors.request.use(config => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  if (!config.headers['Content-Type']) {
+    config.headers['Content-Type'] = 'application/json;charset=UTF-8'
+  }
   return config
 })
 
 request.interceptors.response.use(
   response => response.data,
   error => {
-    if (error.response?.status === 401) {
-      const userStore = useUserStore()
-      userStore.logout()
-      window.location.href = '/login'
+    const userStore = useUserStore()
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          ElMessage.warning('登录已过期，请重新登录')
+          userStore.clearLoginState()
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login'
+          }
+          break
+        case 403:
+          ElMessage.error('没有权限访问该资源')
+          break
+        case 404:
+          ElMessage.error('请求的资源不存在')
+          break
+        case 500:
+          ElMessage.error('服务器错误，请稍后再试')
+          break
+        default:
+          ElMessage.error(error.response.data?.message || '请求失败')
+      }
+    } else if (error.request) {
+      ElMessage.error('网络连接失败，请检查网络')
+    } else {
+      ElMessage.error('请求配置错误')
     }
     return Promise.reject(error)
   }
@@ -60,9 +89,16 @@ export const classApi = {
   page: (params) => request.get('/classes/page', { params }),
   list: (params) => request.get('/classes', { params }),
   getById: (id) => request.get(`/classes/${id}`),
-  create: (data) => request.post('/classes', data),
+  create: (data, teacherId) => request.post('/class/create', data, { params: { teacherId } }),
   update: (data) => request.put('/classes', data),
-  delete: (id) => request.delete(`/classes/${id}`)
+  delete: (id) => request.delete(`/classes/${id}`),
+  getMyClasses: (userId) => request.get('/class/my-classes', { params: { userId } }),
+  joinByCode: (inviteCode, userId) => request.post('/class/join-by-code', { inviteCode, userId }),
+  getClassInfo: (classId) => request.get(`/classes/${classId}`),
+  getClassMembers: (classId) => request.get(`/class/${classId}/members`),
+  getMessages: (classId, current, size) => request.get(`/class/${classId}/messages`, { params: { current, size } }),
+  sendMessage: (classId, content, senderId) => request.post(`/class/${classId}/message`, { content }, { params: { senderId } }),
+  checkMemberRole: (classId, userId) => request.get(`/class/${classId}/member/${userId}/check`)
 }
 
 export const logApi = {
@@ -131,7 +167,8 @@ export const examRecordApi = {
   screenSwitch: (data) => request.post('/exam-records/screen-switch', data),
   getAnswers: (id) => request.get(`/exam-records/${id}/answers`),
   getStudentHistory: (params) => request.get('/exam-records/student/history', { params }),
-  getAnalysis: (params) => request.get('/exam-records/analysis', { params })
+  getAnalysis: (params) => request.get('/exam-records/analysis', { params }),
+  getStudentStats: () => request.get('/exam-records/student/stats')
 }
 
 export const wrongQuestionApi = {
@@ -141,5 +178,6 @@ export const wrongQuestionApi = {
 }
 
 export const statisticsApi = {
-  overview: () => request.get('/statistics/overview')
+  overview: () => request.get('/statistics/overview'),
+  teacherStats: () => request.get('/statistics/teacher/stats')
 }

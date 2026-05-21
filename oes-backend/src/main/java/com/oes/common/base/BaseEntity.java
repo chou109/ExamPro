@@ -12,7 +12,6 @@ public class BaseEntity implements Serializable {
     private Long id;
 
     @TableLogic
-    @TableField(select = false)
     private Integer deleted;
 
     @TableField(fill = FieldFill.INSERT)

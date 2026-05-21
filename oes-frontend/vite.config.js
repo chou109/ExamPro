@@ -10,15 +10,22 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3000,
+    host: '0.0.0.0',
+    port: 3001,
+    strictPort: true,
+    allowedHosts: true,
+    hmr: {
+      host: 'localhost',
+      port: 3001
+    },
     proxy: {
       '/api': {
-        target: 'http://localhost:8081',
+        target: 'http://localhost:8083',
         changeOrigin: true,
         rewrite: (path) => path
       },
       '/uploads': {
-        target: 'http://localhost:8081',
+        target: 'http://localhost:8083',
         changeOrigin: true,
         rewrite: (path) => path
       }

@@ -15,6 +15,8 @@ import java.util.List;
 @Service
 public class SysLogService extends ServiceImpl<SysLogMapper, SysLog> {
 
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SysLogService.class);
+
     public PageResult<SysLog> page(Integer current, Integer size, String username, String operation) {
         Page<SysLog> page = new Page<>(current, size);
         LambdaQueryWrapper<SysLog> wrapper = new LambdaQueryWrapper<>();
@@ -30,13 +32,22 @@ public class SysLogService extends ServiceImpl<SysLogMapper, SysLog> {
     }
 
     public void saveLog(String username, String operation, String method, String params, String ip) {
+        logger.info("========== SysLogService.saveLog called ==========");
+        logger.info("username: {}, operation: {}, method: {}, ip: {}", username, operation, method, ip);
+        
         SysLog log = new SysLog();
         log.setUsername(username);
         log.setOperation(operation);
         log.setMethod(method);
         log.setParams(params);
         log.setIp(ip);
-        save(log);
+        
+        try {
+            boolean saved = save(log);
+            logger.info("Log saved successfully: {}", saved);
+        } catch (Exception e) {
+            logger.error("Error saving log: ", e);
+        }
     }
 
     public List<SysLog> getRecentLogs(int limit) {

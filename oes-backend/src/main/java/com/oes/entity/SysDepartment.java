@@ -1,5 +1,6 @@
 package com.oes.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.oes.common.base.BaseEntity;
 import lombok.Data;
@@ -15,5 +16,6 @@ public class SysDepartment extends BaseEntity {
     private String code;
     private Long parentId;
     private Integer sortOrder;
+    @TableField(exist = false)
     private List<SysDepartment> children;
 }

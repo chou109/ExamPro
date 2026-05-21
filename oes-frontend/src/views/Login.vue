@@ -30,8 +30,8 @@
     <canvas id="wave-connector" class="wave-connector"></canvas>
     <div class="login-right">
       <div class="login-card">
-        <!-- 学生/教师登录切换 -->
-        <div v-if="!showAdminLogin">
+        <!-- 学生/教师登录 -->
+        <div v-if="!showAdminLogin && !showRegister">
           <h2>欢迎回来</h2>
           <p class="subtitle">请选择登录身份</p>
           
@@ -80,13 +80,14 @@
             </el-form-item>
           </el-form>
           
-          <div class="admin-login-btn">
+          <div class="action-buttons">
             <el-button type="danger" plain @click="showAdminLogin = true">管理员登录</el-button>
+            <el-button type="primary" plain @click="showRegister = true">去注册</el-button>
           </div>
         </div>
         
         <!-- 管理员登录 -->
-        <div v-else>
+        <div v-else-if="showAdminLogin && !showRegister">
           <h2>管理员登录</h2>
           <p class="subtitle">请输入管理员账号</p>
           
@@ -116,16 +117,81 @@
             </el-form-item>
           </el-form>
           
-          <div class="back-btn">
+          <div class="action-buttons single">
             <el-button type="danger" plain @click="showAdminLogin = false">回到学生/教师端</el-button>
+          </div>
+        </div>
+        
+        <!-- 注册界面 -->
+        <div v-else-if="showRegister">
+          <h2>创建账号</h2>
+          <p class="subtitle">请选择身份并填写注册信息</p>
+          
+          <div class="login-tabs">
+            <div 
+              class="login-tab" 
+              :class="{ active: registerForm.role === 'STUDENT' }"
+              @click="registerForm.role = 'STUDENT'"
+            >
+              <el-icon><User /></el-icon>
+              <span>学生</span>
+            </div>
+            <div 
+              class="login-tab" 
+              :class="{ active: registerForm.role === 'TEACHER' }"
+              @click="registerForm.role = 'TEACHER'"
+            >
+              <el-icon><UserFilled /></el-icon>
+              <span>教师</span>
+            </div>
+          </div>
+          
+          <el-form ref="registerFormRef" :model="registerForm" :rules="registerRules" @submit.prevent="handleRegister">
+            <el-form-item prop="username">
+              <el-input
+                v-model="registerForm.username"
+                placeholder="请输入用户名"
+                size="large"
+                :prefix-icon="User"
+              />
+            </el-form-item>
+            <el-form-item prop="password">
+              <el-input
+                v-model="registerForm.password"
+                type="password"
+                placeholder="请输入密码"
+                size="large"
+                :prefix-icon="Lock"
+                show-password
+              />
+            </el-form-item>
+            <el-form-item prop="confirmPassword">
+              <el-input
+                v-model="registerForm.confirmPassword"
+                type="password"
+                placeholder="请确认密码"
+                size="large"
+                :prefix-icon="Lock"
+                show-password
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="danger" size="large" :loading="registerLoading" native-type="submit" class="login-btn">
+                注册
+              </el-button>
+            </el-form-item>
+          </el-form>
+          
+          <div class="action-buttons single">
+            <el-button type="primary" plain @click="backToLogin">去登录</el-button>
           </div>
         </div>
         
         <div class="demo-accounts">
           <p>演示账号：</p>
-          <el-tag v-if="!showAdminLogin && loginType === 'student'">学生: s / stu</el-tag>
-          <el-tag v-if="!showAdminLogin && loginType === 'teacher'">教师: t / tchr</el-tag>
-          <el-tag v-if="showAdminLogin">管理员: a / admin</el-tag>
+          <el-tag v-if="!showAdminLogin && !showRegister && loginType === 'student'">学生: s / stu</el-tag>
+          <el-tag v-if="!showAdminLogin && !showRegister && loginType === 'teacher'">教师: t / tchr</el-tag>
+          <el-tag v-if="showAdminLogin && !showRegister">管理员: a / admin</el-tag>
         </div>
       </div>
     </div>
@@ -136,12 +202,15 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User, UserFilled, Lock, Check, Edit } from '@element-plus/icons-vue'
+import { User, UserFilled, Lock, Check } from '@element-plus/icons-vue'
 import { useUserStore } from '../store'
+import { authApi } from '../utils/api'
 
 const router = useRouter()
 const formRef = ref()
+const registerFormRef = ref()
 const loading = ref(false)
+const registerLoading = ref(false)
 const userStore = useUserStore()
 
 const form = reactive({
@@ -149,12 +218,45 @@ const form = reactive({
   password: ''
 })
 
-const loginType = ref('student') // student 或 teacher
+const registerForm = reactive({
+  username: '',
+  password: '',
+  confirmPassword: '',
+  role: 'STUDENT'
+})
+
+const loginType = ref('student')
 const showAdminLogin = ref(false)
+const showRegister = ref(false)
+
+const validateConfirmPassword = (rule, value, callback) => {
+  if (value === '') {
+    callback(new Error('请再次输入密码'))
+  } else if (value !== registerForm.password) {
+    callback(new Error('两次输入密码不一致'))
+  } else {
+    callback()
+  }
+}
 
 const rules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+}
+
+const registerRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '用户名长度应为3-20个字符', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, max: 20, message: '密码长度应为6-20个字符', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认密码', trigger: 'blur' },
+    { validator: validateConfirmPassword, trigger: 'blur' }
+  ]
 }
 
 const handleLogin = async () => {
@@ -184,6 +286,42 @@ const handleLogin = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handleRegister = async () => {
+  const valid = await registerFormRef.value.validate().catch(() => false)
+  if (!valid) return
+
+  registerLoading.value = true
+  try {
+    await authApi.register({
+      username: registerForm.username,
+      password: registerForm.password,
+      role: registerForm.role
+    })
+    
+    ElMessage({
+      message: '注册成功，请登录',
+      type: 'success',
+      customClass: 'custom-success-message'
+    })
+    
+    // 注册成功后返回登录界面
+    backToLogin()
+  } catch (e) {
+    ElMessage.error(e.message || '注册失败')
+  } finally {
+    registerLoading.value = false
+  }
+}
+
+const backToLogin = () => {
+  showRegister.value = false
+  // 重置注册表单
+  registerForm.username = ''
+  registerForm.password = ''
+  registerForm.confirmPassword = ''
+  registerForm.role = 'STUDENT'
 }
 
 // 动态波形连接器
@@ -397,7 +535,6 @@ onMounted(() => {
 
 .demo-accounts .el-tag {
   margin-right: 8px;
-  margin-bottom: 8px;
 }
 
 .login-tabs {
@@ -434,15 +571,18 @@ onMounted(() => {
   font-size: 18px;
 }
 
-.admin-login-btn,
-.back-btn {
+.action-buttons {
   display: flex;
   justify-content: center;
+  gap: 12px;
   margin-top: 20px;
 }
 
-.admin-login-btn .el-button,
-.back-btn .el-button {
+.action-buttons.single {
+  justify-content: center;
+}
+
+.action-buttons .el-button {
   font-size: 14px;
   padding: 8px 16px;
 }

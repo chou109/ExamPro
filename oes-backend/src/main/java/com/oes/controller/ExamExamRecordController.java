@@ -4,11 +4,11 @@ import com.oes.common.base.PageResult;
 import com.oes.common.base.R;
 import com.oes.config.JwtUtils;
 import com.oes.entity.*;
+import com.oes.mapper.ExamWrongQuestionMapper;
 import com.oes.service.*;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,15 +19,18 @@ public class ExamExamRecordController {
     private final ExamExamRecordService examExamRecordService;
     private final ExamPaperService examPaperService;
     private final ExamExamService examExamService;
+    private final ExamWrongQuestionMapper examWrongQuestionMapper;
     private final JwtUtils jwtUtils;
 
     public ExamExamRecordController(ExamExamRecordService examExamRecordService,
                                     ExamPaperService examPaperService,
                                     ExamExamService examExamService,
+                                    ExamWrongQuestionMapper examWrongQuestionMapper,
                                     JwtUtils jwtUtils) {
         this.examExamRecordService = examExamRecordService;
         this.examPaperService = examPaperService;
         this.examExamService = examExamService;
+        this.examWrongQuestionMapper = examWrongQuestionMapper;
         this.jwtUtils = jwtUtils;
     }
 
@@ -168,7 +171,47 @@ public class ExamExamRecordController {
     }
 
     @GetMapping("/analysis")
-    public R<Map<String, Object>> getAnalysis(@RequestParam Long examId) {
-        return R.ok(examExamRecordService.getExamAnalysis(examId));
+    public R<Map<String, Object>> getAnalysis(@RequestParam(required = false) Long examId, HttpServletRequest request) {
+        if (examId != null) {
+            return R.ok(examExamRecordService.getExamAnalysis(examId));
+        }
+        
+        String token = request.getHeader("Authorization");
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.replace("Bearer ", "");
+            Long studentId = jwtUtils.getUserIdFromToken(token);
+            return R.ok(examExamRecordService.getStudentAnalysis(studentId));
+        }
+        
+        return R.error("无法获取用户信息");
+    }
+
+    @GetMapping("/student/stats")
+    public R<Map<String, Object>> getStudentStats(HttpServletRequest request) {
+        String token = request.getHeader("Authorization").replace("Bearer ", "");
+        Long studentId = jwtUtils.getUserIdFromToken(token);
+
+        Map<String, Object> stats = new HashMap<>();
+
+        // 待考考试数量（未开始或进行中的考试）
+        Long pendingCount = examExamRecordService.countByStudentAndStatus(studentId, "NOT_STARTED");
+        Long ongoingCount = examExamRecordService.countByStudentAndStatus(studentId, "ONGOING");
+        stats.put("pendingExams", pendingCount + ongoingCount);
+
+        // 已完成考试数量
+        Long completedCount = examExamRecordService.countByStudentAndStatus(studentId, "SUBMITTED");
+        stats.put("completedExams", completedCount);
+
+        // 错题数量
+        Long wrongCount = examWrongQuestionMapper.selectCount(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.oes.entity.ExamWrongQuestion>()
+                        .eq(com.oes.entity.ExamWrongQuestion::getStudentId, studentId));
+        stats.put("wrongCount", wrongCount);
+
+        // 平均分
+        Double averageScore = examExamRecordService.getAverageScoreByStudent(studentId);
+        stats.put("averageScore", averageScore != null ? Math.round(averageScore * 10) / 10.0 : 0);
+
+        return R.ok(stats);
     }
 }

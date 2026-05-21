@@ -1,14 +1,14 @@
 :root {
-  --brand-50: #eef2ff;
-  --brand-100: #e0e7ff;
-  --brand-200: #c7d2fe;
-  --brand-300: #a5b4fc;
-  --brand-400: #818cf8;
-  --brand-500: #6366f1;
-  --brand-600: #4f46e5;
-  --brand-700: #4338ca;
-  --brand-800: #3730a3;
-  --brand-900: #312e81;
+  --brand-50: #fef2f2;
+  --brand-100: #fee2e2;
+  --brand-200: #fecaca;
+  --brand-300: #fca5a5;
+  --brand-400: #f87171;
+  --brand-500: #ef4444;
+  --brand-600: #dc2626;
+  --brand-700: #b91c1c;
+  --brand-800: #991b1b;
+  --brand-900: #7f1d1d;
 }
 
 * {
@@ -104,7 +104,7 @@ body {
 }
 
 .stat-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
   border-radius: 20px;
   padding: 24px;
   color: white;
@@ -165,31 +165,12 @@ body {
   background: linear-gradient(135deg, #FF6A6A, #CD5C5C) !important;
   border-color: #FF6A6A !important;
   color: white !important;
-}
-
-.el-message--success .el-message__content {
-  color: white !important;
-}
-
-.el-message--success .el-message__icon {
-  color: white !important;
-}
-
-.el-message--success .el-icon {
-  color: white !important;
-}
-
-.el-message--success svg {
-  color: white !important;
-  fill: white !important;
-}
-
-/* 强制覆盖Element Plus图标颜色 */
-.el-message--success .el-icon-success {
-  color: white !important;
-}
-
-.el-message--success .el-icon-success svg {
-  fill: white !important;
-  color: white !important;
+  
+  .el-message__content {
+    color: white !important;
+  }
+  
+  .el-message__icon {
+    color: white !important;
+  }
 }

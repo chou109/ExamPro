@@ -1,11 +1,14 @@
 package com.oes.controller;
 
+import com.oes.annotation.Log;
 import com.oes.common.base.PageResult;
 import com.oes.common.base.R;
 import com.oes.config.JwtUtils;
 import com.oes.entity.SysUser;
 import com.oes.service.SysUserService;
+import com.oes.service.SysLogService;
 import javax.servlet.http.HttpServletRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -16,14 +19,18 @@ public class AuthController {
 
     private final SysUserService sysUserService;
     private final JwtUtils jwtUtils;
+    private final PasswordEncoder passwordEncoder;
+    private final SysLogService sysLogService;
 
-    public AuthController(SysUserService sysUserService, JwtUtils jwtUtils) {
+    public AuthController(SysUserService sysUserService, JwtUtils jwtUtils, PasswordEncoder passwordEncoder, SysLogService sysLogService) {
         this.sysUserService = sysUserService;
         this.jwtUtils = jwtUtils;
+        this.passwordEncoder = passwordEncoder;
+        this.sysLogService = sysLogService;
     }
 
     @PostMapping("/login")
-    public R<Map<String, Object>> login(@RequestBody SysUser user) {
+    public R<Map<String, Object>> login(@RequestBody SysUser user, HttpServletRequest request) {
         SysUser dbUser = sysUserService.getByUsername(user.getUsername());
         if (dbUser == null) {
             return R.error("用户不存在");
@@ -31,24 +38,49 @@ public class AuthController {
         if (dbUser.getStatus() == 0) {
             return R.error("用户已被禁用");
         }
+        if (!passwordEncoder.matches(user.getPassword(), dbUser.getPassword())) {
+            return R.error("密码错误");
+        }
 
         String token = jwtUtils.generateToken(dbUser.getId(), dbUser.getUsername(), dbUser.getRole());
 
-        Map<String, Object> data = Map.of(
-                "token", token,
-                "userId", dbUser.getId(),
-                "username", dbUser.getUsername(),
-                "realName", dbUser.getRealName(),
-                "role", dbUser.getRole(),
-                "avatar", dbUser.getAvatar() != null ? dbUser.getAvatar() : ""
-        );
+        try {
+            String ip = request.getRemoteAddr();
+            sysLogService.saveLog(dbUser.getUsername(), "用户登录", "POST /api/auth/login", 
+                    "{\"username\":\"" + user.getUsername() + "\"}", ip);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Map<String, Object> data = new java.util.HashMap<>();
+        data.put("token", token);
+        data.put("userId", dbUser.getId());
+        data.put("username", dbUser.getUsername());
+        data.put("realName", dbUser.getRealName() != null ? dbUser.getRealName() : "");
+        data.put("role", dbUser.getRole());
+        data.put("avatar", dbUser.getAvatar() != null ? dbUser.getAvatar() : "");
         return R.ok(data);
     }
 
     @GetMapping("/info")
     public R<Map<String, Object>> getUserInfo(HttpServletRequest request) {
-        String token = request.getHeader("Authorization").replace("Bearer ", "");
-        Long userId = jwtUtils.getUserIdFromToken(token);
+        String authorization = request.getHeader("Authorization");
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            return R.unauthorized();
+        }
+        String token = authorization.replace("Bearer ", "");
+        if (token == null || token.isEmpty()) {
+            return R.unauthorized();
+        }
+        Long userId;
+        try {
+            userId = jwtUtils.getUserIdFromToken(token);
+        } catch (Exception e) {
+            return R.unauthorized();
+        }
+        if (userId == null) {
+            return R.unauthorized();
+        }
         SysUser user = sysUserService.getById(userId);
         if (user == null) {
             return R.unauthorized();

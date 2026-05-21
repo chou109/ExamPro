@@ -4,15 +4,15 @@
       <aside class="sidebar">
         <div class="user-profile" @click="navigateToAccount">
           <el-avatar :size="50" :src="userInfo.avatar || ''" class="user-avatar">
-            {{ userInfo.realName?.charAt(0) }}
+            {{ displayName?.charAt(0) }}
           </el-avatar>
-          <div class="user-name">{{ userInfo.realName }}</div>
+          <div class="user-name">{{ displayName }}</div>
           <div class="user-role">{{ roleName }}</div>
         </div>
         <el-menu :default-active="activeMenu" @select="handleSidebarSelect" class="sidebar-menu">
           <template v-for="item in currentMenus" :key="item.path">
             <el-menu-item :index="item.path">
-              <el-icon><component :is="item.icon" /></el-icon>
+              <el-icon><component :is="iconMap[item.icon]" /></el-icon>
               <span>{{ item.title }}</span>
             </el-menu-item>
           </template>
@@ -33,9 +33,9 @@
             <span class="nav-link">消息</span>
             <span class="nav-divider">|</span>
             <el-avatar :size="28" :src="userInfo.avatar || ''" class="top-avatar">
-              {{ userInfo.realName?.charAt(0) }}
+              {{ displayName?.charAt(0) }}
             </el-avatar>
-            <span class="user-name-top">{{ userInfo.realName }}</span>
+            <span class="user-name-top">{{ displayName }}</span>
             <el-button type="danger" size="small" plain @click="handleLogout" class="logout-btn">退出</el-button>
           </div>
         </header>
@@ -51,7 +51,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
-import { School } from '@element-plus/icons-vue'
+import { 
+  User, OfficeBuilding, Document, Folder, Calendar, Plus,
+  Close, Check, Edit, Clock, CircleCheck, CircleClose, DataAnalysis
+} from '@element-plus/icons-vue'
 import { useUserStore } from '../store'
 
 const router = useRouter()
@@ -59,6 +62,12 @@ const route = useRoute()
 const userStore = useUserStore()
 
 const userInfo = computed(() => userStore.userInfo || {})
+
+const displayName = computed(() => {
+  const name = userInfo.value.realName
+  const username = userInfo.value.username
+  return name && name.trim() ? name : username
+})
 
 const roleName = computed(() => {
   const map = { ADMIN: '管理员', TEACHER: '教师', STUDENT: '学生' }
@@ -69,11 +78,13 @@ const adminMenus = [
   { path: '/dashboard', title: '首页概览', icon: 'DataBoard' },
   { path: '/users', title: '用户管理', icon: 'User' },
   { path: '/departments', title: '院系管理', icon: 'OfficeBuilding' },
+  { path: '/statistics', title: '数据统计', icon: 'BarChart' },
   { path: '/logs', title: '系统日志', icon: 'Document' }
 ]
 
 const teacherMenus = [
   { path: '/dashboard', title: '首页概览', icon: 'DataBoard' },
+  { path: '/teacher/my-classes', title: '我的班级', icon: 'UserFilled' },
   { path: '/classes', title: '班级管理', icon: 'Collection' },
   { path: '/subjects', title: '科目管理', icon: 'Books' },
   { path: '/questions', title: '题库管理', icon: 'Memo' },
@@ -85,11 +96,31 @@ const teacherMenus = [
 
 const studentMenus = [
   { path: '/dashboard', title: '首页概览', icon: 'DataBoard' },
+  { path: '/student/my-classes', title: '我的班级', icon: 'UserFilled' },
   { path: '/student/exams', title: '考试列表', icon: 'Calendar' },
   { path: '/student/history', title: '考试历史', icon: 'Clock' },
+  { path: '/student/statistics', title: '成绩分析', icon: 'DataAnalysis' },
   { path: '/student/wrong', title: '错题本', icon: 'WarnTriangleFilled' },
   { path: '/account', title: '账号管理', icon: 'User' }
 ]
+
+const iconMap = {
+  DataBoard: Document,
+  User,
+  OfficeBuilding,
+  Document,
+  Collection: Folder,
+  Books: Document,
+  Memo: Document,
+  Files: Folder,
+  Calendar,
+  Tickets: Check,
+  UserFilled: User,
+  Clock,
+  DataAnalysis,
+  WarnTriangleFilled: CircleClose,
+  BarChart: DataAnalysis
+}
 
 const menuMap = {
   ADMIN: adminMenus,
@@ -157,6 +188,9 @@ onMounted(() => {
 
 .sidebar {
   width: 200px;
+  min-width: 200px;
+  max-width: 200px;
+  flex-shrink: 0;
   background: #fbf5eb;
   color: #333;
   padding: 15px 0;
@@ -164,6 +198,8 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
 }
 
 .user-profile {

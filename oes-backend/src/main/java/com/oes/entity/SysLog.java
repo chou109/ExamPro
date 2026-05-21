@@ -1,17 +1,24 @@
 package com.oes.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.oes.common.base.BaseEntity;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+import java.time.LocalDateTime;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
 @TableName("sys_log")
-public class SysLog extends BaseEntity {
+public class SysLog {
+    @TableId(type = IdType.AUTO)
+    private Long id;
     private String username;
     private String operation;
     private String method;
     private String params;
     private String ip;
+    
+    @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
+    private LocalDateTime createTime;
 }

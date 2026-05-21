@@ -35,4 +35,20 @@ public class SysDepartmentService extends ServiceImpl<SysDepartmentMapper, SysDe
                 .eq(parentId != null, SysDepartment::getParentId, parentId)
                 .orderByAsc(SysDepartment::getSortOrder));
     }
+
+    public void saveWithAutoSortOrder(SysDepartment department) {
+        if (department.getSortOrder() == null || department.getSortOrder() == 0) {
+            Integer maxSortOrder = getBaseMapper().selectMaxSortOrder();
+            department.setSortOrder((maxSortOrder == null ? 0 : maxSortOrder) + 1);
+        }
+        save(department);
+    }
+
+    public void updateWithAutoSortOrder(SysDepartment department) {
+        if (department.getSortOrder() == null || department.getSortOrder() == 0) {
+            Integer maxSortOrder = getBaseMapper().selectMaxSortOrder();
+            department.setSortOrder((maxSortOrder == null ? 0 : maxSortOrder) + 1);
+        }
+        updateById(department);
+    }
 }

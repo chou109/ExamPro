@@ -99,9 +99,9 @@
         </el-form-item>
         <el-form-item label="难度" prop="difficulty">
           <el-radio-group v-model="form.difficulty">
-            <el-radio label="EASY">简单</el-radio>
-            <el-radio label="MEDIUM">中等</el-radio>
-            <el-radio label="HARD">困难</el-radio>
+            <el-radio value="EASY">简单</el-radio>
+            <el-radio value="MEDIUM">中等</el-radio>
+            <el-radio value="HARD">困难</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="分值" prop="score">

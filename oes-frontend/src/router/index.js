@@ -43,6 +43,12 @@ const routes = [
         meta: { title: '系统日志', roles: ['ADMIN'] }
       },
       {
+        path: 'statistics',
+        name: 'Statistics',
+        component: () => import('../views/admin/Statistics.vue'),
+        meta: { title: '数据统计', roles: ['ADMIN'] }
+      },
+      {
         path: 'subjects',
         name: 'SubjectManage',
         component: () => import('../views/teacher/SubjectManage.vue'),
@@ -101,6 +107,36 @@ const routes = [
         name: 'StudentWrong',
         component: () => import('../views/student/WrongQuestions.vue'),
         meta: { title: '错题本', roles: ['STUDENT'] }
+      },
+      {
+        path: 'student/statistics',
+        name: 'StudentStatistics',
+        component: () => import('../views/student/Statistics.vue'),
+        meta: { title: '成绩分析', roles: ['STUDENT'] }
+      },
+      {
+        path: 'student/my-classes',
+        name: 'StudentMyClasses',
+        component: () => import('../views/student/MyClasses.vue'),
+        meta: { title: '我的班级', roles: ['STUDENT'] }
+      },
+      {
+        path: 'student/class/:id',
+        name: 'StudentClassChat',
+        component: () => import('../views/student/ClassChat.vue'),
+        meta: { title: '班级聊天', roles: ['STUDENT'] }
+      },
+      {
+        path: 'teacher/my-classes',
+        name: 'TeacherMyClasses',
+        component: () => import('../views/teacher/MyClasses.vue'),
+        meta: { title: '我的班级', roles: ['TEACHER'] }
+      },
+      {
+        path: 'teacher/class/:id',
+        name: 'TeacherClassChat',
+        component: () => import('../views/teacher/ClassChat.vue'),
+        meta: { title: '班级聊天', roles: ['TEACHER'] }
       }
     ]
   }
@@ -111,24 +147,47 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+let isVerifying = false
+let verificationPromise = null
+
+router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
-  const token = localStorage.getItem('token')
+
   if (to.path === '/login') {
-    next()
-  } else if (!token) {
-    next('/login')
-  } else {
-    const userInfo = userStore.userInfo
-    if (userInfo && userInfo.role) {
-      if (to.meta.roles && !to.meta.roles.includes(userInfo.role)) {
-        next('/dashboard')
-      } else {
-        next()
-      }
+    if (userStore.token && userStore.isLoginVerified && userStore.userInfo) {
+      next('/dashboard')
     } else {
       next()
     }
+    return
+  }
+
+  if (!userStore.token) {
+    next('/login')
+    return
+  }
+
+  if (!userStore.isLoginVerified) {
+    if (!verificationPromise) {
+      verificationPromise = userStore.verifyLoginState().finally(() => {
+        verificationPromise = null
+      })
+    }
+    const isValid = await verificationPromise
+    if (!isValid) {
+      next('/login')
+      return
+    }
+  }
+
+  if (userStore.userInfo && userStore.userInfo.role) {
+    if (to.meta.roles && !to.meta.roles.includes(userStore.userInfo.role)) {
+      next('/dashboard')
+    } else {
+      next()
+    }
+  } else {
+    next('/login')
   }
 })
 

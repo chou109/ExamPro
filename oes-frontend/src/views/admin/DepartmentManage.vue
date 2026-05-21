@@ -31,7 +31,7 @@
         <el-form-item label="院系代码" prop="code">
           <el-input v-model="form.code" />
         </el-form-item>
-        <el-form-item label="排序">
+        <el-form-item v-if="isEdit" label="排序">
           <el-input-number v-model="form.sortOrder" :min="0" />
         </el-form-item>
       </el-form>
