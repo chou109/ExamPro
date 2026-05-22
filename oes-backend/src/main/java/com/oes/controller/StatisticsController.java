@@ -9,6 +9,7 @@ import com.oes.service.ExamExamService;
 import com.oes.service.ExamPaperService;
 import com.oes.service.ExamQuestionService;
 import com.oes.service.SysClassService;
+import com.oes.service.SysClassMemberService;
 import com.oes.service.SysDepartmentService;
 import com.oes.service.SysUserService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,17 +28,20 @@ public class StatisticsController {
     private final SysUserService sysUserService;
     private final ExamExamService examExamService;
     private final SysClassService sysClassService;
+    private final SysClassMemberService classMemberService;
     private final SysDepartmentService sysDepartmentService;
     private final ExamPaperService examPaperService;
     private final ExamQuestionService examQuestionService;
     private final JwtUtils jwtUtils;
 
     public StatisticsController(SysUserService sysUserService, ExamExamService examExamService,
-                               SysClassService sysClassService, SysDepartmentService sysDepartmentService,
+                               SysClassService sysClassService, SysClassMemberService classMemberService,
+                               SysDepartmentService sysDepartmentService,
                                ExamPaperService examPaperService, ExamQuestionService examQuestionService,
                                JwtUtils jwtUtils) {
         this.sysUserService = sysUserService;
         this.examExamService = examExamService;
+        this.classMemberService = classMemberService;
         this.sysClassService = sysClassService;
         this.sysDepartmentService = sysDepartmentService;
         this.examPaperService = examPaperService;
@@ -103,8 +107,13 @@ public class StatisticsController {
             stats.put("examCount", 0L);
         }
 
-        // 班级数（暂时返回0，因为没有教师班级关联表）
-        stats.put("classCount", 0L);
+        // 教师关联的班级数（通过班级成员表查询）
+        List<com.oes.entity.SysClassMember> members = classMemberService.getMemberByUserId(teacherId);
+        Long classCount = members.stream()
+                .map(com.oes.entity.SysClassMember::getClassId)
+                .distinct()
+                .count();
+        stats.put("classCount", classCount);
 
         return R.ok(stats);
     }

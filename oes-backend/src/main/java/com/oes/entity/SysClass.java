@@ -16,4 +16,7 @@ public class SysClass extends BaseEntity {
     private Long departmentId;
     private String grade;
     private String inviteCode;
+    
+    @com.baomidou.mybatisplus.annotation.TableField(exist = false)
+    private Integer studentCount;
 }

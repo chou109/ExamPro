@@ -98,9 +98,9 @@ npm run dev
 
 | 角色   | 用户名    | 密码      |
 |--------|-----------|-----------|
-| 管理员 | admin     | admin123  |
-| 教师   | teacher1  | admin123  |
-| 学生   | student1  | admin123  |
+| 管理员 | a     | admin  |
+| 教师   | t  | tchr  |
+| 学生   | s  | stu  |
 
 ## 功能模块
 

@@ -33,7 +33,19 @@ public class SysClassController {
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long departmentId) {
-        return R.ok(sysClassService.page(current, size, keyword, departmentId));
+        PageResult<SysClass> result = sysClassService.page(current, size, keyword, departmentId);
+        
+        // 填充每个班级的学生人数
+        for (SysClass cls : result.getRecords()) {
+            List<com.oes.entity.SysClassMember> members = classMemberService.getMembersByClassId(cls.getId());
+            // 只统计学生（MEMBER）数量，不包括教师（OWNER/ADMIN）
+            int studentCount = (int) members.stream()
+                    .filter(m -> "MEMBER".equals(m.getRole()))
+                    .count();
+            cls.setStudentCount(studentCount);
+        }
+        
+        return R.ok(result);
     }
 
     @GetMapping
@@ -80,7 +92,20 @@ public class SysClassController {
 
     @PutMapping
     public R<Void> update(@RequestBody SysClass sysClass) {
-        sysClassService.updateById(sysClass);
+        if (sysClass.getId() == null) {
+            return R.error("ID 不能为空");
+        }
+        // 先查询原有数据
+        SysClass existing = sysClassService.getById(sysClass.getId());
+        if (existing == null) {
+            return R.error("班级不存在");
+        }
+        // 更新字段
+        existing.setName(sysClass.getName());
+        existing.setCode(sysClass.getCode());
+        existing.setDepartmentId(sysClass.getDepartmentId());
+        existing.setGrade(sysClass.getGrade());
+        sysClassService.updateById(existing);
         return R.ok();
     }
 

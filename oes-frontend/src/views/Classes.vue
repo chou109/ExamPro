@@ -34,7 +34,14 @@
       <el-table :data="classes" stripe style="width: 100%">
         <el-table-column prop="id" label="班级ID" width="80" />
         <el-table-column prop="className" label="班级名称" />
-        <el-table-column prop="departmentName" label="所属院系" />
+        <el-table-column prop="departmentId" label="所属院系">
+          <template #default="{ row }">
+            <span v-if="row.departmentId">
+              {{ getDepartmentName(row.departmentId) }}
+            </span>
+            <span v-else class="text-gray">-</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="inviteCode" label="群号" width="120">
           <template #default="{ row }">
             <span v-if="row.inviteCode">{{ row.inviteCode }}</span>
@@ -193,11 +200,19 @@ const loadDepartments = async () => {
   try {
     const res = await departmentApi.list()
     if (res.code === 200) {
-      departments.value = res.data
+      departments.value = res.data || []
     }
   } catch (e) {
     console.error(e)
   }
+}
+
+const getDepartmentName = (id) => {
+  if (!id || !departments.value || departments.value.length === 0) {
+    return '-'
+  }
+  const dept = departments.value.find(d => d.id === id)
+  return dept?.name || '-'
 }
 
 const loadStudents = async () => {

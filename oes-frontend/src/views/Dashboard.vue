@@ -59,7 +59,7 @@
       <!-- 教师统计 -->
       <template v-else-if="userInfo.role === 'TEACHER'">
         <el-col :span="6">
-          <div class="stat-card teacher-stat">
+          <div class="stat-card teacher-stat" @click="goToClasses">
             <div class="stat-icon">
               <el-icon><Folder /></el-icon>
             </div>
@@ -67,10 +67,11 @@
               <p class="stat-value">{{ stats.classCount }}</p>
               <p class="stat-label">班级数</p>
             </div>
+            <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
           </div>
         </el-col>
         <el-col :span="6">
-          <div class="stat-card teacher-stat">
+          <div class="stat-card teacher-stat" @click="goToPapers">
             <div class="stat-icon">
               <el-icon><Ticket /></el-icon>
             </div>
@@ -78,10 +79,11 @@
               <p class="stat-value">{{ stats.paperCount }}</p>
               <p class="stat-label">试卷数</p>
             </div>
+            <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
           </div>
         </el-col>
         <el-col :span="6">
-          <div class="stat-card teacher-stat">
+          <div class="stat-card teacher-stat" @click="goToQuestions">
             <div class="stat-icon">
               <el-icon><Edit /></el-icon>
             </div>
@@ -89,10 +91,11 @@
               <p class="stat-value">{{ stats.questionCount }}</p>
               <p class="stat-label">题目数</p>
             </div>
+            <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
           </div>
         </el-col>
         <el-col :span="6">
-          <div class="stat-card teacher-stat">
+          <div class="stat-card teacher-stat" @click="goToExams">
             <div class="stat-icon">
               <el-icon><Calendar /></el-icon>
             </div>
@@ -100,6 +103,7 @@
               <p class="stat-value">{{ stats.examCount }}</p>
               <p class="stat-label">考试数</p>
             </div>
+            <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
           </div>
         </el-col>
       </template>
@@ -169,9 +173,9 @@
           <div class="class-list">
             <div class="class-card" v-for="cls in classes" :key="cls.id" @click="goToClass(cls.id)">
               <div class="class-info">
-                <h4>{{ cls.className }}</h4>
-                <p class="class-department">{{ cls.departmentName }}</p>
-                <p class="class-students">学生人数: {{ cls.studentCount || 0 }}</p>
+                <h4>{{ cls.name || cls.className }}</h4>
+                <p class="class-department">{{ getDepartmentName(cls.departmentId) }}</p>
+                <p class="class-students">班级代码: {{ cls.code || '-' }}</p>
               </div>
               <div class="class-actions">
                 <el-button type="danger" size="small">查看</el-button>
@@ -296,11 +300,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { examApi, classApi, userApi, examRecordApi, statisticsApi, logApi } from '../utils/api'
+import { examApi, classApi, userApi, examRecordApi, statisticsApi, logApi, departmentApi } from '../utils/api'
 import { useUserStore } from '../store'
 import { 
   User, OfficeBuilding, Folder, Check, Edit, Calendar, 
-  Clock, CircleCheck, CircleClose, Plus, Document, CircleCheck as BarChart3, Check as InfoIcon 
+  Clock, CircleCheck, CircleClose, Plus, Document, CircleCheck as BarChart3, Check as InfoIcon,
+  ArrowRight, Ticket
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -327,6 +332,7 @@ const recentExams = ref([])
 const pendingExams = ref([])
 const classes = ref([])
 const recentLogs = ref([])
+const departments = ref([])
 const stats = ref({
   totalUsers: 0,
   studentCount: 0,
@@ -370,6 +376,35 @@ const goToUsers = (role) => {
 
 const goToDepartments = () => {
   router.push('/departments')
+}
+
+const goToClasses = () => {
+  router.push('/classes')
+}
+
+const goToPapers = () => {
+  router.push('/papers')
+}
+
+const goToQuestions = () => {
+  router.push('/questions')
+}
+
+const goToExams = () => {
+  router.push('/exams')
+}
+
+const getDepartmentName = (id) => departments.value.find(d => d.id === id)?.name || '-'
+
+const loadDepartments = async () => {
+  try {
+    const res = await departmentApi.list()
+    if (res.code === 200) {
+      departments.value = res.data
+    }
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 const loadRecentExams = async () => {
@@ -477,10 +512,12 @@ onMounted(() => {
   if (userInfo.value.role === 'TEACHER') {
     loadClasses()
     loadRecentExams()
+    loadDepartments()
   } else if (userInfo.value.role === 'STUDENT') {
     loadPendingExams()
   } else if (userInfo.value.role === 'ADMIN') {
     loadLogs()
+    loadDepartments()
   }
   loadStats()
 })
@@ -561,9 +598,30 @@ onMounted(() => {
   color: white;
 }
 
-.teacher-stat .stat-icon {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
+.teacher-stat {
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .stat-icon {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
+  }
+  
+  .stat-arrow {
+    color: #94a3b8;
+    font-size: 18px;
+    transition: all 0.2s;
+  }
+  
+  &:hover .stat-arrow {
+    color: #dc2626;
+    transform: translateX(4px);
+  }
 }
 
 .student-stat .stat-icon {
