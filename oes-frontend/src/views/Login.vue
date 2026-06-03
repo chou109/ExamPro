@@ -268,7 +268,13 @@ const handleLogin = async () => {
     const result = await userStore.login(form)
     
     // 验证登录类型是否匹配
-    if (!showAdminLogin.value) {
+    if (showAdminLogin.value) {
+      // 管理员登录界面只允许 ADMIN 角色登录
+      if (result.role !== 'ADMIN') {
+        throw new Error('不存在此管理员账号')
+      }
+    } else {
+      // 学生/教师登录界面只允许对应角色登录
       const expectedRole = loginType.value === 'student' ? 'STUDENT' : 'TEACHER'
       if (result.role !== expectedRole) {
         throw new Error(loginType.value === 'student' ? '不存在此学生账号' : '不存在此教师账号')

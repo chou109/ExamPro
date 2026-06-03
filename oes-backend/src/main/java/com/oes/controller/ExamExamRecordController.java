@@ -78,6 +78,7 @@ public class ExamExamRecordController {
                 result.put("duration", exam.getDuration());
                 result.put("totalScore", exam.getTotalScore());
                 result.put("examConfig", exam.getAntiCheatConfig());
+                result.put("leaveCount", existRecord.getLeaveCount() != null ? existRecord.getLeaveCount() : 0);
                 return R.ok(result);
             } else if (existRecord != null && "SUBMITTED".equals(existRecord.getStatus())) {
                 // 允许已提交的学生查看结果

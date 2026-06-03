@@ -107,20 +107,30 @@ public class ExamExamRecordService extends ServiceImpl<ExamExamRecordMapper, Exa
 
     @Transactional
     public void submitExam(Long recordId) {
-        ExamExamRecord record = getById(recordId);
-        if (record == null) {
-            throw new RuntimeException("考试记录不存在");
-        }
-        record.setSubmitTime(LocalDateTime.now());
-        record.setStatus("SUBMITTED");
-        updateById(record);
+        try {
+            ExamExamRecord record = getById(recordId);
+            if (record == null) {
+                throw new RuntimeException("考试记录不存在");
+            }
+            record.setSubmitTime(LocalDateTime.now());
+            record.setStatus("SUBMITTED");
+            updateById(record);
 
-        autoGrade(recordId);
-        calculateStatistics(record.getExamId());
+            // 直接执行评分逻辑，不调用事务方法
+            doAutoGrade(recordId);
+            doCalculateStatistics(record.getExamId());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @Transactional
     public void autoGrade(Long recordId) {
+        doAutoGrade(recordId);
+    }
+
+    private void doAutoGrade(Long recordId) {
         ExamExamRecord record = getById(recordId);
         if (record == null) return;
 
@@ -133,8 +143,8 @@ public class ExamExamRecordService extends ServiceImpl<ExamExamRecordMapper, Exa
 
             if (isObjective(question.getType())) {
                 if ("MULTIPLE_CHOICE".equals(question.getType())) {
-                    Integer score = gradeMultipleChoice(question, answer);
-                    answer.setIsCorrect(score >= question.getScore() ? 1 : (score > 0 ? 0 : 0));
+                    int score = gradeMultipleChoice(question, answer);
+                    answer.setIsCorrect(score >= question.getScore() ? 1 : 0);
                     answer.setAutoScore(score);
 
                     if (score < question.getScore()) {
@@ -178,15 +188,15 @@ public class ExamExamRecordService extends ServiceImpl<ExamExamRecordMapper, Exa
         return correct.equals(student);
     }
 
-    private Integer gradeMultipleChoice(ExamQuestion question, ExamAnswer answer) {
+    private int gradeMultipleChoice(ExamQuestion question, ExamAnswer answer) {
         if (question.getAnswer() == null || answer.getAnswer() == null) {
             return 0;
         }
         String correct = question.getAnswer().trim().toUpperCase();
         String student = answer.getAnswer().trim().toUpperCase();
 
-        java.util.Set<String> correctSet = new java.util.HashSet<>(java.util.Arrays.asList(correct.split(",")));
-        java.util.Set<String> studentSet = new java.util.HashSet<>(java.util.Arrays.asList(student.split(",")));
+        Set<String> correctSet = new HashSet<>(Arrays.asList(correct.split(",")));
+        Set<String> studentSet = new HashSet<>(Arrays.asList(student.split(",")));
 
         boolean hasWrongChoice = false;
         boolean hasAllCorrect = true;
@@ -256,11 +266,15 @@ public class ExamExamRecordService extends ServiceImpl<ExamExamRecordMapper, Exa
     }
 
     private void calculateStatistics(Long examId) {
+        doCalculateStatistics(examId);
+    }
+
+    private void doCalculateStatistics(Long examId) {
         List<ExamExamRecord> records = list(new LambdaQueryWrapper<ExamExamRecord>()
                 .eq(ExamExamRecord::getExamId, examId)
                 .eq(ExamExamRecord::getStatus, "SUBMITTED"));
 
-        if (records.isEmpty()) return;
+        if (records == null || records.isEmpty()) return;
 
         int total = records.size();
         int submitted = records.size();
@@ -269,7 +283,7 @@ public class ExamExamRecordService extends ServiceImpl<ExamExamRecordMapper, Exa
         int min = records.stream().mapToInt(r -> r.getScore() != null ? r.getScore() : 0).min().orElse(0);
         long pass = records.stream().filter(r -> r.getScore() != null && r.getScore() >= 60).count();
         BigDecimal passRate = BigDecimal.valueOf((double) pass / total * 100);
-        int suspicious = (int) records.stream().filter(r -> r.getIsSuspicious() != null && r.getIsSuspicious() ==1).count();
+        int suspicious = (int) records.stream().filter(r -> r.getIsSuspicious() != null && r.getIsSuspicious().equals(1)).count();
 
         ExamStatistics stats = examStatisticsMapper.selectOne(
                 new LambdaQueryWrapper<ExamStatistics>().eq(ExamStatistics::getExamId, examId));

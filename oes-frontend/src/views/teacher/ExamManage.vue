@@ -216,7 +216,7 @@ const form = reactive({
   duration: 120,
   totalScore: 100,
   passRate: 60,
-  config: { shuffleQuestions: true, shuffleOptions: true, leaveDetection: false, maxLeaveCount: 3, allowViewAfterExam: true }
+  config: { shuffleQuestions: true, shuffleOptions: true, leaveDetection: true, maxLeaveCount: 3, allowViewAfterExam: true }
 })
 
 const rules = {
@@ -285,7 +285,7 @@ const onPaperChange = (paperId) => {
 
 const handleCreate = () => {
   const queryClassId = route.query.classId
-  Object.assign(form, { title: '', paperId: null, subjectId: null, classIds: queryClassId ? [parseInt(queryClassId)] : [], startTime: null, endTime: null, duration: 120, totalScore: 100, passRate: 60, config: { shuffleQuestions: true, shuffleOptions: true, leaveDetection: false, maxLeaveCount: 3, allowViewAfterExam: true } })
+  Object.assign(form, { title: '', paperId: null, subjectId: null, classIds: queryClassId ? [parseInt(queryClassId)] : [], startTime: null, endTime: null, duration: 120, totalScore: 100, passRate: 60, config: { shuffleQuestions: true, shuffleOptions: true, leaveDetection: true, maxLeaveCount: 3, allowViewAfterExam: true } })
   dialogVisible.value = true
 }
 
@@ -304,7 +304,7 @@ const handleSubmit = async () => {
       duration: form.duration,
       totalScore: form.totalScore,
       passScore: passScore,
-      config: JSON.stringify(form.config)
+      antiCheatConfig: JSON.stringify(form.config)
     }
     const res = await examApi.create(submitData)
     if (res.code === 200) { ElMessage.success('发布成功'); dialogVisible.value = false; loadData() }

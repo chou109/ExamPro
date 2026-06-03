@@ -261,7 +261,19 @@
                     <p class="exam-desc">总分：{{ exam.totalScore }}分 | 及格线：{{ exam.passScore }}分</p>
                   </div>
                   <div class="exam-action">
-                    <el-button type="danger" :disabled="exam.status !== 'ONGOING'">
+                    <el-button 
+                      v-if="exam.studentStatus === 'SUBMITTED'"
+                      type="success" 
+                      @click="handleJoinExam(exam.id)"
+                    >
+                      查看考试
+                    </el-button>
+                    <el-button 
+                      v-else
+                      type="danger" 
+                      :disabled="exam.status !== 'ONGOING'"
+                      @click="handleJoinExam(exam.id)"
+                    >
                       {{ exam.status === 'ONGOING' ? '进入考试' : '等待开始' }}
                     </el-button>
                   </div>
@@ -394,6 +406,10 @@ const goToExams = () => {
   router.push('/exams')
 }
 
+const handleJoinExam = (examId) => {
+  router.push(`/student/examing/${examId}`)
+}
+
 const getDepartmentName = (id) => departments.value.find(d => d.id === id)?.name || '-'
 
 const loadDepartments = async () => {
@@ -420,9 +436,15 @@ const loadRecentExams = async () => {
 
 const loadPendingExams = async () => {
   try {
-    const res = await examApi.page({ current: 1, size: 5 })
+    const res = await examApi.studentPage({ current: 1, size: 10 })
     if (res.code === 200) {
-      pendingExams.value = res.data.records.filter(e => e.status !== 'FINISHED')
+      // 过滤出未结束且未交卷的考试
+      pendingExams.value = res.data.records.filter(e => 
+        e.exam && e.exam.status !== 'FINISHED' && e.studentStatus !== 'SUBMITTED'
+      ).map(e => ({
+        ...e.exam,
+        studentStatus: e.studentStatus
+      }))
     }
   } catch (e) {
     console.error(e)
