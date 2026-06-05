@@ -173,6 +173,15 @@ public class ExamExamService extends ServiceImpl<ExamExamMapper, ExamExam> {
         return updateById(exam);
     }
 
+    public boolean extendExam(Long examId, Integer minutes) {
+        ExamExam exam = getById(examId);
+        if (exam == null) {
+            throw new RuntimeException("考试不存在");
+        }
+        exam.setEndTime(exam.getEndTime().plusMinutes(minutes));
+        return updateById(exam);
+    }
+
     public List<Long> getClassIds(ExamExam exam) {
         if (!StringUtils.hasText(exam.getClassIds())) {
             return List.of();
@@ -189,7 +198,19 @@ public class ExamExamService extends ServiceImpl<ExamExamMapper, ExamExam> {
     }
 
     public ExamStatistics getStatistics(Long examId) {
-        return examStatisticsMapper.selectOne(
+        ExamStatistics stats = examStatisticsMapper.selectOne(
                 new LambdaQueryWrapper<ExamStatistics>().eq(ExamStatistics::getExamId, examId));
+        if (stats == null) {
+            stats = new ExamStatistics();
+            stats.setExamId(examId);
+            stats.setTotalStudents(0);
+            stats.setSubmittedCount(0);
+            stats.setAvgScore(java.math.BigDecimal.ZERO);
+            stats.setMaxScore(0);
+            stats.setMinScore(0);
+            stats.setPassRate(java.math.BigDecimal.ZERO);
+            stats.setSuspiciousCount(0);
+        }
+        return stats;
     }
 }

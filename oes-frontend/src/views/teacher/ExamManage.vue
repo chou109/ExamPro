@@ -161,15 +161,16 @@
         <el-table-column prop="studentName" label="学生" />
         <el-table-column prop="status" label="状态">
           <template #default="{ row }">
-            <el-tag size="small" :type="row.status === 'SUBMITTED' ? 'success' : row.status === 'ONGOING' ? 'warning' : 'info'">
-              {{ row.status === 'SUBMITTED' ? '已交卷' : row.status === 'ONGOING' ? '进行中' : '未开始' }}
+            <el-tag size="small" :type="getStatusType(row)">
+              {{ getStatusText(row) }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="screenSwitchCount" label="切屏次数" />
+        <el-table-column prop="leaveCount" label="离开次数" />
         <el-table-column prop="isSuspicious" label="可疑">
           <template #default="{ row }">
-            <el-tag size="small" type="warning" v-if="row.isSuspicious">可疑</el-tag>
+            <el-tag size="small" type="warning" v-if="row.isSuspicious === 1">可疑</el-tag>
             <span v-else>-</span>
           </template>
         </el-table-column>
@@ -359,6 +360,22 @@ const loadMonitorData = async () => {
       }
     }
   } catch (e) { console.error(e) }
+}
+
+const getStatusType = (row) => {
+  if (row.status === 'SUBMITTED') {
+    return row.isAutoSubmit === 1 ? 'danger' : 'success'
+  }
+  if (row.status === 'ONGOING') return 'warning'
+  return 'info'
+}
+
+const getStatusText = (row) => {
+  if (row.status === 'SUBMITTED') {
+    return row.isAutoSubmit === 1 ? '强制收卷' : '已交卷'
+  }
+  if (row.status === 'ONGOING') return '进行中'
+  return '未开始'
 }
 
 const handleStats = async (row) => {

@@ -198,6 +198,12 @@ public class ExamExamRecordController {
         return R.ok();
     }
 
+    @PostMapping("/auto-submit/{recordId}")
+    public R<Void> autoSubmit(@PathVariable Long recordId) {
+        examExamRecordService.submitExamAuto(recordId);
+        return R.ok();
+    }
+
     @PostMapping("/screen-switch")
     public R<Void> recordScreenSwitch(@RequestBody Map<String, Long> params) {
         Long recordId = params.get("recordId");

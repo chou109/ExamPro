@@ -164,6 +164,7 @@ export const examRecordApi = {
   saveAnswer: (data) => request.post('/exam-records/answer', data),
   autoSave: (data) => request.post('/exam-records/auto-save', data),
   submit: (id) => request.post(`/exam-records/submit/${id}`),
+  autoSubmit: (id) => request.post(`/exam-records/auto-submit/${id}`),
   screenSwitch: (data) => request.post('/exam-records/screen-switch', data),
   reportLeave: (data) => request.post('/exam-records/report-leave', data),
   getAnswers: (id) => request.get(`/exam-records/${id}/answers`),

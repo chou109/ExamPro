@@ -26,6 +26,7 @@ D:\周超\Documents\大三下\J2EE\exam_pro\oes-backend\src\main\java\com\oes\co
 D:\周超\Documents\大三下\J2EE\exam_pro\oes-backend\src\main\java\com\oes\service\ExamQuestionService.java
 D:\周超\Documents\大三下\J2EE\exam_pro\oes-backend\src\main\java\com\oes\interceptor\AuthInterceptor.java
 D:\周超\Documents\大三下\J2EE\exam_pro\oes-backend\src\main\java\com\oes\mapper\ExamKnowledgePointMapper.java
+D:\周超\Documents\大三下\J2EE\exam_pro\oes-backend\src\main\java\com\oes\task\ExamStatusTask.java
 D:\周超\Documents\大三下\J2EE\exam_pro\oes-backend\src\main\java\com\oes\entity\ExamExamRecord.java
 D:\周超\Documents\大三下\J2EE\exam_pro\oes-backend\src\main\java\com\oes\mapper\SysUserMapper.java
 D:\周超\Documents\大三下\J2EE\exam_pro\oes-backend\src\main\java\com\oes\mapper\SysClassMemberMapper.java

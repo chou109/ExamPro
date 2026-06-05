@@ -23,6 +23,7 @@ com\oes\service\SysClassMessageService.class
 com\oes\service\ExamExamService.class
 com\oes\config\MyMetaObjectHandler.class
 com\oes\mapper\SysClassMapper.class
+com\oes\task\ExamStatusTask.class
 com\oes\service\SysDepartmentService.class
 com\oes\controller\SysDepartmentController.class
 com\oes\annotation\Log.class

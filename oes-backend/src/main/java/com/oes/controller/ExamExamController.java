@@ -112,6 +112,12 @@ public class ExamExamController {
         return R.ok();
     }
 
+    @PutMapping("/{id}/extend")
+    public R<Void> extend(@PathVariable Long id, @RequestParam Integer minutes) {
+        examExamService.extendExam(id, minutes);
+        return R.ok();
+    }
+
     @PutMapping("/{id}/finish")
     public R<Void> finish(@PathVariable Long id, HttpServletRequest request) {
         examExamService.finishExam(id);
@@ -162,7 +168,24 @@ public class ExamExamController {
     }
 
     @GetMapping("/{id}/statistics")
-    public R<ExamStatistics> getStatistics(@PathVariable Long id) {
-        return R.ok(examExamService.getStatistics(id));
+    public R<?> getStatistics(@PathVariable Long id) {
+        try {
+            ExamStatistics stats = examExamService.getStatistics(id);
+            if (stats == null) {
+                stats = new ExamStatistics();
+                stats.setExamId(id);
+                stats.setTotalStudents(0);
+                stats.setSubmittedCount(0);
+                stats.setAvgScore(java.math.BigDecimal.ZERO);
+                stats.setMaxScore(0);
+                stats.setMinScore(0);
+                stats.setPassRate(java.math.BigDecimal.ZERO);
+                stats.setSuspiciousCount(0);
+            }
+            return R.ok(stats);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return R.error("获取统计信息失败: " + e.getMessage());
+        }
     }
 }

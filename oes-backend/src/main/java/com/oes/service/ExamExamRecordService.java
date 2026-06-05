@@ -107,6 +107,20 @@ public class ExamExamRecordService extends ServiceImpl<ExamExamRecordMapper, Exa
 
     @Transactional
     public void submitExam(Long recordId) {
+        ExamExamRecord record = getById(recordId);
+        if (record == null) {
+            throw new RuntimeException("考试记录不存在");
+        }
+        record.setSubmitTime(LocalDateTime.now());
+        record.setStatus("SUBMITTED");
+        updateById(record);
+
+        doAutoGrade(recordId);
+        doCalculateStatistics(record.getExamId());
+    }
+
+    @Transactional
+    public void submitExamAuto(Long recordId) {
         try {
             ExamExamRecord record = getById(recordId);
             if (record == null) {
@@ -114,14 +128,15 @@ public class ExamExamRecordService extends ServiceImpl<ExamExamRecordMapper, Exa
             }
             record.setSubmitTime(LocalDateTime.now());
             record.setStatus("SUBMITTED");
+            record.setIsAutoSubmit(1);
+            record.setIsSuspicious(1);
             updateById(record);
 
-            // 直接执行评分逻辑，不调用事务方法
             doAutoGrade(recordId);
             doCalculateStatistics(record.getExamId());
         } catch (Exception e) {
             e.printStackTrace();
-            throw e;
+            throw new RuntimeException("强制收卷失败: " + e.getMessage(), e);
         }
     }
 

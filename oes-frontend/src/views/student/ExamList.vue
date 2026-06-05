@@ -60,13 +60,17 @@ const formatTime = (time) => {
 }
 
 const getExamStatusType = (item) => {
-  if (item.studentStatus === 'SUBMITTED') return 'success'
+  if (item.studentStatus === 'SUBMITTED') {
+    return item.isAutoSubmit === 1 ? 'danger' : 'success'
+  }
   if (item.exam.status === 'ONGOING') return 'warning'
   return 'info'
 }
 
 const getExamStatusText = (item) => {
-  if (item.studentStatus === 'SUBMITTED') return '已完成'
+  if (item.studentStatus === 'SUBMITTED') {
+    return item.isAutoSubmit === 1 ? '强制收卷' : '已完成'
+  }
   if (item.exam.status === 'ONGOING') return '进行中'
   return '即将开始'
 }
