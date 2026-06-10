@@ -170,7 +170,8 @@ export const examRecordApi = {
   getAnswers: (id) => request.get(`/exam-records/${id}/answers`),
   getStudentHistory: (params) => request.get('/exam-records/student/history', { params }),
   getAnalysis: (params) => request.get('/exam-records/analysis', { params }),
-  getStudentStats: () => request.get('/exam-records/student/stats')
+  getStudentStats: () => request.get('/exam-records/student/stats'),
+  getStudentSubjectScores: () => request.get('/exam-records/student/subject-scores')
 }
 
 export const wrongQuestionApi = {

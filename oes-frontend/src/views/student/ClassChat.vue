@@ -31,8 +31,32 @@
           </div>
           <div class="message-content-wrapper">
             <p class="message-sender">{{ getSenderName(msg.senderId) }}</p>
-            <div class="message-bubble">
+            <div class="message-bubble" v-if="!isExamNotice(msg)">
               <p class="message-text">{{ msg.content }}</p>
+            </div>
+            <div class="exam-notice" v-else>
+              <div class="notice-header">
+                <span class="notice-icon">{{ parseExamNotice(msg.content)?.noticeType === 'START' ? '🚀' : '📢' }}</span>
+                <span class="notice-title">{{ parseExamNotice(msg.content)?.title }}</span>
+                <span class="notice-badge">{{ parseExamNotice(msg.content)?.noticeType === 'START' ? '进行中' : '待开始' }}</span>
+              </div>
+              <div class="notice-info">
+                <div class="info-item">
+                  <span class="info-icon">📅</span>
+                  <span>开始时间：{{ parseExamNotice(msg.content)?.startTime }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-icon">🔚</span>
+                  <span>结束时间：{{ parseExamNotice(msg.content)?.endTime }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-icon">⏱️</span>
+                  <span>考试时长：{{ parseExamNotice(msg.content)?.duration }}分钟</span>
+                </div>
+              </div>
+              <div class="notice-action">
+                <el-button type="primary" size="small" @click="goToExamList(msg)">{{ parseExamNotice(msg.content)?.noticeType === 'START' ? '进入考试' : '查看考试' }}</el-button>
+              </div>
             </div>
             <p class="message-time">{{ formatTime(msg.createTime) }}</p>
           </div>
@@ -112,6 +136,35 @@ const messageList = ref(null)
 const isSelfMessage = (senderId) => {
   const userId = userStore.userInfo?.userId || localStorage.getItem('userId')
   return String(senderId) === String(userId)
+}
+
+// 判断是否是考试通知
+const isExamNotice = (msg) => {
+  return msg.content?.startsWith('EXAM_NOTICE|')
+}
+
+// 解析考试通知
+const parseExamNotice = (content) => {
+  if (!content?.startsWith('EXAM_NOTICE|')) return null
+  const parts = content.split('|')
+  return {
+    title: parts[1] || '',
+    startTime: parts[2] || '',
+    endTime: parts[3] || '',
+    duration: parts[4] || '',
+    examId: parts[5] || '',
+    noticeType: parts[6] || 'PUBLISH'
+  }
+}
+
+// 跳转考试列表或考试页面
+const goToExamList = (msg) => {
+  const examInfo = parseExamNotice(msg.content)
+  if (examInfo && examInfo.noticeType === 'START' && examInfo.examId) {
+    router.push(`/student/examing/${examInfo.examId}`)
+  } else {
+    router.push('/student/exams')
+  }
 }
 
 const loadClassInfo = async () => {
@@ -247,7 +300,6 @@ watch(() => route.params.id, (newId) => {
   display: flex;
   flex-direction: column;
   background: #f5f5f5;
-  margin-left: 200px;
 }
 
 .chat-header {
@@ -335,6 +387,70 @@ watch(() => route.params.id, (newId) => {
   margin: 4px 0 0 0;
   font-size: 12px;
   color: #ccc;
+}
+
+.exam-notice {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  border-radius: 12px;
+  padding: 16px;
+  color: #fff;
+  min-width: 280px;
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+}
+
+.exam-notice .notice-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.exam-notice .notice-icon {
+  font-size: 20px;
+}
+
+.exam-notice .notice-title {
+  font-size: 16px;
+  font-weight: bold;
+  flex: 1;
+}
+
+.exam-notice .notice-badge {
+  background: rgba(255, 255, 255, 0.3);
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.exam-notice .notice-info {
+  margin-bottom: 12px;
+}
+
+.exam-notice .info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.exam-notice .info-icon {
+  font-size: 14px;
+}
+
+.exam-notice .notice-action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.exam-notice .notice-action .el-button {
+  background: #fff;
+  color: #ff6b6b;
+  border: none;
+}
+
+.exam-notice .notice-action .el-button:hover {
+  background: #f8f9fa;
 }
 
 /* 自己发送的消息 - 右侧显示 */

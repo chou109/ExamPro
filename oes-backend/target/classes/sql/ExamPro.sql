@@ -194,8 +194,8 @@ CREATE TABLE IF NOT EXISTS `exam_question` (
 -- Table structure for exam_statistics
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `exam_statistics` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '统计ID',
-  `exam_id` bigint(20) NOT NULL COMMENT '考试ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '统计 ID',
+  `exam_id` bigint(20) NOT NULL COMMENT '考试 ID',
   `total_students` int(11) DEFAULT '0' COMMENT '总考生数',
   `submitted_count` int(11) DEFAULT '0' COMMENT '已交卷人数',
   `avg_score` decimal(5,2) DEFAULT NULL COMMENT '平均分',
@@ -203,6 +203,7 @@ CREATE TABLE IF NOT EXISTS `exam_statistics` (
   `min_score` int(11) DEFAULT NULL COMMENT '最低分',
   `pass_rate` decimal(5,2) DEFAULT NULL COMMENT '及格率',
   `suspicious_count` int(11) DEFAULT '0' COMMENT '可疑试卷数',
+  `deleted` tinyint(1) DEFAULT '0' COMMENT '逻辑删除标志',
   `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),

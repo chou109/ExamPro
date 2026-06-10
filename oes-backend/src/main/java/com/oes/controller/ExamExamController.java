@@ -41,10 +41,12 @@ public class ExamExamController {
     public R<PageResult<Map<String, Object>>> studentPage(
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
             HttpServletRequest request) {
         String token = request.getHeader("Authorization").replace("Bearer ", "");
         Long studentId = jwtUtils.getUserIdFromToken(token);
-        return R.ok(examExamService.studentPageWithStatus(current, size, studentId));
+        return R.ok(examExamService.studentPageWithStatus(current, size, studentId, keyword, status));
     }
 
     @GetMapping("/{id}")

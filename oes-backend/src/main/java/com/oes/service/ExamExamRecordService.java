@@ -127,13 +127,21 @@ public class ExamExamRecordService extends ServiceImpl<ExamExamRecordMapper, Exa
                 throw new RuntimeException("考试记录不存在");
             }
             record.setSubmitTime(LocalDateTime.now());
-            record.setStatus("SUBMITTED");
+            record.setStatus("AUTO_SUBMITTED");
             record.setIsAutoSubmit(1);
-            record.setIsSuspicious(1);
             updateById(record);
 
-            doAutoGrade(recordId);
-            doCalculateStatistics(record.getExamId());
+            try {
+                doAutoGrade(recordId);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            
+            try {
+                doCalculateStatistics(record.getExamId());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("强制收卷失败: " + e.getMessage(), e);
@@ -287,7 +295,7 @@ public class ExamExamRecordService extends ServiceImpl<ExamExamRecordMapper, Exa
     private void doCalculateStatistics(Long examId) {
         List<ExamExamRecord> records = list(new LambdaQueryWrapper<ExamExamRecord>()
                 .eq(ExamExamRecord::getExamId, examId)
-                .eq(ExamExamRecord::getStatus, "SUBMITTED"));
+                .in(ExamExamRecord::getStatus, "SUBMITTED", "AUTO_SUBMITTED"));
 
         if (records == null || records.isEmpty()) return;
 
@@ -327,7 +335,7 @@ public class ExamExamRecordService extends ServiceImpl<ExamExamRecordMapper, Exa
 
         List<ExamExamRecord> records = list(new LambdaQueryWrapper<ExamExamRecord>()
                 .eq(ExamExamRecord::getExamId, examId)
-                .eq(ExamExamRecord::getStatus, "SUBMITTED"));
+                .in(ExamExamRecord::getStatus, "SUBMITTED", "AUTO_SUBMITTED"));
 
         if (!records.isEmpty()) {
             double avg = records.stream().mapToInt(r -> r.getScore() != null ? r.getScore() : 0).average().orElse(0);
@@ -350,7 +358,7 @@ public class ExamExamRecordService extends ServiceImpl<ExamExamRecordMapper, Exa
 
         List<ExamExamRecord> records = list(new LambdaQueryWrapper<ExamExamRecord>()
                 .eq(ExamExamRecord::getStudentId, studentId)
-                .eq(ExamExamRecord::getStatus, "SUBMITTED"));
+                .in(ExamExamRecord::getStatus, "SUBMITTED", "AUTO_SUBMITTED"));
 
         if (!records.isEmpty()) {
             int totalExams = records.size();
@@ -387,7 +395,7 @@ public class ExamExamRecordService extends ServiceImpl<ExamExamRecordMapper, Exa
     public Double getAverageScoreByStudent(Long studentId) {
         List<ExamExamRecord> records = list(new LambdaQueryWrapper<ExamExamRecord>()
                 .eq(ExamExamRecord::getStudentId, studentId)
-                .eq(ExamExamRecord::getStatus, "SUBMITTED"));
+                .in(ExamExamRecord::getStatus, "SUBMITTED", "AUTO_SUBMITTED"));
 
         if (records.isEmpty()) {
             return null;

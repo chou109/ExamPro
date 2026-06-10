@@ -146,6 +146,12 @@
         </el-col>
         <el-col :span="6">
           <div class="stat-item">
+            <span class="label">强制收卷</span>
+            <span class="value danger">{{ monitorStats.autoSubmitted }}</span>
+          </div>
+        </el-col>
+        <el-col :span="6">
+          <div class="stat-item">
             <span class="label">进行中</span>
             <span class="value">{{ monitorStats.ongoing }}</span>
           </div>
@@ -166,11 +172,10 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="screenSwitchCount" label="切屏次数" />
         <el-table-column prop="leaveCount" label="离开次数" />
         <el-table-column prop="isSuspicious" label="可疑">
           <template #default="{ row }">
-            <el-tag size="small" type="warning" v-if="row.isSuspicious === 1">可疑</el-tag>
+            <el-tag size="small" type="warning" v-if="row.status !== 'AUTO_SUBMITTED' && row.leaveCount > 0">可疑</el-tag>
             <span v-else>-</span>
           </template>
         </el-table-column>
@@ -201,7 +206,7 @@ const dialogVisible = ref(false)
 const monitorVisible = ref(false)
 const monitorExam = ref(null)
 const monitorRecords = ref([])
-const monitorStats = ref({ totalStudents: 0, submitted: 0, ongoing: 0, suspicious: 0 })
+const monitorStats = ref({ totalStudents: 0, submitted: 0, autoSubmitted: 0, ongoing: 0, suspicious: 0 })
 const formRef = ref()
 let monitorTimer = null
 
@@ -317,7 +322,27 @@ const handleStart = async (row) => {
   await ElMessageBox.confirm('确定要开始该考试吗？')
   try {
     const res = await examApi.start(row.id)
-    if (res.code === 200) { ElMessage.success('考试已开始'); loadData() }
+    if (res.code === 200) { 
+      ElMessage.success('考试已开始')
+      loadData()
+      
+      const examInfo = await examApi.getById(row.id)
+      if (examInfo.code === 200) {
+        const examData = examInfo.data
+        const classIds = examData.classIds?.split(',') || []
+        const userId = userStore.userInfo?.userId || localStorage.getItem('userId')
+        
+        const startTime = new Date(examData.startTime)
+        const timeStr = `${startTime.getFullYear()}/${String(startTime.getMonth() + 1).padStart(2, '0')}/${String(startTime.getDate()).padStart(2, '0')} ${String(startTime.getHours()).padStart(2, '0')}:${String(startTime.getMinutes()).padStart(2, '0')}`
+        const endTime = new Date(examData.endTime)
+        const endTimeStr = `${endTime.getFullYear()}/${String(endTime.getMonth() + 1).padStart(2, '0')}/${String(endTime.getDate()).padStart(2, '0')} ${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`
+        
+        for (const cId of classIds) {
+          const noticeContent = `EXAM_NOTICE|${examData.title}|${timeStr}|${endTimeStr}|${examData.duration}|${examData.id}|START`
+          await classApi.sendMessage(cId, noticeContent, userId)
+        }
+      }
+    }
   } catch (e) { ElMessage.error(e.message) }
 }
 
@@ -355,24 +380,31 @@ const loadMonitorData = async () => {
       monitorStats.value = {
         totalStudents: res.data.total,
         submitted: res.data.records.filter(r => r.status === 'SUBMITTED').length,
+        autoSubmitted: res.data.records.filter(r => r.status === 'AUTO_SUBMITTED').length,
         ongoing: res.data.records.filter(r => r.status === 'ONGOING').length,
-        suspicious: res.data.records.filter(r => r.isSuspicious === 1).length
+        suspicious: res.data.records.filter(r => r.status !== 'AUTO_SUBMITTED' && r.leaveCount > 0).length
       }
     }
   } catch (e) { console.error(e) }
 }
 
 const getStatusType = (row) => {
+  if (row.status === 'AUTO_SUBMITTED') {
+    return 'danger'
+  }
   if (row.status === 'SUBMITTED') {
-    return row.isAutoSubmit === 1 ? 'danger' : 'success'
+    return 'success'
   }
   if (row.status === 'ONGOING') return 'warning'
   return 'info'
 }
 
 const getStatusText = (row) => {
+  if (row.status === 'AUTO_SUBMITTED') {
+    return '强制收卷'
+  }
   if (row.status === 'SUBMITTED') {
-    return row.isAutoSubmit === 1 ? '强制收卷' : '已交卷'
+    return '已交卷'
   }
   if (row.status === 'ONGOING') return '进行中'
   return '未开始'
@@ -400,4 +432,5 @@ onUnmounted(() => { if (monitorTimer) clearInterval(monitorTimer) })
 .stat-item .label { display: block; font-size: 13px; color: #64748b; margin-bottom: 8px; }
 .stat-item .value { font-size: 24px; font-weight: 700; color: #1e293b; }
 .stat-item .value.warning { color: #f59e0b; }
+.stat-item .value.danger { color: #ef4444; }
 </style>

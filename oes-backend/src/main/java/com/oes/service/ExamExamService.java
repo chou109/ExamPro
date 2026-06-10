@@ -51,12 +51,24 @@ public class ExamExamService extends ServiceImpl<ExamExamMapper, ExamExam> {
         return new PageResult<>(result.getTotal(), result.getRecords(), (long) current, (long) size);
     }
 
-    public PageResult<Map<String, Object>> studentPageWithStatus(Integer current, Integer size, Long studentId) {
+    public PageResult<Map<String, Object>> studentPageWithStatus(Integer current, Integer size, Long studentId, String keyword, String status) {
         Page<ExamExam> page = new Page<>(current, size);
         LambdaQueryWrapper<ExamExam> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ExamExam::getStatus, "ONGOING");
-        wrapper.or(w -> w.eq(ExamExam::getStatus, "PENDING")
-                .gt(ExamExam::getEndTime, LocalDateTime.now()));
+        
+        // 状态筛选
+        if (StringUtils.hasText(status)) {
+            wrapper.eq(ExamExam::getStatus, status);
+        } else {
+            wrapper.eq(ExamExam::getStatus, "ONGOING");
+            wrapper.or(w -> w.eq(ExamExam::getStatus, "PENDING")
+                    .gt(ExamExam::getEndTime, LocalDateTime.now()));
+        }
+        
+        // 关键词搜索
+        if (StringUtils.hasText(keyword)) {
+            wrapper.like(ExamExam::getTitle, keyword);
+        }
+        
         wrapper.orderByAsc(ExamExam::getStartTime);
         IPage<ExamExam> result = page(page, wrapper);
         
@@ -67,18 +79,16 @@ public class ExamExamService extends ServiceImpl<ExamExamMapper, ExamExam> {
             
             if (studentId != null) {
                 ExamExamRecord record = examExamRecordService.getByExamAndStudent(exam.getId(), studentId);
-                System.out.println("========== studentPageWithStatus debug ==========");
-                System.out.println("examId: " + exam.getId() + ", studentId: " + studentId);
-                System.out.println("record: " + (record != null ? record.getId() + ", status: " + record.getStatus() : "null"));
                 if (record != null && "SUBMITTED".equals(record.getStatus())) {
                     map.put("studentStatus", "SUBMITTED");
+                } else if (record != null && "AUTO_SUBMITTED".equals(record.getStatus())) {
+                    map.put("studentStatus", "AUTO_SUBMITTED");
                 } else if (record != null && "ONGOING".equals(record.getStatus())) {
                     map.put("studentStatus", "ONGOING");
                 } else {
                     map.put("studentStatus", "NOT_STARTED");
                 }
             } else {
-                System.out.println("========== studentId is null ==========");
                 map.put("studentStatus", "UNKNOWN");
             }
             records.add(map);

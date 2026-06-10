@@ -23,6 +23,7 @@ public class ExamExamRecordController {
     private final ExamExamService examExamService;
     private final ExamQuestionService examQuestionService;
     private final ExamWrongQuestionMapper examWrongQuestionMapper;
+    private final ExamSubjectService examSubjectService;
     private final JwtUtils jwtUtils;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -31,12 +32,14 @@ public class ExamExamRecordController {
                                     ExamExamService examExamService,
                                     ExamQuestionService examQuestionService,
                                     ExamWrongQuestionMapper examWrongQuestionMapper,
+                                    ExamSubjectService examSubjectService,
                                     JwtUtils jwtUtils) {
         this.examExamRecordService = examExamRecordService;
         this.examPaperService = examPaperService;
         this.examExamService = examExamService;
         this.examQuestionService = examQuestionService;
         this.examWrongQuestionMapper = examWrongQuestionMapper;
+        this.examSubjectService = examSubjectService;
         this.jwtUtils = jwtUtils;
     }
 
@@ -80,7 +83,7 @@ public class ExamExamRecordController {
                 result.put("examConfig", exam.getAntiCheatConfig());
                 result.put("leaveCount", existRecord.getLeaveCount() != null ? existRecord.getLeaveCount() : 0);
                 return R.ok(result);
-            } else if (existRecord != null && "SUBMITTED".equals(existRecord.getStatus())) {
+            } else if (existRecord != null && ("SUBMITTED".equals(existRecord.getStatus()) || "AUTO_SUBMITTED".equals(existRecord.getStatus()))) {
                 // 允许已提交的学生查看结果
                 Map<String, Object> result = new HashMap<>();
                 result.put("recordId", existRecord.getId());
@@ -117,16 +120,27 @@ public class ExamExamRecordController {
                 result.put("hasSubjectiveUngraded", hasSubjectiveUngraded);
 
                 // 判断是否允许查看试卷
-                boolean allowView = exam.getEndTime().isBefore(java.time.LocalDateTime.now());
-                if (!allowView && exam.getAntiCheatConfig() != null) {
+                boolean allowView = false;
+                
+                // 检查防作弊配置中的 allowViewAfterExam 设置
+                if (exam.getAntiCheatConfig() != null) {
                     try {
                         Map<String, Object> config = objectMapper.readValue(exam.getAntiCheatConfig(), Map.class);
-                        if (config != null && config.containsKey("allowViewAfterExam")) {
-                            allowView = Boolean.TRUE.equals(config.get("allowViewAfterExam"));
+                        if (config != null) {
+                            // 如果明确配置了 allowViewAfterExam，则按照配置来
+                            if (config.containsKey("allowViewAfterExam")) {
+                                allowView = Boolean.TRUE.equals(config.get("allowViewAfterExam"));
+                            } else {
+                                // 如果没有配置，默认不允许查看
+                                allowView = false;
+                            }
                         }
                     } catch (Exception e) {
                         allowView = false;
                     }
+                } else {
+                    // 如果没有防作弊配置，检查考试是否已结束
+                    allowView = exam.getEndTime().isBefore(java.time.LocalDateTime.now());
                 }
                 // 如果有主观题未评分，也不能查看详细答案
                 if (hasSubjectiveUngraded) {
@@ -194,14 +208,24 @@ public class ExamExamRecordController {
 
     @PostMapping("/submit/{recordId}")
     public R<Void> submit(@PathVariable Long recordId) {
-        examExamRecordService.submitExam(recordId);
-        return R.ok();
+        try {
+            examExamRecordService.submitExam(recordId);
+            return R.ok();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return R.error("交卷失败: " + e.getMessage());
+        }
     }
 
     @PostMapping("/auto-submit/{recordId}")
     public R<Void> autoSubmit(@PathVariable Long recordId) {
-        examExamRecordService.submitExamAuto(recordId);
-        return R.ok();
+        try {
+            examExamRecordService.submitExamAuto(recordId);
+            return R.ok();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return R.error("强制收卷失败: " + e.getMessage());
+        }
     }
 
     @PostMapping("/screen-switch")
@@ -238,7 +262,7 @@ public class ExamExamRecordController {
         String token = request.getHeader("Authorization").replace("Bearer ", "");
         Long studentId = jwtUtils.getUserIdFromToken(token);
 
-        PageResult<ExamExamRecord> pageResult = examExamRecordService.page(current, size, null, studentId, "SUBMITTED");
+        PageResult<ExamExamRecord> pageResult = examExamRecordService.page(current, size, null, studentId, null);
 
         List<Map<String, Object>> records = pageResult.getRecords().stream().map(record -> {
             Map<String, Object> map = new HashMap<>();
@@ -246,7 +270,7 @@ public class ExamExamRecordController {
             map.put("examId", record.getExamId());
             map.put("score", record.getScore());
             map.put("submitTime", record.getSubmitTime());
-            map.put("status", record.getStatus());
+            map.put("studentStatus", record.getStatus());
 
             ExamExam exam = examExamService.getById(record.getExamId());
             if (exam != null) {
@@ -288,9 +312,10 @@ public class ExamExamRecordController {
         Long ongoingCount = examExamRecordService.countByStudentAndStatus(studentId, "ONGOING");
         stats.put("pendingExams", pendingCount + ongoingCount);
 
-        // 已完成考试数量
-        Long completedCount = examExamRecordService.countByStudentAndStatus(studentId, "SUBMITTED");
-        stats.put("completedExams", completedCount);
+        // 已完成考试数量（包括主动提交和强制收卷）
+        Long submittedCount = examExamRecordService.countByStudentAndStatus(studentId, "SUBMITTED");
+        Long autoSubmittedCount = examExamRecordService.countByStudentAndStatus(studentId, "AUTO_SUBMITTED");
+        stats.put("completedExams", submittedCount + autoSubmittedCount);
 
         // 错题数量
         Long wrongCount = examWrongQuestionMapper.selectCount(
@@ -303,6 +328,47 @@ public class ExamExamRecordController {
         stats.put("averageScore", averageScore != null ? Math.round(averageScore * 10) / 10.0 : 0);
 
         return R.ok(stats);
+    }
+
+    @GetMapping("/student/subject-scores")
+    public R<List<Map<String, Object>>> getStudentSubjectScores(HttpServletRequest request) {
+        String token = request.getHeader("Authorization").replace("Bearer ", "");
+        Long studentId = jwtUtils.getUserIdFromToken(token);
+
+        List<ExamExamRecord> records = examExamRecordService.list(new LambdaQueryWrapper<ExamExamRecord>()
+                .eq(ExamExamRecord::getStudentId, studentId)
+                .in(ExamExamRecord::getStatus, "SUBMITTED", "AUTO_SUBMITTED"));
+
+        Map<Long, List<Integer>> subjectScores = new HashMap<>();
+
+        for (ExamExamRecord record : records) {
+            ExamExam exam = examExamService.getById(record.getExamId());
+            if (exam != null && record.getScore() != null) {
+                subjectScores.computeIfAbsent(exam.getSubjectId(), k -> new ArrayList<>()).add(record.getScore());
+            }
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (Map.Entry<Long, List<Integer>> entry : subjectScores.entrySet()) {
+            Long subjectId = entry.getKey();
+            List<Integer> scores = entry.getValue();
+
+            ExamSubject subject = examSubjectService.getById(subjectId);
+            String subjectName = subject != null ? subject.getName() : "未知科目";
+
+            double avgScore = scores.stream().mapToInt(Integer::intValue).average().orElse(0);
+
+            Map<String, Object> subjectScore = new HashMap<>();
+            subjectScore.put("subjectId", subjectId);
+            subjectScore.put("subjectName", subjectName);
+            subjectScore.put("avgScore", Math.round(avgScore * 10) / 10.0);
+            subjectScore.put("examCount", scores.size());
+
+            result.add(subjectScore);
+        }
+
+        return R.ok(result);
     }
 
     private boolean isSubjective(String type) {

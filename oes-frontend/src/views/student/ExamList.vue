@@ -5,6 +5,34 @@
       <p>查看并参加待进行的考试</p>
     </div>
 
+    <!-- 搜索和筛选区域 -->
+    <div class="search-bar">
+      <el-input
+        v-model="searchForm.keyword"
+        placeholder="搜索考试名称"
+        class="search-input"
+        @keyup.enter.native="handleSearch"
+      >
+        <template #prefix>
+          <el-icon><Search /></el-icon>
+        </template>
+        <template #suffix>
+          <el-button type="danger" @click="handleSearch">搜索</el-button>
+        </template>
+      </el-input>
+      <el-select
+        v-model="searchForm.status"
+        placeholder="筛选状态"
+        class="status-select"
+        @change="handleSearch"
+      >
+        <el-option label="全部" value="" />
+        <el-option label="待开始" value="PENDING" />
+        <el-option label="进行中" value="ONGOING" />
+        <el-option label="已结束" value="FINISHED" />
+      </el-select>
+    </div>
+
     <el-row :gutter="24">
       <el-col :span="8" v-for="item in tableData" :key="item.exam.id">
         <div class="exam-card">
@@ -49,10 +77,15 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Search } from '@element-plus/icons-vue'
 import { examApi } from '../../utils/api'
 
 const router = useRouter()
 const tableData = ref([])
+const searchForm = ref({
+  keyword: '',
+  status: ''
+})
 
 const formatTime = (time) => {
   if (!time) return ''
@@ -60,31 +93,37 @@ const formatTime = (time) => {
 }
 
 const getExamStatusType = (item) => {
+  if (item.studentStatus === 'AUTO_SUBMITTED') {
+    return 'danger'
+  }
   if (item.studentStatus === 'SUBMITTED') {
-    return item.isAutoSubmit === 1 ? 'danger' : 'success'
+    return 'success'
   }
   if (item.exam.status === 'ONGOING') return 'warning'
   return 'info'
 }
 
 const getExamStatusText = (item) => {
+  if (item.studentStatus === 'AUTO_SUBMITTED') {
+    return '强制收卷'
+  }
   if (item.studentStatus === 'SUBMITTED') {
-    return item.isAutoSubmit === 1 ? '强制收卷' : '已完成'
+    return '已完成'
   }
   if (item.exam.status === 'ONGOING') return '进行中'
   return '即将开始'
 }
 
 const canJoin = (item) => {
-  return item.exam.status === 'ONGOING' && item.studentStatus !== 'SUBMITTED'
+  return item.exam.status === 'ONGOING' && item.studentStatus !== 'SUBMITTED' && item.studentStatus !== 'AUTO_SUBMITTED'
 }
 
 const canView = (item) => {
-  return item.studentStatus === 'SUBMITTED'
+  return item.studentStatus === 'SUBMITTED' || item.studentStatus === 'AUTO_SUBMITTED'
 }
 
 const getButtonText = (item) => {
-  if (item.studentStatus === 'SUBMITTED') return '查看详情'
+  if (item.studentStatus === 'SUBMITTED' || item.studentStatus === 'AUTO_SUBMITTED') return '查看详情'
   if (item.exam.status === 'ONGOING') return '进入考试'
   return '等待开始'
 }
@@ -93,9 +132,19 @@ const handleJoin = (exam) => {
   router.push(`/student/examing/${exam.id}`)
 }
 
+const handleSearch = () => {
+  loadData()
+}
+
 const loadData = async () => {
   try {
-    const res = await examApi.studentPage({ current: 1, size: 20 })
+    const params = { 
+      current: 1, 
+      size: 20,
+      keyword: searchForm.value.keyword,
+      status: searchForm.value.status
+    }
+    const res = await examApi.studentPage(params)
     if (res.code === 200) {
       tableData.value = res.data.records
     }
@@ -107,6 +156,24 @@ onMounted(() => { loadData() })
 
 <style lang="scss" scoped>
 .exam-list { max-width: 1200px; }
+
+.search-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  
+  .search-input {
+    width: 260px;
+  }
+  
+  .status-select {
+    width: 150px;
+  }
+}
 
 .exam-card {
   background: white;

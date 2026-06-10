@@ -111,7 +111,7 @@
       <!-- 学生统计 -->
       <template v-else-if="userInfo.role === 'STUDENT'">
         <el-col :span="6">
-          <div class="stat-card student-stat">
+          <div class="stat-card student-stat cursor-pointer" @click="goToExamList">
             <div class="stat-icon">
               <el-icon><Clock /></el-icon>
             </div>
@@ -119,10 +119,11 @@
               <p class="stat-value">{{ stats.pendingExams }}</p>
               <p class="stat-label">待考考试</p>
             </div>
+            <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
           </div>
         </el-col>
         <el-col :span="6">
-          <div class="stat-card student-stat">
+          <div class="stat-card student-stat cursor-pointer" @click="goToHistory">
             <div class="stat-icon">
               <el-icon><CircleCheck /></el-icon>
             </div>
@@ -130,10 +131,11 @@
               <p class="stat-value">{{ stats.completedExams }}</p>
               <p class="stat-label">已完成</p>
             </div>
+            <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
           </div>
         </el-col>
         <el-col :span="6">
-          <div class="stat-card student-stat">
+          <div class="stat-card student-stat cursor-pointer" @click="goToWrongQuestions">
             <div class="stat-icon">
               <el-icon><CircleClose /></el-icon>
             </div>
@@ -141,10 +143,11 @@
               <p class="stat-value">{{ stats.wrongCount }}</p>
               <p class="stat-label">错题数</p>
             </div>
+            <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
           </div>
         </el-col>
         <el-col :span="6">
-          <div class="stat-card student-stat">
+          <div class="stat-card student-stat cursor-pointer" @click="goToStatistics">
             <div class="stat-icon">
               <el-icon><Plus /></el-icon>
             </div>
@@ -152,6 +155,7 @@
               <p class="stat-value">{{ stats.averageScore }}分</p>
               <p class="stat-label">平均分</p>
             </div>
+            <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
           </div>
         </el-col>
       </template>
@@ -406,6 +410,23 @@ const goToExams = () => {
   router.push('/exams')
 }
 
+// 学生端跳转函数
+const goToExamList = () => {
+  router.push('/student/exams')
+}
+
+const goToHistory = () => {
+  router.push('/student/history')
+}
+
+const goToWrongQuestions = () => {
+  router.push('/student/wrong')
+}
+
+const goToStatistics = () => {
+  router.push('/student/statistics')
+}
+
 const handleJoinExam = (examId) => {
   router.push(`/student/examing/${examId}`)
 }
@@ -646,9 +667,30 @@ onMounted(() => {
   }
 }
 
-.student-stat .stat-icon {
-  background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
-  color: white;
+.student-stat {
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  }
+  
+  .stat-icon {
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
+    color: white;
+  }
+  
+  .stat-arrow {
+    color: #94a3b8;
+    font-size: 18px;
+    transition: all 0.2s;
+  }
+  
+  &:hover .stat-arrow {
+    color: #dc2626;
+    transform: translateX(4px);
+  }
 }
 
 /* 班级列表 */
