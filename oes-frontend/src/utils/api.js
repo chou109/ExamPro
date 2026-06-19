@@ -182,13 +182,20 @@ export const examRecordApi = {
   getStudentHistory: (params) => request.get('/exam-records/student/history', { params }),
   getAnalysis: (params) => request.get('/exam-records/analysis', { params }),
   getStudentStats: () => request.get('/exam-records/student/stats'),
-  getStudentSubjectScores: () => request.get('/exam-records/student/subject-scores')
+  getStudentSubjectScores: () => request.get('/exam-records/student/subject-scores'),
+  getScoreTrend: () => request.get('/exam-records/student/score-trend'),
+  getKnowledgeMastery: () => request.get('/exam-records/student/knowledge-mastery'),
+  getExamStats: (examId) => request.get(`/exam-records/teacher/exam-stats/${examId}`),
+  getQuestionAnalysis: (examId) => request.get(`/exam-records/teacher/question-analysis/${examId}`),
+  exportExamScores: (examId) => request.get(`/exam-records/teacher/export/${examId}`)
 }
 
 export const wrongQuestionApi = {
   page: (params) => request.get('/wrong-questions/page', { params }),
   getById: (id) => request.get(`/wrong-questions/${id}`),
-  practice: (id) => request.post(`/wrong-questions/${id}/practice`)
+  practice: (id) => request.post(`/wrong-questions/${id}/practice`),
+  correct: (id) => request.post(`/wrong-questions/${id}/correct`),
+  updateMastered: (id, mastered) => request.put(`/wrong-questions/${id}/mastered`, null, { params: { mastered } })
 }
 
 export const statisticsApi = {

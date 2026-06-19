@@ -15,5 +15,7 @@ public class ExamWrongQuestion extends BaseEntity {
     private String wrongAnswer;
     private String correctAnswer;
     private Integer practicedCount;
+    private Integer correctCount;
     private java.time.LocalDateTime lastPracticeTime;
+    private Integer mastered;
 }

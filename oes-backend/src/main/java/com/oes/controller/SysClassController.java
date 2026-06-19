@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/classes")
@@ -68,10 +69,21 @@ public class SysClassController {
     }
 
     @PostMapping
-    public R<SysClass> create(@RequestBody SysClass sysClass) {
-        if (sysClass.getName() == null || sysClass.getName().trim().isEmpty()) {
+    public R<SysClass> create(@RequestBody Map<String, Object> request) {
+        // 手动处理字段映射
+        String className = (String) request.get("className");
+        if (className == null || className.trim().isEmpty()) {
             return R.error("班级名称不能为空");
         }
+        
+        SysClass sysClass = new SysClass();
+        sysClass.setName(className);
+        sysClass.setCode((String) request.get("code"));
+        
+        if (request.get("departmentId") != null) {
+            sysClass.setDepartmentId(Long.parseLong(request.get("departmentId").toString()));
+        }
+        sysClass.setGrade((String) request.get("grade"));
         
         String inviteCode = generateInviteCode();
         sysClass.setInviteCode(inviteCode);
@@ -91,20 +103,43 @@ public class SysClassController {
     }
 
     @PutMapping
-    public R<Void> update(@RequestBody SysClass sysClass) {
-        if (sysClass.getId() == null) {
+    public R<Void> update(@RequestBody Map<String, Object> request) {
+        if (request.get("id") == null) {
             return R.error("ID 不能为空");
         }
+        
+        Long id = Long.parseLong(request.get("id").toString());
         // 先查询原有数据
-        SysClass existing = sysClassService.getById(sysClass.getId());
+        SysClass existing = sysClassService.getById(id);
         if (existing == null) {
             return R.error("班级不存在");
         }
-        // 更新字段
-        existing.setName(sysClass.getName());
-        existing.setCode(sysClass.getCode());
-        existing.setDepartmentId(sysClass.getDepartmentId());
-        existing.setGrade(sysClass.getGrade());
+        
+        // 更新字段（支持 className 字段）
+        String className = (String) request.get("className");
+        if (className != null && !className.trim().isEmpty()) {
+            existing.setName(className);
+        }
+        
+        String name = (String) request.get("name");
+        if (name != null && !name.trim().isEmpty()) {
+            existing.setName(name);
+        }
+        
+        String code = (String) request.get("code");
+        if (code != null) {
+            existing.setCode(code);
+        }
+        
+        if (request.get("departmentId") != null) {
+            existing.setDepartmentId(Long.parseLong(request.get("departmentId").toString()));
+        }
+        
+        String grade = (String) request.get("grade");
+        if (grade != null) {
+            existing.setGrade(grade);
+        }
+        
         sysClassService.updateById(existing);
         return R.ok();
     }

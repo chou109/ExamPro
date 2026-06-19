@@ -116,12 +116,37 @@
         </div>
       </el-col>
     </el-row>
+
+    <!-- 成绩趋势图 -->
+    <el-row :gutter="24" style="margin-top: 24px;">
+      <el-col :span="24">
+        <div class="card">
+          <div class="card-header">
+            <h3>成绩趋势</h3>
+          </div>
+          <div ref="scoreTrendChart" style="width: 100%; height: 400px;"></div>
+        </div>
+      </el-col>
+    </el-row>
+
+    <!-- 知识点掌握雷达图 -->
+    <el-row :gutter="24" style="margin-top: 24px;">
+      <el-col :span="24">
+        <div class="card">
+          <div class="card-header">
+            <h3>知识点掌握情况</h3>
+          </div>
+          <div ref="knowledgeRadarChart" style="width: 100%; height: 400px;"></div>
+        </div>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { examRecordApi } from '../../utils/api'
+import * as echarts from 'echarts'
 
 const stats = ref({
   totalExams: 0,
@@ -135,6 +160,13 @@ const stats = ref({
 const subjectColors = ['#7f1d1d', '#991b1b', '#b91c1c', '#dc2626', '#ef4444', '#f87171', '#fb923c', '#f59e0b']
 
 const subjectScores = ref([])
+const scoreTrendData = ref([])
+const knowledgeMasteryData = ref([])
+
+const scoreTrendChart = ref(null)
+const knowledgeRadarChart = ref(null)
+let scoreTrendChartInstance = null
+let knowledgeRadarChartInstance = null
 
 const totalAnswers = computed(() => stats.value.correctCount + stats.value.wrongCount + stats.value.skippedCount)
 const correctRate = computed(() => totalAnswers.value > 0 ? Math.round((stats.value.correctCount / totalAnswers.value) * 100) : 0)
@@ -175,9 +207,262 @@ const loadSubjectScores = async () => {
   }
 }
 
+const loadScoreTrend = async () => {
+  try {
+    const res = await examRecordApi.getScoreTrend()
+    if (res.code === 200 && res.data) {
+      scoreTrendData.value = res.data
+      initScoreTrendChart()
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const loadKnowledgeMastery = async () => {
+  try {
+    const res = await examRecordApi.getKnowledgeMastery()
+    if (res.code === 200 && res.data) {
+      knowledgeMasteryData.value = res.data
+      initKnowledgeRadarChart()
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const initScoreTrendChart = () => {
+  if (!scoreTrendChart.value) return
+  
+  if (scoreTrendChartInstance) {
+    scoreTrendChartInstance.dispose()
+  }
+  
+  scoreTrendChartInstance = echarts.init(scoreTrendChart.value)
+  
+  const dates = scoreTrendData.value.map(item => {
+    const date = new Date(item.submitTime)
+    return `${date.getMonth() + 1}/${date.getDate()}`
+  })
+  const scores = scoreTrendData.value.map(item => item.score)
+  const titles = scoreTrendData.value.map(item => item.examTitle)
+  
+  const option = {
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(params) {
+        const index = params[0].dataIndex
+        return `${titles[index]}<br/>分数: ${params[0].value}分`
+      }
+    },
+    grid: {
+      left: '3%',
+      right: '4%',
+      bottom: '3%',
+      containLabel: true
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: dates,
+      axisLine: {
+        lineStyle: {
+          color: '#e2e8f0'
+        }
+      },
+      axisLabel: {
+        color: '#64748b'
+      }
+    },
+    yAxis: {
+      type: 'value',
+      min: 0,
+      max: 100,
+      axisLine: {
+        lineStyle: {
+          color: '#e2e8f0'
+        }
+      },
+      axisLabel: {
+        color: '#64748b'
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#f1f5f9'
+        }
+      }
+    },
+    series: [
+      {
+        name: '分数',
+        type: 'line',
+        smooth: true,
+        data: scores,
+        symbol: 'circle',
+        symbolSize: 8,
+        lineStyle: {
+          width: 3,
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 1,
+            y2: 0,
+            colorStops: [
+              { offset: 0, color: '#dc2626' },
+              { offset: 1, color: '#b91c1c' }
+            ]
+          }
+        },
+        itemStyle: {
+          color: '#dc2626',
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(220, 38, 38, 0.3)' },
+              { offset: 1, color: 'rgba(220, 38, 38, 0.05)' }
+            ]
+          }
+        }
+      }
+    ]
+  }
+  
+  scoreTrendChartInstance.setOption(option)
+}
+
+const initKnowledgeRadarChart = () => {
+  if (!knowledgeRadarChart.value) return
+  
+  if (knowledgeRadarChartInstance) {
+    knowledgeRadarChartInstance.dispose()
+  }
+  
+  knowledgeRadarChartInstance = echarts.init(knowledgeRadarChart.value)
+  
+  const subjects = knowledgeMasteryData.value.map(item => item.subjectName)
+  const masteryRates = knowledgeMasteryData.value.map(item => item.masteryRate)
+  const correctRates = knowledgeMasteryData.value.map(item => item.correctRate)
+  
+  const option = {
+    tooltip: {
+      trigger: 'item',
+      formatter: function(params) {
+        const index = params.dataIndex
+        const data = knowledgeMasteryData.value[index]
+        return `${data.subjectName}<br/>掌握率: ${data.masteryRate}%<br/>正确率: ${data.correctRate}%<br/>总题数: ${data.totalQuestions}<br/>已学会: ${data.masteredQuestions}`
+      }
+    },
+    legend: {
+      data: ['掌握率', '正确率'],
+      bottom: 10,
+      textStyle: {
+        color: '#64748b'
+      }
+    },
+    radar: {
+      indicator: subjects.map(subject => ({
+        name: subject,
+        max: 100
+      })),
+      shape: 'polygon',
+      splitNumber: 5,
+      axisName: {
+        color: '#1e293b',
+        fontSize: 14
+      },
+      splitLine: {
+        lineStyle: {
+          color: '#e2e8f0'
+        }
+      },
+      splitArea: {
+        show: true,
+        areaStyle: {
+          color: ['rgba(220, 38, 38, 0.05)', 'rgba(220, 38, 38, 0.1)']
+        }
+      },
+      axisLine: {
+        lineStyle: {
+          color: '#e2e8f0'
+        }
+      }
+    },
+    series: [
+      {
+        name: '知识点掌握',
+        type: 'radar',
+        data: [
+          {
+            value: masteryRates,
+            name: '掌握率',
+            itemStyle: {
+              color: '#dc2626'
+            },
+            areaStyle: {
+              color: 'rgba(220, 38, 38, 0.3)'
+            },
+            lineStyle: {
+              color: '#dc2626',
+              width: 2
+            }
+          },
+          {
+            value: correctRates,
+            name: '正确率',
+            itemStyle: {
+              color: '#f59e0b'
+            },
+            areaStyle: {
+              color: 'rgba(245, 158, 11, 0.3)'
+            },
+            lineStyle: {
+              color: '#f59e0b',
+              width: 2
+            }
+          }
+        ]
+      }
+    ]
+  }
+  
+  knowledgeRadarChartInstance.setOption(option)
+}
+
+const handleResize = () => {
+  if (scoreTrendChartInstance) {
+    scoreTrendChartInstance.resize()
+  }
+  if (knowledgeRadarChartInstance) {
+    knowledgeRadarChartInstance.resize()
+  }
+}
+
 onMounted(() => {
   loadData()
   loadSubjectScores()
+  loadScoreTrend()
+  loadKnowledgeMastery()
+  
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  if (scoreTrendChartInstance) {
+    scoreTrendChartInstance.dispose()
+  }
+  if (knowledgeRadarChartInstance) {
+    knowledgeRadarChartInstance.dispose()
+  }
 })
 </script>
 

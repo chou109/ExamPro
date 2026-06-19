@@ -7,7 +7,7 @@
     <!-- 统计卡片 -->
     <el-row :gutter="20" style="margin-bottom: 24px;">
       <el-col :span="6">
-        <div class="stat-card cursor-pointer" @click="router.push('/admin/users')">
+        <div class="stat-card cursor-pointer" @click="router.push('/users')">
           <div class="stat-icon blue">
             <el-icon><UserFilled /></el-icon>
           </div>
@@ -18,7 +18,7 @@
         </div>
       </el-col>
       <el-col :span="6">
-        <div class="stat-card cursor-pointer" @click="router.push('/admin/users?role=STUDENT')">
+        <div class="stat-card cursor-pointer" @click="router.push('/users?role=STUDENT')">
           <div class="stat-icon green">
             <el-icon><School /></el-icon>
           </div>
@@ -29,7 +29,7 @@
         </div>
       </el-col>
       <el-col :span="6">
-        <div class="stat-card cursor-pointer" @click="router.push('/admin/users?role=TEACHER')">
+        <div class="stat-card cursor-pointer" @click="router.push('/users?role=TEACHER')">
           <div class="stat-icon purple">
             <el-icon><User /></el-icon>
           </div>
@@ -40,7 +40,7 @@
         </div>
       </el-col>
       <el-col :span="6">
-        <div class="stat-card cursor-pointer" @click="router.push('/admin/departments')">
+        <div class="stat-card cursor-pointer" @click="router.push('/departments')">
           <div class="stat-icon orange">
             <el-icon><Folder /></el-icon>
           </div>
@@ -65,7 +65,7 @@
         </div>
       </el-col>
       <el-col :span="6">
-        <div class="stat-card cursor-pointer" @click="router.push('/admin/classes')">
+        <div class="stat-card cursor-pointer" @click="router.push('/classes')">
           <div class="stat-icon red">
             <el-icon><Folder /></el-icon>
           </div>
@@ -76,7 +76,7 @@
         </div>
       </el-col>
       <el-col :span="6">
-        <div class="stat-card cursor-pointer" @click="router.push('/admin/papers')">
+        <div class="stat-card cursor-pointer" @click="router.push('/papers')">
           <div class="stat-icon pink">
             <el-icon><Files /></el-icon>
           </div>
@@ -87,7 +87,7 @@
         </div>
       </el-col>
       <el-col :span="6">
-        <div class="stat-card cursor-pointer" @click="router.push('/admin/questions')">
+        <div class="stat-card cursor-pointer" @click="router.push('/questions')">
           <div class="stat-icon cyan">
             <el-icon><EditPen /></el-icon>
           </div>
@@ -98,7 +98,7 @@
         </div>
       </el-col>
       <el-col :span="6">
-        <div class="stat-card cursor-pointer" @click="router.push('/admin/exams')">
+        <div class="stat-card cursor-pointer" @click="router.push('/exams')">
           <div class="stat-icon yellow">
             <el-icon><Calendar /></el-icon>
           </div>

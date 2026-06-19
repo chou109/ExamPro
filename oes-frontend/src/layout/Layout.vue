@@ -78,6 +78,7 @@ const adminMenus = [
   { path: '/dashboard', title: '首页概览', icon: 'DataBoard' },
   { path: '/users', title: '用户管理', icon: 'User' },
   { path: '/departments', title: '院系管理', icon: 'OfficeBuilding' },
+  { path: '/classes', title: '班级管理', icon: 'Collection' },
   { path: '/statistics', title: '数据统计', icon: 'BarChart' },
   { path: '/logs', title: '系统日志', icon: 'Document' }
 ]

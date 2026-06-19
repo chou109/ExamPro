@@ -126,7 +126,17 @@ public class ClassController {
 
     @PostMapping("/create")
     public R<SysClass> createClass(@RequestBody Map<String, Object> request, HttpServletRequest httpRequest) {
-        String className = (String) request.get("name");
+        // 优先获取 className 字段，兼容前端
+        String className = (String) request.get("className");
+        if (className == null || className.trim().isEmpty()) {
+            // 如果 className 为空，尝试获取 name 字段
+            className = (String) request.get("name");
+        }
+        
+        if (className == null || className.trim().isEmpty()) {
+            return R.error("班级名称不能为空");
+        }
+        
         SysClass sysClass = new SysClass();
         sysClass.setName(className);
         sysClass.setCode((String) request.get("code"));

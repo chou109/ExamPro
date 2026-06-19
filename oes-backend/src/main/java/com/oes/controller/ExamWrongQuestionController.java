@@ -40,6 +40,7 @@ public class ExamWrongQuestionController {
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) Long subjectId,
+            @RequestParam(required = false) Integer mastered,
             HttpServletRequest request) {
         String token = request.getHeader("Authorization").replace("Bearer ", "");
         Long studentId = jwtUtils.getUserIdFromToken(token);
@@ -48,6 +49,10 @@ public class ExamWrongQuestionController {
         LambdaQueryWrapper<ExamWrongQuestion> wrapper = new LambdaQueryWrapper<ExamWrongQuestion>()
                 .eq(ExamWrongQuestion::getStudentId, studentId)
                 .orderByDesc(ExamWrongQuestion::getCreateTime);
+
+        if (mastered != null) {
+            wrapper.eq(ExamWrongQuestion::getMastered, mastered);
+        }
 
         IPage<ExamWrongQuestion> result = examWrongQuestionMapper.selectPage(page, wrapper);
 
@@ -58,7 +63,9 @@ public class ExamWrongQuestionController {
             map.put("wrongAnswer", wq.getWrongAnswer());
             map.put("correctAnswer", wq.getCorrectAnswer());
             map.put("practicedCount", wq.getPracticedCount());
+            map.put("correctCount", wq.getCorrectCount() != null ? wq.getCorrectCount() : 0);
             map.put("lastPracticeTime", wq.getLastPracticeTime());
+            map.put("mastered", wq.getMastered() != null ? wq.getMastered() : 0);
 
             ExamQuestion question = examQuestionService.getById(wq.getQuestionId());
             if (question != null) {
@@ -69,6 +76,13 @@ public class ExamWrongQuestionController {
                 map.put("subjectId", question.getSubjectId());
             }
             return map;
+        }).filter(map -> {
+            // 如果指定了科目ID，则过滤
+            if (subjectId != null) {
+                Long qSubjectId = (Long) map.get("subjectId");
+                return subjectId.equals(qSubjectId);
+            }
+            return true;
         }).collect(java.util.stream.Collectors.toList());
 
         return R.ok(new PageResult<>(result.getTotal(), records, (long) current, (long) size));
@@ -85,6 +99,26 @@ public class ExamWrongQuestionController {
         if (wq != null) {
             wq.setPracticedCount(wq.getPracticedCount() + 1);
             wq.setLastPracticeTime(LocalDateTime.now());
+            examWrongQuestionMapper.updateById(wq);
+        }
+        return R.ok();
+    }
+
+    @PostMapping("/{id}/correct")
+    public R<Void> correct(@PathVariable Long id) {
+        ExamWrongQuestion wq = examWrongQuestionMapper.selectById(id);
+        if (wq != null) {
+            wq.setCorrectCount(wq.getCorrectCount() != null ? wq.getCorrectCount() + 1 : 1);
+            examWrongQuestionMapper.updateById(wq);
+        }
+        return R.ok();
+    }
+
+    @PutMapping("/{id}/mastered")
+    public R<Void> updateMastered(@PathVariable Long id, @RequestParam Integer mastered) {
+        ExamWrongQuestion wq = examWrongQuestionMapper.selectById(id);
+        if (wq != null) {
+            wq.setMastered(mastered);
             examWrongQuestionMapper.updateById(wq);
         }
         return R.ok();

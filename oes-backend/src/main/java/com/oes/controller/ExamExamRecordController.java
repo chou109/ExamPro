@@ -82,6 +82,17 @@ public class ExamExamRecordController {
                 result.put("totalScore", exam.getTotalScore());
                 result.put("examConfig", exam.getAntiCheatConfig());
                 result.put("leaveCount", existRecord.getLeaveCount() != null ? existRecord.getLeaveCount() : 0);
+                
+                // 返回已保存的答案（用于恢复答题进度）
+                List<ExamAnswer> savedAnswers = examExamRecordService.getAnswersByRecordId(existRecord.getId());
+                Map<Long, Map<String, Object>> answerMap = new HashMap<>();
+                for (ExamAnswer answer : savedAnswers) {
+                    Map<String, Object> answerInfo = new HashMap<>();
+                    answerInfo.put("answer", answer.getAnswer());
+                    answerMap.put(answer.getQuestionId(), answerInfo);
+                }
+                result.put("answerMap", answerMap);
+                
                 return R.ok(result);
             } else if (existRecord != null && ("SUBMITTED".equals(existRecord.getStatus()) || "AUTO_SUBMITTED".equals(existRecord.getStatus()))) {
                 // 允许已提交的学生查看结果
@@ -396,6 +407,219 @@ public class ExamExamRecordController {
 
             result.add(subjectScore);
         }
+
+        return R.ok(result);
+    }
+
+    @GetMapping("/student/score-trend")
+    public R<List<Map<String, Object>>> getScoreTrend(HttpServletRequest request) {
+        String token = request.getHeader("Authorization").replace("Bearer ", "");
+        Long studentId = jwtUtils.getUserIdFromToken(token);
+
+        List<ExamExamRecord> records = examExamRecordService.list(new LambdaQueryWrapper<ExamExamRecord>()
+                .eq(ExamExamRecord::getStudentId, studentId)
+                .in(ExamExamRecord::getStatus, "SUBMITTED", "AUTO_SUBMITTED")
+                .orderByAsc(ExamExamRecord::getSubmitTime));
+
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (ExamExamRecord record : records) {
+            ExamExam exam = examExamService.getById(record.getExamId());
+            if (exam != null && record.getScore() != null) {
+                Map<String, Object> trendData = new HashMap<>();
+                trendData.put("examId", exam.getId());
+                trendData.put("examTitle", exam.getTitle());
+                trendData.put("score", record.getScore());
+                trendData.put("submitTime", record.getSubmitTime());
+                result.add(trendData);
+            }
+        }
+
+        return R.ok(result);
+    }
+
+    @GetMapping("/student/knowledge-mastery")
+    public R<List<Map<String, Object>>> getKnowledgeMastery(HttpServletRequest request) {
+        String token = request.getHeader("Authorization").replace("Bearer ", "");
+        Long studentId = jwtUtils.getUserIdFromToken(token);
+
+        // 获取所有科目
+        List<ExamSubject> subjects = examSubjectService.list();
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (ExamSubject subject : subjects) {
+            // 获取该科目的错题统计
+            List<ExamWrongQuestion> wrongQuestions = examWrongQuestionMapper.selectList(
+                    new LambdaQueryWrapper<ExamWrongQuestion>()
+                            .eq(ExamWrongQuestion::getStudentId, studentId));
+
+            // 获取该科目相关的错题
+            List<ExamWrongQuestion> subjectWrongQuestions = wrongQuestions.stream()
+                    .filter(wq -> {
+                        ExamQuestion question = examQuestionService.getById(wq.getQuestionId());
+                        return question != null && question.getSubjectId().equals(subject.getId());
+                    })
+                    .collect(Collectors.toList());
+
+            if (subjectWrongQuestions.isEmpty()) {
+                continue;
+            }
+
+            // 计算掌握情况
+            int totalQuestions = subjectWrongQuestions.size();
+            int masteredQuestions = (int) subjectWrongQuestions.stream()
+                    .filter(wq -> wq.getMastered() != null && wq.getMastered() == 1)
+                    .count();
+
+            // 计算平均正确率
+            double avgCorrectRate = subjectWrongQuestions.stream()
+                    .mapToDouble(wq -> {
+                        int practiced = wq.getPracticedCount() != null ? wq.getPracticedCount() : 0;
+                        int correct = wq.getCorrectCount() != null ? wq.getCorrectCount() : 0;
+                        return practiced > 0 ? (double) correct / practiced : 0;
+                    })
+                    .average()
+                    .orElse(0);
+
+            Map<String, Object> masteryData = new HashMap<>();
+            masteryData.put("subjectId", subject.getId());
+            masteryData.put("subjectName", subject.getName());
+            masteryData.put("totalQuestions", totalQuestions);
+            masteryData.put("masteredQuestions", masteredQuestions);
+            masteryData.put("masteryRate", Math.round((double) masteredQuestions / totalQuestions * 100));
+            masteryData.put("correctRate", Math.round(avgCorrectRate * 100));
+
+            result.add(masteryData);
+        }
+
+        return R.ok(result);
+    }
+
+    @GetMapping("/teacher/exam-stats/{examId}")
+    public R<Map<String, Object>> getExamStats(@PathVariable Long examId) {
+        ExamExam exam = examExamService.getById(examId);
+        if (exam == null) {
+            return R.error("考试不存在");
+        }
+
+        List<ExamExamRecord> records = examExamRecordService.list(new LambdaQueryWrapper<ExamExamRecord>()
+                .eq(ExamExamRecord::getExamId, examId)
+                .in(ExamExamRecord::getStatus, "SUBMITTED", "AUTO_SUBMITTED"));
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("examTitle", exam.getTitle());
+        result.put("totalStudents", records.size());
+        result.put("examId", examId);
+
+        if (records.isEmpty()) {
+            result.put("highestScore", 0);
+            result.put("lowestScore", 0);
+            result.put("averageScore", 0);
+            result.put("passRate", 0);
+            result.put("passCount", 0);
+            return R.ok(result);
+        }
+
+        List<Integer> scores = records.stream()
+                .filter(r -> r.getScore() != null)
+                .map(ExamExamRecord::getScore)
+                .collect(Collectors.toList());
+
+        int highestScore = scores.stream().mapToInt(Integer::intValue).max().orElse(0);
+        int lowestScore = scores.stream().mapToInt(Integer::intValue).min().orElse(0);
+        double averageScore = scores.stream().mapToInt(Integer::intValue).average().orElse(0);
+        int passCount = (int) scores.stream().filter(s -> s >= 60).count();
+        double passRate = (double) passCount / scores.size() * 100;
+
+        result.put("highestScore", highestScore);
+        result.put("lowestScore", lowestScore);
+        result.put("averageScore", Math.round(averageScore * 10) / 10.0);
+        result.put("passRate", Math.round(passRate * 10) / 10.0);
+        result.put("passCount", passCount);
+
+        return R.ok(result);
+    }
+
+    @GetMapping("/teacher/question-analysis/{examId}")
+    public R<List<Map<String, Object>>> getQuestionAnalysis(@PathVariable Long examId) {
+        ExamExam exam = examExamService.getById(examId);
+        if (exam == null) {
+            return R.error("考试不存在");
+        }
+
+        ExamPaper paper = examPaperService.getById(exam.getPaperId());
+        if (paper == null) {
+            return R.error("试卷不存在");
+        }
+
+        List<ExamQuestion> questions = examPaperService.getQuestions(paper);
+        List<ExamExamRecord> records = examExamRecordService.list(new LambdaQueryWrapper<ExamExamRecord>()
+                .eq(ExamExamRecord::getExamId, examId)
+                .in(ExamExamRecord::getStatus, "SUBMITTED", "AUTO_SUBMITTED"));
+
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (ExamQuestion question : questions) {
+            Map<String, Object> analysis = new HashMap<>();
+            analysis.put("questionId", question.getId());
+            analysis.put("questionContent", question.getContent());
+            analysis.put("questionType", question.getType());
+            analysis.put("score", question.getScore());
+
+            int totalAnswered = 0;
+            int correctCount = 0;
+
+            for (ExamExamRecord record : records) {
+                List<ExamAnswer> answers = examExamRecordService.getAnswersByRecordId(record.getId());
+                for (ExamAnswer answer : answers) {
+                    if (answer.getQuestionId().equals(question.getId())) {
+                        totalAnswered++;
+                        String correctAnswer = question.getAnswer();
+                        if (correctAnswer != null && correctAnswer.equals(answer.getAnswer())) {
+                            correctCount++;
+                        }
+                        break;
+                    }
+                }
+            }
+
+            double correctRate = totalAnswered > 0 ? (double) correctCount / totalAnswered * 100 : 0;
+            analysis.put("totalAnswered", totalAnswered);
+            analysis.put("correctCount", correctCount);
+            analysis.put("correctRate", Math.round(correctRate * 10) / 10.0);
+
+            result.add(analysis);
+        }
+
+        return R.ok(result);
+    }
+
+    @GetMapping("/teacher/export/{examId}")
+    public R<Map<String, Object>> exportExamScores(@PathVariable Long examId) {
+        ExamExam exam = examExamService.getById(examId);
+        if (exam == null) {
+            return R.error("考试不存在");
+        }
+
+        List<ExamExamRecord> records = examExamRecordService.list(new LambdaQueryWrapper<ExamExamRecord>()
+                .eq(ExamExamRecord::getExamId, examId)
+                .in(ExamExamRecord::getStatus, "SUBMITTED", "AUTO_SUBMITTED"));
+
+        List<Map<String, Object>> exportData = new ArrayList<>();
+
+        for (ExamExamRecord record : records) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("studentId", record.getStudentId());
+            data.put("score", record.getScore());
+            data.put("submitTime", record.getSubmitTime());
+            data.put("status", record.getStatus());
+            exportData.add(data);
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("examTitle", exam.getTitle());
+        result.put("exportTime", new Date());
+        result.put("data", exportData);
 
         return R.ok(result);
     }

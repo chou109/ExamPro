@@ -255,14 +255,30 @@ public class ExamExamRecordService extends ServiceImpl<ExamExamRecordMapper, Exa
     }
 
     private void saveWrongQuestion(Long studentId, ExamQuestion question, String wrongAnswer, Long examId) {
-        ExamWrongQuestion wrongQuestion = new ExamWrongQuestion();
-        wrongQuestion.setStudentId(studentId);
-        wrongQuestion.setQuestionId(question.getId());
-        wrongQuestion.setExamId(examId);
-        wrongQuestion.setWrongAnswer(wrongAnswer);
-        wrongQuestion.setCorrectAnswer(question.getAnswer());
-        wrongQuestion.setPracticedCount(0);
-        examWrongQuestionMapper.insert(wrongQuestion);
+        // 先检查是否已存在该错题
+        LambdaQueryWrapper<ExamWrongQuestion> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ExamWrongQuestion::getStudentId, studentId)
+               .eq(ExamWrongQuestion::getQuestionId, question.getId());
+        
+        ExamWrongQuestion existing = examWrongQuestionMapper.selectOne(wrapper);
+        
+        if (existing != null) {
+            // 如果已存在，更新错题信息
+            existing.setWrongAnswer(wrongAnswer);
+            existing.setCorrectAnswer(question.getAnswer());
+            existing.setExamId(examId);
+            examWrongQuestionMapper.updateById(existing);
+        } else {
+            // 如果不存在，插入新记录
+            ExamWrongQuestion wrongQuestion = new ExamWrongQuestion();
+            wrongQuestion.setStudentId(studentId);
+            wrongQuestion.setQuestionId(question.getId());
+            wrongQuestion.setExamId(examId);
+            wrongQuestion.setWrongAnswer(wrongAnswer);
+            wrongQuestion.setCorrectAnswer(question.getAnswer());
+            wrongQuestion.setPracticedCount(0);
+            examWrongQuestionMapper.insert(wrongQuestion);
+        }
     }
 
     public void incrementScreenSwitch(Long recordId) {

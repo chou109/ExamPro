@@ -53,8 +53,8 @@
 
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑班级' : '新增班级'" width="500px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="班级名称" prop="name">
-          <el-input v-model="form.name" />
+        <el-form-item label="班级名称" prop="className">
+          <el-input v-model="form.className" />
         </el-form-item>
         <el-form-item label="班级代码" prop="code">
           <el-input v-model="form.code" />
@@ -92,8 +92,8 @@ const isEdit = ref(false)
 const formRef = ref()
 
 const params = reactive({ departmentId: null, keyword: '' })
-const form = reactive({ id: null, name: '', code: '', departmentId: null, grade: '' })
-const rules = { name: [{ required: true, message: '请输入班级名称', trigger: 'blur' }] }
+const form = reactive({ id: null, className: '', code: '', departmentId: null, grade: '' })
+const rules = { className: [{ required: true, message: '请输入班级名称', trigger: 'blur' }] }
 
 const getDepartmentName = (id) => departments.value.find(d => d.id === id)?.name || ''
 
@@ -114,7 +114,7 @@ const handleCreate = () => {
   isEdit.value = false
   // 自动生成班级代码（格式：CLS+8位数字）
   const code = 'CLS' + Math.floor(Math.random() * 90000000 + 10000000)
-  Object.assign(form, { id: null, name: '', code: code, departmentId: null, grade: '' })
+  Object.assign(form, { id: null, className: '', code: code, departmentId: null, grade: '' })
   dialogVisible.value = true
 }
 
