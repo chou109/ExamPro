@@ -52,6 +52,12 @@ public class ClassController {
             Map<String, Object> map = new HashMap<>();
             SysClass cls = sysClassService.getById(member.getClassId());
             if (cls != null) {
+                List<SysClassMessage> messages = classMessageService.getRecentMessages(member.getClassId(), 1);
+                if (!messages.isEmpty()) {
+                    SysClassMessage lastMsg = messages.get(0);
+                    cls.setLastMessage(lastMsg.getContent());
+                    cls.setLastMessageTime(lastMsg.getCreateTime() != null ? lastMsg.getCreateTime().toString() : "");
+                }
                 map.put("class", cls);
                 map.put("role", member.getRole());
                 map.put("muteUntil", member.getMuteUntil());

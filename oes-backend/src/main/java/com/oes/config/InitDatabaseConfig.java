@@ -302,7 +302,9 @@ public class InitDatabaseConfig implements CommandLineRunner {
                     "`wrong_answer` text," +
                     "`correct_answer` text," +
                     "`practiced_count` int(11) DEFAULT '0'," +
+                    "`correct_count` int(11) DEFAULT '0'," +
                     "`last_practice_time` datetime DEFAULT NULL," +
+                    "`mastered` tinyint(4) DEFAULT '0'," +
                     "`deleted` tinyint(4) DEFAULT '0'," +
                     "`create_time` datetime DEFAULT CURRENT_TIMESTAMP," +
                     "`update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +

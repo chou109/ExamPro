@@ -48,7 +48,7 @@
         <view class="question-content-text">{{ currentQuestion.content }}</view>
 
         <!-- 选择题选项 -->
-        <view v-if="isSingleChoiceOrJudgment(currentQuestion.type)" class="question-options">
+        <view v-if="isSingleChoiceOrJudgment(currentQuestion.type) && !currentQuestion.correctAnswer?.includes(',')" class="question-options">
           <view
             v-for="(item, index) in currentShuffledOptions"
             :key="item.key"
@@ -66,7 +66,7 @@
         </view>
 
         <!-- 多选题 -->
-        <view v-else-if="currentQuestion.type === 'MULTIPLE_CHOICE'" class="question-options">
+        <view v-else-if="currentQuestion.type === 'MULTIPLE_CHOICE' || currentQuestion.correctAnswer?.includes(',')" class="question-options">
           <view
             v-for="(item, index) in currentShuffledOptions"
             :key="item.key"
@@ -101,7 +101,7 @@
             </view>
             <view v-if="currentQuestion.type === 'FILL_BLANK'" class="answer-row">
               <text class="label">正确答案：</text>
-              <text class="value correct">{{ currentQuestion.answer }}</text>
+              <text class="value correct">{{ currentQuestion.correctAnswer }}</text>
             </view>
           </view>
         </view>
@@ -345,21 +345,45 @@ const formatTime = (seconds) => {
 }
 
 const parseOptions = (options) => {
-  try {
-    const parsed = JSON.parse(options)
-    if (Array.isArray(parsed)) {
+  if (!options) return {}
+  if (Array.isArray(options)) {
+    const result = {}
+    options.forEach((item, idx) => {
+      const key = String.fromCharCode(65 + idx)
+      if (typeof item === 'object') {
+        result[key] = item.content || item.text || ''
+      } else {
+        result[key] = String(item)
+      }
+    })
+    return result
+  }
+  if (typeof options === 'string') {
+    try {
+      const parsed = JSON.parse(options)
+      if (Array.isArray(parsed)) {
+        const result = {}
+        parsed.forEach((item, idx) => {
+          const key = String.fromCharCode(65 + idx)
+          if (typeof item === 'object') {
+            result[key] = item.content || item.text || ''
+          } else {
+            result[key] = String(item)
+          }
+        })
+        return result
+      }
+    } catch (e) {
+      const parts = options.split('|').filter(o => o.trim())
       const result = {}
-      parsed.forEach(item => {
-        if (item.key && item.content) {
-          result[item.key] = item.content
-        }
+      parts.forEach((part, idx) => {
+        const key = String.fromCharCode(65 + idx)
+        result[key] = part.trim()
       })
       return result
     }
-    return parsed
-  } catch {
-    return {}
   }
+  return {}
 }
 
 const shuffleArray = (array) => {
@@ -485,40 +509,73 @@ const handleTimeUp = async () => {
 
 onLoad((options) => {
   const examId = options.id
+  const recordId = options.recordId
+  const isReview = options.review === '1'
   if (examId) {
-    loadExamData(examId)
+    loadExamData(examId, recordId, isReview)
   }
 })
 
-const loadExamData = async (examId) => {
+const loadExamData = async (examId, reviewRecordId, isReview) => {
   try {
-    const res = await examRecordApi.getStudentExamRecord(examId)
-    if (res.code === 200) {
-      examInfo.value = res.data.exam
-      questions.value = res.data.questions
-      recordId.value = res.data.recordId
-      isViewMode.value = res.data.isViewMode || false
-      answerMap.value = res.data.answerMap || {}
-      canViewPaper.value = res.data.canViewPaper || false
-      studentScore.value = res.data.score || 0
-      hasSubjectiveUngraded.value = res.data.hasSubjectiveUngraded || false
+    if (isReview && reviewRecordId) {
+      isViewMode.value = true
+      canViewPaper.value = true
+      
+      const res = await examRecordApi.getById(reviewRecordId)
+      if (res.code === 200) {
+        examInfo.value = res.data.exam
+        questions.value = res.data.questions || []
+        recordId.value = res.data.id
+        answerMap.value = res.data.answerMap || {}
+        studentScore.value = res.data.score || 0
 
-      if (res.data.studentAnswers) {
-        Object.assign(answers, res.data.studentAnswers)
-      }
+        if (res.data.answers) {
+          Object.assign(answers, res.data.answers)
+        }
 
-      if (questions.value.length > 0) {
-        currentQuestionId.value = questions.value[0].id
-      }
-
-      if (!isViewMode.value && res.data.remainingTime) {
-        remainingTime.value = res.data.remainingTime
-        startTimer()
-        setupLeaveDetection()
-        setupAutoSave()
+        if (questions.value.length > 0) {
+          currentQuestionId.value = questions.value[0].id
+        }
+      } else {
+        uni.showToast({ title: res.message || '加载失败', icon: 'none' })
       }
     } else {
-      uni.showToast({ title: res.message || '加载失败', icon: 'none' })
+      const res = await examRecordApi.start({ examId: Number(examId) })
+      if (res.code === 200) {
+        examInfo.value = res.data.exam
+        questions.value = res.data.questions
+        recordId.value = res.data.recordId
+        canViewPaper.value = res.data.canViewPaper || false
+        answerMap.value = res.data.answerMap || {}
+        studentScore.value = res.data.studentScore || 0
+        hasSubjectiveUngraded.value = res.data.hasSubjectiveUngraded || false
+
+        if (res.data.studentAnswers) {
+          Object.assign(answers, res.data.studentAnswers)
+        }
+
+        const examConfig = examInfo.value?.config || {}
+        if (examConfig.shuffleQuestions && !isViewMode.value) {
+          questions.value = shuffleArray([...questions.value])
+        }
+
+        if (questions.value.length > 0) {
+          currentQuestionId.value = questions.value[0].id
+        }
+
+        const isExamFinished = examInfo.value?.status === 'FINISHED'
+        isViewMode.value = isExamFinished || canViewPaper.value
+
+        if (!isViewMode.value && res.data.duration) {
+          remainingTime.value = res.data.duration * 60
+          startTimer()
+          setupLeaveDetection()
+          setupAutoSave()
+        }
+      } else {
+        uni.showToast({ title: res.message || '加载失败', icon: 'none' })
+      }
     }
   } catch (e) {
     console.error(e)
@@ -600,7 +657,7 @@ onUnmounted(() => {
 }
 
 .exam-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   padding: 40rpx 32rpx;
   color: #fff;
 }
@@ -721,14 +778,14 @@ onUnmounted(() => {
   bottom: 180rpx;
   width: 100rpx;
   height: 100rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
   border-radius: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 4rpx;
-  box-shadow: 0 4rpx 16rpx rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4rpx 16rpx rgba(220, 38, 38, 0.4);
   z-index: 100;
 }
 
@@ -791,8 +848,8 @@ onUnmounted(() => {
 }
 
 .option-item.selected {
-  background: #ecf5ff;
-  border-color: #409eff;
+  background: #fef2f2;
+  border-color: #dc2626;
 }
 
 .option-item.correct {
@@ -896,7 +953,7 @@ onUnmounted(() => {
   flex: 1;
   height: 80rpx;
   line-height: 80rpx;
-  background: #409eff;
+  background: #dc2626;
   color: #fff;
   border-radius: 12rpx;
   font-size: 28rpx;

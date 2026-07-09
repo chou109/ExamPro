@@ -79,12 +79,14 @@
 <script>
 import { ref, reactive } from 'vue'
 import { authApi } from '../../utils/api'
+import { useUserStore } from '../../store/index.js'
 
 export default {
   setup() {
     const loginType = ref('student')
     const showAdminLogin = ref(false)
     const loading = ref(false)
+    const userStore = useUserStore()
 
     const form = reactive({
       username: '',
@@ -114,15 +116,9 @@ export default {
       try {
         console.log('开始登录，用户名:', form.username)
 
-        // 直接调用后端 API 登录
-        const response = await authApi.login(form)
-        console.log('登录成功:', response)
-
-        // 解构响应数据（后端返回 {code, message, data} 结构）
-        const result = response.data || response
+        const result = await userStore.login(form)
         console.log('用户信息:', result)
 
-        // 验证登录类型
         if (showAdminLogin.value && result.role !== 'ADMIN') {
           uni.showToast({
             title: '不存在此管理员账号',
@@ -142,8 +138,6 @@ export default {
           }
         }
 
-        // 存储登录信息到本地
-        uni.setStorageSync('token', result.token)
         uni.setStorageSync('userInfo', result)
 
         uni.showToast({

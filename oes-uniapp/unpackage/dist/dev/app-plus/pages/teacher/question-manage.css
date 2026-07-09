@@ -156,27 +156,306 @@
   color: #fff;
   border-color: #f56c6c;
 }
+.manage-page {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: 5rem;
+}
+.page-header {
+  padding: 1rem;
+  background: #fff;
+  margin-bottom: 0.75rem;
+}
+.page-header .title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #333;
+  display: block;
+}
+.search-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #fff;
+  margin-bottom: 0.75rem;
+}
+.search-bar .picker {
+  padding: 0.5rem 0.625rem;
+  background: #f5f5f5;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  color: #666;
+}
+.search-bar .picker .picker-text {
+  font-size: 0.8125rem;
+}
+.search-bar .search-input {
+  flex: 1;
+  min-width: 6.25rem;
+  height: 2.25rem;
+  background: #f5f5f5;
+  border-radius: 0.375rem;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+}
+.search-bar .search-btn {
+  padding: 0.5rem 1rem;
+  background: #dc2626;
+  color: #fff;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  height: 2.25rem;
+  line-height: 2.25rem;
+  padding: 0 1rem;
+}
+.list {
+  padding: 0 0.75rem;
+}
+.list .list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.list .list-item .item-info {
+  flex: 1;
+  min-width: 0;
+}
+.list .list-item .item-info .item-title {
+  font-size: 0.875rem;
+  color: #333;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 0.25rem;
+}
+.list .list-item .item-info .item-meta {
+  font-size: 0.75rem;
+  color: #999;
+}
+.list .list-item .item-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: 0.75rem;
+}
+.list .list-item .item-actions .action-btn {
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
+  background: #f5f5f5;
+  color: #666;
+}
+.list .list-item .item-actions .action-btn.danger {
+  background: #f56c6c;
+  color: #fff;
+}
+.list .empty {
+  padding: 2.5rem 0.75rem;
+  text-align: center;
+}
+.list .empty .empty-text {
+  font-size: 0.875rem;
+  color: #999;
+}
 .type-tag {
   display: inline-block;
   padding: 0.125rem 0.375rem;
-  background: rgba(220, 38, 38, 0.1);
-  color: #dc2626;
-  font-size: 0.75rem;
   border-radius: 0.125rem;
+  font-size: 0.75rem;
   margin-right: 0.375rem;
 }
-.import-btn {
+.type-tag.type-single {
+  background: rgba(64, 158, 255, 0.1);
+  color: #409eff;
+}
+.type-tag.type-multi {
+  background: rgba(103, 194, 58, 0.1);
+  color: #67c23a;
+}
+.type-tag.type-judge {
+  background: rgba(230, 162, 60, 0.1);
+  color: #e6a23c;
+}
+.type-tag.type-fill {
+  background: rgba(156, 136, 255, 0.1);
+  color: #9c88ff;
+}
+.type-tag.type-essay {
+  background: rgba(245, 108, 108, 0.1);
+  color: #f56c6c;
+}
+.add-btn {
   position: fixed;
-  bottom: 3.125rem;
-  right: 5rem;
+  bottom: 1.25rem;
+  right: 1.25rem;
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.625rem 1rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border-radius: 1.25rem;
+}
+.add-btn .add-icon {
+  font-size: 0.875rem;
+}
+.add-btn .add-text {
+  font-size: 0.875rem;
+  color: #fff;
+}
+.import-btn {
+  position: fixed;
+  bottom: 1.25rem;
+  right: 6.875rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  border-radius: 0.75rem;
+  border-radius: 1.25rem;
+}
+.import-btn .import-icon {
+  font-size: 0.875rem;
 }
 .import-btn .import-text {
   font-size: 0.875rem;
+  color: #fff;
+}
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.question-modal, .import-modal {
+  width: 90%;
+  max-height: 85vh;
+  background: #fff;
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
+}
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 0.03125rem solid #eee;
+}
+.modal-header .modal-title {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+}
+.modal-header .modal-close {
+  padding: 0.25rem;
+}
+.modal-header .modal-close .close-icon {
+  font-size: 1rem;
+  color: #999;
+}
+.modal-body {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  max-height: 55vh;
+}
+.form-item {
+  margin-bottom: 0.875rem;
+}
+.form-item .form-label {
+  display: block;
+  font-size: 0.875rem;
+  color: #333;
+  margin-bottom: 0.375rem;
+}
+.form-item .form-input {
+  height: 2.5rem;
+  background: #f5f5f5;
+  border-radius: 0.375rem;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+}
+.form-item .form-textarea {
+  height: 5rem;
+  background: #f5f5f5;
+  border-radius: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+.form-item .form-picker {
+  height: 2.5rem;
+  background: #f5f5f5;
+  border-radius: 0.375rem;
+  padding: 0 0.75rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #666;
+}
+.options-list {
+  margin-bottom: 0.5rem;
+}
+.options-list .option-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-bottom: 0.375rem;
+}
+.options-list .option-item .option-label {
+  font-size: 0.875rem;
+  color: #666;
+  width: 1.25rem;
+}
+.options-list .option-item .option-input {
+  flex: 1;
+  height: 2.25rem;
+  background: #f5f5f5;
+  border-radius: 0.25rem;
+  padding: 0 0.5rem;
+  font-size: 0.875rem;
+}
+.options-list .option-item .option-delete {
+  font-size: 0.875rem;
+  color: #f56c6c;
+  padding: 0.25rem;
+}
+.add-option-btn {
+  width: 100%;
+  height: 2.25rem;
+  line-height: 2.25rem;
+  background: #f5f5f5;
+  color: #666;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+.modal-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-top: 0.03125rem solid #eee;
+}
+.modal-footer .modal-btn {
+  flex: 1;
+  height: 2.5rem;
+  line-height: 2.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+.modal-footer .modal-btn.cancel {
+  background: #f5f5f5;
+  color: #666;
+}
+.modal-footer .modal-btn.confirm {
+  background: #dc2626;
   color: #fff;
 }

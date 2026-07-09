@@ -47,7 +47,7 @@ export const classApi = {
   getClassInfo: (classId) => get(`/classes/${classId}`),
   getClassMembers: (classId) => get(`/class/${classId}/members`),
   getMessages: (classId, current, size) => get(`/class/${classId}/messages`, { current, size }),
-  sendMessage: (classId, content, senderId) => post(`/class/${classId}/message`, { content }, { senderId }),
+  sendMessage: (classId, content, senderId) => post(`/class/${classId}/message?senderId=${senderId}`, { content }),
   checkMemberRole: (classId, userId) => get(`/class/${classId}/member/${userId}/check`)
 }
 
@@ -86,6 +86,7 @@ export const questionApi = {
   delete: (id) => del(`/questions/${id}`),
   getCorrectRate: (id) => get(`/questions/${id}/correct-rate`),
   import: (data) => post('/questions/import', data),
+  importQuestion: (filePath) => upload('/questions/import', filePath),
   generatePaper: (data) => post('/questions/generate-paper', data)
 }
 
@@ -135,7 +136,8 @@ export const examRecordApi = {
   getKnowledgeMastery: () => get('/exam-records/student/knowledge-mastery'),
   getExamStats: (examId) => get(`/exam-records/teacher/exam-stats/${examId}`),
   getQuestionAnalysis: (examId) => get(`/exam-records/teacher/question-analysis/${examId}`),
-  exportExamScores: (examId) => get(`/exam-records/teacher/export/${examId}`)
+  exportExamScores: (examId) => get(`/exam-records/teacher/export/${examId}`),
+  grade: (id, data) => put(`/exam-records/${id}/grade`, data)
 }
 
 // 错题本API
@@ -144,7 +146,7 @@ export const wrongQuestionApi = {
   getById: (id) => get(`/wrong-questions/${id}`),
   practice: (id) => post(`/wrong-questions/${id}/practice`),
   correct: (id) => post(`/wrong-questions/${id}/correct`),
-  updateMastered: (id, mastered) => put(`/wrong-questions/${id}/mastered`, null, { mastered })
+  updateMastered: (id, mastered) => put(`/wrong-questions/${id}/mastered?mastered=${mastered}`)
 }
 
 // 统计API

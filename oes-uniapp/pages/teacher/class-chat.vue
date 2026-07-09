@@ -3,7 +3,7 @@
     <view class="chat-header">
       <view class="header-left">
         <view class="back-btn" @click="goBack">
-          <uni-icons type="back" size="20" color="#333" />
+          <text class="back-icon">‹</text>
         </view>
         <view class="header-info">
           <text class="class-name">{{ className }}</text>
@@ -12,10 +12,10 @@
       </view>
       <view class="header-right">
         <view class="member-btn" @click="showMembers = true">
-          <uni-icons type="person" size="20" color="#666" />
+          <text class="btn-icon">👥</text>
         </view>
         <view class="more-btn" @click="showActions = true">
-          <uni-icons type="bars" size="20" color="#666" />
+          <text class="btn-icon">☰</text>
         </view>
       </view>
     </view>
@@ -78,7 +78,7 @@
         <view class="modal-header">
           <text class="modal-title">班级成员</text>
           <view class="modal-close" @click="showMembers = false">
-            <uni-icons type="close" size="24" color="#333" />
+            <text class="close-icon">✕</text>
           </view>
         </view>
         <scroll-view class="members-list" scroll-y>
@@ -105,11 +105,11 @@
     <view v-if="showActions" class="modal" @click="showActions = false">
       <view class="action-panel" @click.stop>
         <view class="action-item" @click="handleSendExamNotice">
-          <uni-icons type="flag" size="24" color="#409eff" />
-          <text>发送考试通知</text>
+          <text class="action-icon">📢</text>
+          <text>发布考试</text>
         </view>
         <view class="action-item" @click="handleInvite">
-          <uni-icons type="personadd" size="24" color="#67c23a" />
+          <text class="action-icon">👥</text>
           <text>邀请成员</text>
         </view>
         <view class="action-item danger" @click="showActions = false">
@@ -117,14 +117,64 @@
         </view>
       </view>
     </view>
+
+    <!-- 发布考试弹窗 -->
+    <view v-if="showExamForm" class="modal" @click="showExamForm = false">
+      <view class="exam-form-modal" @click.stop>
+        <view class="modal-header">
+          <text class="modal-title">发布考试</text>
+          <view class="modal-close" @click="showExamForm = false">
+            <text class="close-icon">✕</text>
+          </view>
+        </view>
+        <scroll-view class="form-body" scroll-y>
+          <view class="form-item">
+            <text class="form-label">考试标题</text>
+            <input class="form-input" v-model="examForm.title" placeholder="请输入考试标题" />
+          </view>
+          <view class="form-item">
+            <text class="form-label">选择试卷</text>
+            <picker mode="selector" :range="papers" range-key="title" @change="onPaperChange">
+              <view class="form-picker">
+                <text>{{ selectedPaper?.title || '请选择试卷' }}</text>
+              </view>
+            </picker>
+          </view>
+          <view class="form-item">
+            <text class="form-label">考试时长（分钟）</text>
+            <input class="form-input" type="number" v-model="examForm.duration" placeholder="请输入考试时长" />
+          </view>
+          <view class="form-item">
+            <text class="form-label">开始时间</text>
+            <picker mode="date" :value="examForm.startDate" @change="onStartDateChange">
+              <view class="form-picker">
+                <text>{{ examForm.startDate || '请选择日期' }}</text>
+              </view>
+            </picker>
+          </view>
+          <view class="form-item">
+            <text class="form-label">开始时间</text>
+            <picker mode="time" :value="examForm.startTime" @change="onStartTimeChange">
+              <view class="form-picker">
+                <text>{{ examForm.startTime || '请选择时间' }}</text>
+              </view>
+            </picker>
+          </view>
+        </scroll-view>
+        <view class="modal-footer">
+          <button class="modal-btn cancel" @click="showExamForm = false">取消</button>
+          <button class="modal-btn confirm" @click="submitExam">发布考试</button>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useUserStore } from '../../store/index.js'
-import { classApi } from '../../utils/api.js'
+import { classApi, examApi, paperApi } from '../../utils/api.js'
 
 const userStore = useUserStore()
 const classId = ref('')
@@ -135,13 +185,27 @@ const members = ref([])
 const inputMessage = ref('')
 const showMembers = ref(false)
 const showActions = ref(false)
+const showExamForm = ref(false)
 const scrollTop = ref(0)
 const canManageMember = ref(false)
 const currentRole = ref('')
+const inviteCode = ref('')
+
+const papers = ref([])
+const selectedPaperId = ref(null)
+
+const examForm = reactive({
+  title: '',
+  duration: '',
+  startDate: '',
+  startTime: ''
+})
 
 const iconRocket = '🚀'
 const iconCalendar = '📅'
 const iconTimer = '⏱'
+
+const selectedPaper = ref(null)
 
 const getRoleText = (role) => {
   return {
@@ -189,12 +253,12 @@ const getNoticeDuration = (content) => {
 }
 
 const getSenderName = (senderId) => {
-  const member = members.value.find(m => m.userId === senderId)
+  const member = members.value.find(m => String(m.userId) === String(senderId))
   return member?.realName || '未知用户'
 }
 
 const getSenderAvatar = (senderId) => {
-  const member = members.value.find(m => m.userId === senderId)
+  const member = members.value.find(m => String(m.userId) === String(senderId))
   return member?.avatar || '/static/default-avatar.png'
 }
 
@@ -218,7 +282,7 @@ const sendMessage = async () => {
 
   try {
     const userId = userStore.userInfo?.userId
-    const res = await classApi.sendMessage(classId.value, userId, inputMessage.value)
+    const res = await classApi.sendMessage(classId.value, inputMessage.value, userId)
     if (res.code === 200) {
       inputMessage.value = ''
       loadMessages()
@@ -233,7 +297,96 @@ const sendMessage = async () => {
 
 const handleSendExamNotice = () => {
   showActions.value = false
-  uni.showToast({ title: '考试通知功能开发中', icon: 'none' })
+  loadPapers()
+  showExamForm.value = true
+}
+
+const loadPapers = async () => {
+  try {
+    const res = await paperApi.page({ current: 1, size: 50 })
+    if (res.code === 200) {
+      papers.value = res.data.records || []
+    }
+  } catch (e) {
+    console.error('加载试卷失败:', e)
+    uni.showToast({ title: '加载试卷失败', icon: 'none' })
+  }
+}
+
+const onPaperChange = (e) => {
+  const index = e.detail.value
+  if (papers.value[index]) {
+    selectedPaperId.value = papers.value[index].id
+    selectedPaper.value = papers.value[index]
+  }
+}
+
+const onStartDateChange = (e) => {
+  examForm.startDate = e.detail.value
+}
+
+const onStartTimeChange = (e) => {
+  examForm.startTime = e.detail.value
+}
+
+const submitExam = async () => {
+  if (!examForm.title.trim()) {
+    uni.showToast({ title: '请输入考试标题', icon: 'none' })
+    return
+  }
+  if (!selectedPaperId.value) {
+    uni.showToast({ title: '请选择试卷', icon: 'none' })
+    return
+  }
+  if (!examForm.duration) {
+    uni.showToast({ title: '请输入考试时长', icon: 'none' })
+    return
+  }
+  if (!examForm.startDate || !examForm.startTime) {
+    uni.showToast({ title: '请选择开始时间', icon: 'none' })
+    return
+  }
+
+  try {
+    uni.showLoading({ title: '发布中...' })
+    
+    const startTime = `${examForm.startDate} ${examForm.startTime}:00`
+    
+    const examData = {
+      title: examForm.title,
+      paperId: selectedPaperId.value,
+      classIds: classId.value,
+      duration: parseInt(examForm.duration),
+      startTime: startTime,
+      status: 'PENDING'
+    }
+
+    const res = await examApi.create(examData)
+    
+    if (res.code === 200) {
+      uni.showToast({ title: '考试发布成功', icon: 'success' })
+      showExamForm.value = false
+      
+      const noticeContent = `EXAM_NOTICE|PUBLISH|${examForm.title}|${startTime}||${examForm.duration}|${res.data.id}`
+      await classApi.sendMessage(classId.value, noticeContent, userStore.userInfo?.userId)
+      
+      examForm.title = ''
+      examForm.duration = ''
+      examForm.startDate = ''
+      examForm.startTime = ''
+      selectedPaperId.value = null
+      selectedPaper.value = null
+      
+      loadMessages()
+    } else {
+      uni.showToast({ title: res.message || '发布失败', icon: 'none' })
+    }
+  } catch (e) {
+    console.error('发布考试失败:', e)
+    uni.showToast({ title: '发布失败', icon: 'none' })
+  } finally {
+    uni.hideLoading()
+  }
 }
 
 const handleInvite = () => {
@@ -291,9 +444,10 @@ const handleUnmute = async (member) => {
 
 const loadMessages = async () => {
   try {
-    const res = await classApi.getMessages(classId.value)
+    const res = await classApi.getMessages(classId.value, 1, 50)
     if (res.code === 200) {
-      messages.value = res.data
+      const records = res.data.records || res.data
+      messages.value = records.reverse()
       nextTick(() => {
         scrollTop.value = 999999
       })
@@ -305,13 +459,13 @@ const loadMessages = async () => {
 
 const loadMembers = async () => {
   try {
-    const res = await classApi.getMembers(classId.value)
+    const res = await classApi.getClassMembers(classId.value)
     if (res.code === 200) {
       members.value = res.data
       memberCount.value = res.data.length
 
       const userId = userStore.userInfo?.userId
-      const currentMember = res.data.find(m => m.userId === userId)
+      const currentMember = res.data.find(m => String(m.userId) === String(userId))
       if (currentMember) {
         currentRole.value = currentMember.role
         canManageMember.value = currentMember.role === 'CREATOR' || currentMember.role === 'TEACHER'
@@ -327,6 +481,7 @@ const loadClassInfo = async () => {
     const res = await classApi.getById(classId.value)
     if (res.code === 200) {
       className.value = res.data.className
+      inviteCode.value = res.data.inviteCode || ''
     }
   } catch (e) {
     console.error(e)
@@ -343,10 +498,11 @@ onLoad((options) => {
 
 <style scoped>
 .class-chat {
-  min-height: 100vh;
+  height: 100vh;
   background-color: #f5f5f5;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .chat-header {
@@ -366,6 +522,12 @@ onLoad((options) => {
 
 .back-btn {
   padding: 8rpx;
+  
+  .back-icon {
+    font-size: 48rpx;
+    color: #333;
+    font-weight: bold;
+  }
 }
 
 .header-info {
@@ -391,11 +553,16 @@ onLoad((options) => {
 
 .member-btn, .more-btn {
   padding: 8rpx;
+  
+  .btn-icon {
+    font-size: 36rpx;
+    color: #666;
+  }
 }
 
 .chat-body {
   flex: 1;
-  height: calc(100vh - 180rpx);
+  overflow: hidden;
 }
 
 .message-list {
@@ -692,6 +859,10 @@ onLoad((options) => {
   border-radius: 12rpx;
   margin-bottom: 12rpx;
   background: #f5f5f5;
+  
+  .action-icon {
+    font-size: 32rpx;
+  }
 }
 
 .action-item.danger {
@@ -703,5 +874,75 @@ onLoad((options) => {
 .action-item text {
   font-size: 28rpx;
   color: #333;
+}
+
+.exam-form-modal {
+  width: 90%;
+  max-height: 80vh;
+  background: #fff;
+  border-radius: 16rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-body {
+  flex: 1;
+  padding: 32rpx;
+  max-height: 50vh;
+}
+
+.form-item {
+  margin-bottom: 28rpx;
+  
+  .form-label {
+    display: block;
+    font-size: 28rpx;
+    color: #333;
+    margin-bottom: 12rpx;
+  }
+  
+  .form-input {
+    height: 80rpx;
+    background: #f5f5f5;
+    border-radius: 12rpx;
+    padding: 0 24rpx;
+    font-size: 28rpx;
+  }
+  
+  .form-picker {
+    height: 80rpx;
+    background: #f5f5f5;
+    border-radius: 12rpx;
+    padding: 0 24rpx;
+    display: flex;
+    align-items: center;
+    font-size: 28rpx;
+    color: #666;
+  }
+}
+
+.modal-footer {
+  display: flex;
+  gap: 24rpx;
+  padding: 24rpx 32rpx;
+  border-top: 1rpx solid #eee;
+  
+  .modal-btn {
+    flex: 1;
+    height: 80rpx;
+    line-height: 80rpx;
+    border-radius: 12rpx;
+    font-size: 28rpx;
+    
+    &.cancel {
+      background: #f5f5f5;
+      color: #666;
+    }
+    
+    &.confirm {
+      background: #dc2626;
+      color: #fff;
+    }
+  }
 }
 </style>

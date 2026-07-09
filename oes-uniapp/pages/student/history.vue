@@ -66,7 +66,7 @@ const handleSearch = () => {
 
 const handleDetail = (item) => {
   uni.navigateTo({
-    url: `/pages/student/exam-take?id=${item.examId}`
+    url: `/pages/student/exam-take?id=${item.examId}&recordId=${item.id}&review=1`
   })
 }
 

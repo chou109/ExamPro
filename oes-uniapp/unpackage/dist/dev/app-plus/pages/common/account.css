@@ -219,3 +219,85 @@
   color: #fff;
   font-size: 1rem;
 }
+.avatar-box {
+  position: relative;
+}
+.avatar-edit-icon {
+  position: absolute;
+  right: -0.125rem;
+  bottom: -0.125rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  background: #dc2626;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0.09375rem solid #fff;
+}
+.avatar-edit-icon .edit-icon {
+  font-size: 0.625rem;
+  color: #fff;
+}
+.avatar-menu-popup {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+.avatar-menu-content {
+  background: #fff;
+  border-radius: 0.75rem 0.75rem 0 0;
+  padding: 1rem 0;
+}
+.avatar-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 0;
+  border-bottom: 0.03125rem solid #f0f0f0;
+}
+.avatar-menu-item .menu-item-icon {
+  font-size: 1.25rem;
+  margin-right: 0.5rem;
+}
+.avatar-menu-item .menu-item-text {
+  font-size: 1rem;
+  color: #333;
+}
+.avatar-menu-cancel {
+  margin-top: 0.5rem;
+  padding: 1rem 0;
+  background: #f5f5f5;
+}
+.avatar-menu-cancel .menu-cancel-text {
+  font-size: 1rem;
+  color: #666;
+  text-align: center;
+  display: block;
+}
+.view-avatar-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.9);
+}
+.view-avatar-img {
+  width: 18.75rem;
+  height: 18.75rem;
+  border-radius: 0.5rem;
+}
+.view-avatar-close {
+  position: absolute;
+  top: 1.875rem;
+  right: 1rem;
+  font-size: 1.5rem;
+  color: #fff;
+}

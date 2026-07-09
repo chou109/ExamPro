@@ -1,0 +1,176 @@
+
+.exam-monitor[data-v-f57b8412] {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: 1.25rem;
+}
+.page-header[data-v-f57b8412] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border-bottom: 0.03125rem solid #eee;
+}
+.back-btn[data-v-f57b8412] {
+  padding: 0.25rem;
+.back-icon[data-v-f57b8412] {
+    font-size: 1.5rem;
+    color: #333;
+    font-weight: bold;
+}
+}
+.title[data-v-f57b8412] {
+  font-size: 1.125rem;
+  font-weight: bold;
+  color: #333;
+}
+.card[data-v-f57b8412] {
+  background: #fff;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  margin: 0.75rem;
+}
+.card-header[data-v-f57b8412] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.625rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 0.03125rem solid #eee;
+.card-title[data-v-f57b8412] {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+}
+.status-picker[data-v-f57b8412] {
+    padding: 0.25rem 0.5rem;
+    background: #f5f5f5;
+    border-radius: 0.25rem;
+    font-size: 0.8125rem;
+    color: #666;
+}
+}
+.exam-header[data-v-f57b8412] {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+.exam-title[data-v-f57b8412] {
+    font-size: 1rem;
+    font-weight: bold;
+    color: #333;
+    flex: 1;
+}
+.status-tag[data-v-f57b8412] {
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+}
+.status-pending[data-v-f57b8412] {
+    background: #fdf6ec;
+    color: #e6a23c;
+}
+.status-ongoing[data-v-f57b8412] {
+    background: #f0f9ff;
+    color: #67c23a;
+}
+.status-finished[data-v-f57b8412] {
+    background: #f4f4f5;
+    color: #909399;
+}
+}
+.exam-info[data-v-f57b8412] {
+.info-row[data-v-f57b8412] {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.375rem;
+.info-icon[data-v-f57b8412] {
+      font-size: 0.875rem;
+      margin-right: 0.375rem;
+}
+.info-text[data-v-f57b8412] {
+      font-size: 0.875rem;
+      color: #666;
+}
+}
+}
+.stats-grid[data-v-f57b8412] {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+.stat-item[data-v-f57b8412] {
+    text-align: center;
+    padding: 0.625rem 0;
+    background: #f5f5f5;
+    border-radius: 0.375rem;
+.stat-value[data-v-f57b8412] {
+      display: block;
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #dc2626;
+}
+.stat-label[data-v-f57b8412] {
+      display: block;
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 0.25rem;
+}
+}
+}
+.student-list[data-v-f57b8412] {
+.student-item[data-v-f57b8412] {
+    display: flex;
+    align-items: center;
+    padding: 0.625rem 0;
+    border-bottom: 0.03125rem solid #eee;
+&[data-v-f57b8412]:last-child {
+      border-bottom: none;
+}
+.student-info[data-v-f57b8412] {
+      flex: 1;
+.student-name[data-v-f57b8412] {
+        display: block;
+        font-size: 0.875rem;
+        color: #333;
+        margin-bottom: 0.125rem;
+}
+.student-id[data-v-f57b8412] {
+        font-size: 0.75rem;
+        color: #999;
+}
+}
+.student-status[data-v-f57b8412] {
+      margin: 0 0.625rem;
+.status-badge[data-v-f57b8412] {
+        padding: 0.1875rem 0.5rem;
+        border-radius: 0.1875rem;
+        font-size: 0.6875rem;
+}
+.status-not-started[data-v-f57b8412] {
+        background: #f4f4f5;
+        color: #909399;
+}
+.status-ongoing[data-v-f57b8412] {
+        background: #f0f9ff;
+        color: #67c23a;
+}
+.status-submitted[data-v-f57b8412] {
+        background: #f0f9ff;
+        color: #409eff;
+}
+.status-auto-submitted[data-v-f57b8412] {
+        background: #fef0f0;
+        color: #f56c6c;
+}
+}
+.student-meta[data-v-f57b8412] {
+      text-align: right;
+uni-text[data-v-f57b8412] {
+        display: block;
+        font-size: 0.6875rem;
+        color: #999;
+}
+}
+}
+}

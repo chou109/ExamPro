@@ -1,8 +1,8 @@
 <template>
   <view class="my-classes">
     <view class="page-header">
-      <text class="title">我的班级</text>
-      <text class="subtitle">查看和管理您加入的班级</text>
+      <text class="title">班级消息</text>
+      <text class="subtitle">查看班级最新动态</text>
     </view>
 
     <!-- 加入班级 -->
@@ -21,24 +21,25 @@
       </view>
     </view>
 
-    <!-- 班级列表 -->
-    <view class="class-list">
-      <view class="class-card" v-for="item in classList" :key="item.class.id" @click="enterClass(item.class.id)">
-        <view class="class-info">
-          <text class="class-name">{{ item.class.className }}</text>
-          <view class="class-meta">
-            <view class="meta-item">
-              <uni-icons type="info" size="16" color="#666" />
-              <text class="meta-text">群号：{{ item.class.inviteCode }}</text>
-            </view>
-            <view class="meta-item">
-              <uni-icons type="person" size="16" color="#666" />
-              <text class="meta-text">角色：{{ getRoleText(item.role) }}</text>
-            </view>
+    <!-- 班级消息列表 -->
+    <view class="class-message-list" v-if="classList.length > 0">
+      <view class="class-message-card" v-for="item in classList" :key="item.class.id" @click="enterClass(item.class.id)">
+        <view class="class-message-icon">
+          <text class="icon-emoji">🏫</text>
+        </view>
+        <view class="class-message-info">
+          <view class="class-message-header">
+            <text class="class-message-name">{{ item.class.className }}</text>
+            <text class="class-message-time">{{ formatMessageTime(item.class.lastMessageTime) }}</text>
+          </view>
+          <text class="class-message-content">{{ getLastMessage(item.class) }}</text>
+          <view class="class-message-meta">
+            <text>群号：{{ item.class.inviteCode }}</text>
+            <text>角色：{{ getRoleText(item.role) }}</text>
           </view>
         </view>
-        <view class="class-actions">
-          <button class="enter-btn">进入班级</button>
+        <view class="class-message-arrow">
+          <text class="arrow-icon">›</text>
         </view>
       </view>
     </view>
@@ -117,20 +118,63 @@ const enterClass = (classId) => {
 
 const loadClasses = async () => {
   try {
-    const userId = userStore.userInfo?.userId
-    if (!userId) return
+    const userId = userStore.userInfo?.userId || uni.getStorageSync('userId')
+    console.log('loadClasses userId:', userId)
+    if (!userId) {
+      console.log('userId为空')
+      return
+    }
 
+    console.log('调用classApi.getMyClasses:', userId)
     const res = await classApi.getMyClasses(userId)
+    console.log('getMyClasses返回:', JSON.stringify(res))
     if (res.code === 200) {
       classList.value = res.data
+      console.log('classList:', JSON.stringify(classList.value))
+    } else {
+      console.log('接口返回错误:', res.message)
     }
   } catch (e) {
-    console.error(e)
+    console.error('加载班级失败:', e)
     uni.showToast({
       title: '加载班级列表失败',
       icon: 'none'
     })
   }
+}
+
+const getLastMessage = (cls) => {
+  if (!cls.lastMessage) return '暂无消息'
+  if (cls.lastMessage.startsWith('EXAM_NOTICE|')) {
+    return parseExamNotice(cls.lastMessage)
+  }
+  return cls.lastMessage
+}
+
+const parseExamNotice = (content) => {
+  if (!content?.startsWith('EXAM_NOTICE|')) return ''
+  const parts = content.split('|')
+  const noticeType = parts[1] || ''
+  const title = parts[2] || ''
+  if (noticeType === 'START') {
+    return '🚀 ' + title + ' 开始考试'
+  } else if (noticeType === 'PUBLISH') {
+    return '📢 ' + title + ' 发布通知'
+  } else if (noticeType === 'END') {
+    return '🔚 ' + title + ' 考试结束'
+  }
+  return '📝 ' + title
+}
+
+const formatMessageTime = (time) => {
+  if (!time) return ''
+  const date = new Date(time)
+  const now = new Date()
+  const diff = now - date
+  if (diff < 60000) return '刚刚'
+  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
+  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
+  return date.toLocaleDateString('zh-CN')
 }
 
 onMounted(() => {
@@ -200,59 +244,90 @@ onMounted(() => {
   font-size: 28rpx;
 }
 
-.class-list {
+.class-message-list {
   margin-top: 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
 }
 
-.class-card {
+.class-message-card {
+  display: flex;
+  align-items: center;
   background: #fff;
   border-radius: 16rpx;
   padding: 28rpx;
-  margin-bottom: 20rpx;
-}
-
-.class-info {
-  margin-bottom: 20rpx;
-}
-
-.class-name {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 16rpx;
-  display: block;
-}
-
-.class-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-}
-
-.meta-text {
-  margin-left: 12rpx;
-  font-size: 28rpx;
-  color: #666;
-}
-
-.class-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.enter-btn {
-  width: 200rpx;
-  height: 72rpx;
-  line-height: 72rpx;
-  background: #409eff;
-  color: #fff;
-  border-radius: 12rpx;
-  font-size: 28rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+  
+  .class-message-icon {
+    width: 80rpx;
+    height: 80rpx;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    border-radius: 16rpx;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 24rpx;
+    flex-shrink: 0;
+    
+    .icon-emoji {
+      font-size: 36rpx;
+    }
+  }
+  
+  .class-message-info {
+    flex: 1;
+    min-width: 0;
+    
+    .class-message-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12rpx;
+      
+      .class-message-name {
+        font-size: 30rpx;
+        font-weight: 600;
+        color: #333;
+      }
+      
+      .class-message-time {
+        font-size: 24rpx;
+        color: #999;
+        flex-shrink: 0;
+      }
+    }
+    
+    .class-message-content {
+      font-size: 26rpx;
+      color: #666;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
+      margin-bottom: 12rpx;
+    }
+    
+    .class-message-meta {
+      display: flex;
+      gap: 20rpx;
+      
+      text {
+        font-size: 24rpx;
+        color: #999;
+      }
+    }
+  }
+  
+  .class-message-arrow {
+    margin-left: 16rpx;
+    flex-shrink: 0;
+    
+    .arrow-icon {
+      font-size: 40rpx;
+      color: #999;
+    }
+  }
 }
 
 .empty {

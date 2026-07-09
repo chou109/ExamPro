@@ -31,4 +31,11 @@ public class SysClass extends BaseEntity {
     public String getClassName() {
         return this.name;
     }
+    
+    // 添加最近消息相关字段
+    @com.baomidou.mybatisplus.annotation.TableField(exist = false)
+    private String lastMessage;
+    
+    @com.baomidou.mybatisplus.annotation.TableField(exist = false)
+    private String lastMessageTime;
 }

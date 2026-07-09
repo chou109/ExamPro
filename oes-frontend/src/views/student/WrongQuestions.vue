@@ -23,7 +23,7 @@
         <el-table-column prop="content" label="题目内容" show-overflow-tooltip />
         <el-table-column prop="type" label="类型" width="100">
           <template #default="{ row }">
-            <el-tag size="small">{{ typeText(row.type) }}</el-tag>
+            <el-tag size="small">{{ row.correctAnswer?.includes(',') ? '多选题' : typeText(row.type) }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="mastered" label="状态" width="100">
@@ -90,16 +90,16 @@
 
     <el-dialog v-model="practiceVisible" title="错题练习" width="600px">
       <div v-if="currentQuestion" class="practice-content">
-        <div class="question-type">{{ typeText(currentQuestion.type) }}</div>
+        <div class="question-type">{{ currentQuestion.correctAnswer?.includes(',') ? '多选题' : typeText(currentQuestion.type) }}</div>
         <div class="question-text">{{ currentQuestion.content }}</div>
 
         <div class="question-options" v-if="['SINGLE_CHOICE', 'MULTIPLE_CHOICE', 'JUDGMENT'].includes(currentQuestion.type)">
-          <el-radio-group v-if="currentQuestion.type === 'SINGLE_CHOICE'" v-model="practiceAnswer">
+          <el-radio-group v-if="currentQuestion.type === 'SINGLE_CHOICE' && !currentQuestion.correctAnswer?.includes(',')" v-model="practiceAnswer">
             <el-radio v-for="(label, key) in parseOptions(currentQuestion.options)" :key="key" :value="key">
               {{ key }}. {{ label }}
             </el-radio>
           </el-radio-group>
-          <el-checkbox-group v-else-if="currentQuestion.type === 'MULTIPLE_CHOICE'" v-model="practiceMultiAnswers">
+          <el-checkbox-group v-else-if="currentQuestion.type === 'MULTIPLE_CHOICE' || currentQuestion.correctAnswer?.includes(',')" v-model="practiceMultiAnswers">
             <el-checkbox v-for="(label, key) in parseOptions(currentQuestion.options)" :key="key" :value="key">
               {{ key }}. {{ label }}
             </el-checkbox>

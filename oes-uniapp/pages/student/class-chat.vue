@@ -55,7 +55,7 @@
                   <text>{{ getNoticeDuration(msg.content) }}分钟</text>
                 </view>
               </view>
-              <button class="notice-btn" @click="goToExamList(msg)">
+              <button class="notice-btn" @click="goToExamDetail(msg)">
                 {{ getNoticeBtnText(msg.content) }}
               </button>
             </view>
@@ -143,8 +143,42 @@ const isSelfMessage = (senderId) => {
   return String(senderId) === String(userId)
 }
 
+const getSenderName = (senderId) => {
+  const member = members.value.find(m => String(m.userId) === String(senderId))
+  return member?.realName || '未知用户'
+}
+
+const getSenderAvatar = (senderId) => {
+  const member = members.value.find(m => String(m.userId) === String(senderId))
+  return member?.avatar || '/static/default-avatar.png'
+}
+
 const isExamNotice = (msg) => {
   return msg.content?.startsWith('EXAM_NOTICE|')
+}
+
+const sendMessage = async () => {
+  if (!inputMessage.value.trim() || isMuted.value) return
+
+  try {
+    const userId = userStore.userInfo?.userId
+    const res = await classApi.sendMessage(classId.value, inputMessage.value, userId)
+    if (res.code === 200) {
+      inputMessage.value = ''
+      loadMessages()
+    } else {
+      uni.showToast({
+        title: res.message || '发送失败',
+        icon: 'none'
+      })
+    }
+  } catch (e) {
+    console.error(e)
+    uni.showToast({
+      title: '网络错误',
+      icon: 'none'
+    })
+  }
 }
 
 const parseExamNotice = (content) => {
@@ -195,16 +229,6 @@ const getNoticeDuration = (content) => {
   return notice ? notice.duration : ''
 }
 
-const getSenderName = (senderId) => {
-  const member = members.value.find(m => m.userId === senderId)
-  return member?.realName || '未知用户'
-}
-
-const getSenderAvatar = (senderId) => {
-  const member = members.value.find(m => m.userId === senderId)
-  return member?.avatar || '/static/default-avatar.png'
-}
-
 const formatTime = (time) => {
   if (!time) return ''
   const date = new Date(time)
@@ -220,44 +244,21 @@ const goBack = () => {
   uni.navigateBack()
 }
 
-const goToExamList = (msg) => {
+const goToExamDetail = (msg) => {
   const examNotice = parseExamNotice(msg.content)
-  if (examNotice) {
+  if (examNotice && examNotice.examId) {
     uni.navigateTo({
-      url: `/pages/student/exam-list`
-    })
-  }
-}
-
-const sendMessage = async () => {
-  if (!inputMessage.value.trim() || isMuted.value) return
-
-  try {
-    const userId = userStore.userInfo?.userId
-    const res = await classApi.sendMessage(classId.value, userId, inputMessage.value)
-    if (res.code === 200) {
-      inputMessage.value = ''
-      loadMessages()
-    } else {
-      uni.showToast({
-        title: res.message || '发送失败',
-        icon: 'none'
-      })
-    }
-  } catch (e) {
-    console.error(e)
-    uni.showToast({
-      title: '网络错误',
-      icon: 'none'
+      url: `/pages/student/exam-take?id=${examNotice.examId}`
     })
   }
 }
 
 const loadMessages = async () => {
   try {
-    const res = await classApi.getMessages(classId.value)
+    const res = await classApi.getMessages(classId.value, 1, 50)
     if (res.code === 200) {
-      messages.value = res.data
+      const records = res.data.records || res.data
+      messages.value = records.reverse()
       nextTick(() => {
         scrollTop.value = 999999
       })
@@ -273,14 +274,13 @@ const loadMoreMessages = () => {
 
 const loadMembers = async () => {
   try {
-    const res = await classApi.getMembers(classId.value)
+    const res = await classApi.getClassMembers(classId.value)
     if (res.code === 200) {
       members.value = res.data
       memberCount.value = res.data.length
 
-      // 检查当前用户是否被禁言
       const userId = userStore.userInfo?.userId
-      const currentMember = res.data.find(m => m.userId === userId)
+      const currentMember = res.data.find(m => String(m.userId) === String(userId))
       if (currentMember && currentMember.muteUntil) {
         isMuted.value = true
       }
@@ -311,10 +311,11 @@ onLoad((options) => {
 
 <style scoped>
 .class-chat {
-  min-height: 100vh;
+  height: 100vh;
   background-color: #f5f5f5;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .chat-header {
@@ -358,7 +359,7 @@ onLoad((options) => {
 
 .chat-body {
   flex: 1;
-  height: calc(100vh - 180rpx);
+  overflow: hidden;
 }
 
 .message-list {

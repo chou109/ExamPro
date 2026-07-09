@@ -30,19 +30,19 @@
 
         <view class="exam-info">
           <view class="info-row">
-            <uni-icons type="flag" size="16" color="#666" />
+            <text class="info-icon">📚</text>
             <text class="info-text">科目：{{ getSubjectName(item.subjectId) }}</text>
           </view>
           <view class="info-row">
-            <uni-icons type="clock" size="16" color="#666" />
+            <text class="info-icon">⏱</text>
             <text class="info-text">时长：{{ item.duration }}分钟</text>
           </view>
           <view class="info-row">
-            <uni-icons type="calendar" size="16" color="#666" />
+            <text class="info-icon">📅</text>
             <text class="info-text">开始：{{ formatDateTime(item.startTime) }}</text>
           </view>
           <view class="info-row">
-            <uni-icons type="medal" size="16" color="#666" />
+            <text class="info-icon">🏆</text>
             <text class="info-text">总分：{{ item.totalScore }}分</text>
           </view>
         </view>
@@ -129,15 +129,15 @@ const onStatusChange = (e) => {
 }
 
 const handleCreate = () => {
-  uni.showToast({ title: '考试创建功能开发中', icon: 'none' })
+  uni.navigateTo({ url: '/pages/teacher/exam-edit' })
 }
 
 const handleMonitor = (item) => {
-  uni.showToast({ title: '监控功能开发中', icon: 'none' })
+  uni.navigateTo({ url: `/pages/teacher/exam-monitor?id=${item.id}` })
 }
 
 const handleEdit = (item) => {
-  uni.showToast({ title: '修改功能开发中', icon: 'none' })
+  uni.navigateTo({ url: `/pages/teacher/exam-edit?id=${item.id}` })
 }
 
 const handleStart = async (item) => {
@@ -147,7 +147,7 @@ const handleStart = async (item) => {
     success: async (res) => {
       if (res.confirm) {
         try {
-          const result = await examApi.startExam(item.id)
+          const result = await examApi.start(item.id)
           if (result.code === 200) {
             uni.showToast({ title: '考试已开始', icon: 'success' })
             loadData()
@@ -169,7 +169,7 @@ const handleFinish = async (item) => {
     success: async (res) => {
       if (res.confirm) {
         try {
-          const result = await examApi.finishExam(item.id)
+          const result = await examApi.finish(item.id)
           if (result.code === 200) {
             uni.showToast({ title: '考试已结束', icon: 'success' })
             loadData()

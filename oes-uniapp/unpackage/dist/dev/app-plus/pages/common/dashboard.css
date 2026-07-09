@@ -112,6 +112,28 @@
   font-size: 0.8125rem;
   color: #dc2626;
 }
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 0;
+  border-bottom: 0.03125rem solid #e5e5e5;
+}
+.nav-item:last-child {
+  border-bottom: none;
+}
+.nav-item .nav-icon {
+  font-size: 1.125rem;
+  margin-right: 0.625rem;
+}
+.nav-item .nav-text {
+  flex: 1;
+  font-size: 1rem;
+  color: #333;
+}
+.nav-item .nav-arrow {
+  font-size: 1.25rem;
+  color: #999;
+}
 .log-list .log-item {
   display: flex;
   align-items: center;
@@ -179,6 +201,12 @@
 }
 .exam-list .exam-item .exam-status .status-tag.finished .status-text {
   color: #64748b;
+}
+.exam-list .exam-item .exam-status .status-tag.failed {
+  background: rgba(239, 68, 68, 0.1);
+}
+.exam-list .exam-item .exam-status .status-tag.failed .status-text {
+  color: #ef4444;
 }
 .exam-list .exam-item .exam-status .status-tag .status-text {
   font-size: 0.75rem;

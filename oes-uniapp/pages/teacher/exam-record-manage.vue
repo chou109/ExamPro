@@ -30,19 +30,19 @@
 
         <view class="record-info">
           <view class="info-row">
-            <uni-icons type="flag" size="16" color="#666" />
+            <text class="info-icon">📋</text>
             <text class="info-text">考试：{{ item.examTitle }}</text>
           </view>
           <view class="info-row">
-            <uni-icons type="clock" size="16" color="#666" />
+            <text class="info-icon">📅</text>
             <text class="info-text">提交时间：{{ formatDateTime(item.submitTime) }}</text>
           </view>
           <view class="info-row">
-            <uni-icons type="timer" size="16" color="#666" />
+            <text class="info-icon">⏱</text>
             <text class="info-text">用时：{{ item.duration }}分钟</text>
           </view>
           <view v-if="item.status === 'AUTO_SUBMITTED'" class="info-row">
-            <uni-icons type="info" size="16" color="#f56c6c" />
+            <text class="info-icon">⚠️</text>
             <text class="info-text warning">强制收卷</text>
           </view>
         </view>
@@ -113,12 +113,14 @@ const onStatusChange = (e) => {
 
 const handleView = (item) => {
   uni.navigateTo({
-    url: `/pages/student/exam-take?id=${item.examId}&recordId=${item.id}`
+    url: `/pages/teacher/exam-record-detail?examId=${item.examId}&recordId=${item.id}`
   })
 }
 
 const handleGrade = (item) => {
-  uni.showToast({ title: '评分功能开发中', icon: 'none' })
+  uni.navigateTo({
+    url: `/pages/teacher/exam-grade?examId=${item.examId}&recordId=${item.id}`
+  })
 }
 
 const loadExams = async () => {

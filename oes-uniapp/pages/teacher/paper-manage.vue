@@ -30,19 +30,19 @@
 
         <view class="paper-info">
           <view class="info-row">
-            <uni-icons type="flag" size="16" color="#666" />
+            <text class="info-icon">📚</text>
             <text class="info-text">科目：{{ getSubjectName(item.subjectId) }}</text>
           </view>
           <view class="info-row">
-            <uni-icons type="list" size="16" color="#666" />
+            <text class="info-icon">📝</text>
             <text class="info-text">题数：{{ item.questionCount }}道</text>
           </view>
           <view class="info-row">
-            <uni-icons type="medal" size="16" color="#666" />
+            <text class="info-icon">🏆</text>
             <text class="info-text">总分：{{ item.totalScore }}分</text>
           </view>
           <view class="info-row">
-            <uni-icons type="clock" size="16" color="#666" />
+            <text class="info-icon">⏱</text>
             <text class="info-text">时长：{{ item.duration }}分钟</text>
           </view>
         </view>
@@ -113,15 +113,15 @@ const onStatusChange = (e) => {
 }
 
 const handleCreate = () => {
-  uni.showToast({ title: '试卷创建功能开发中', icon: 'none' })
+  uni.navigateTo({ url: '/pages/teacher/paper-edit' })
 }
 
 const handleEdit = (item) => {
-  uni.showToast({ title: '编辑功能开发中', icon: 'none' })
+  uni.navigateTo({ url: `/pages/teacher/paper-edit?id=${item.id}` })
 }
 
 const handlePreview = (item) => {
-  uni.showToast({ title: '预览功能开发中', icon: 'none' })
+  uni.navigateTo({ url: `/pages/teacher/paper-preview?id=${item.id}` })
 }
 
 const handlePublish = async (item) => {

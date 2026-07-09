@@ -1,14 +1,11 @@
 <template>
   <view class="dashboard">
-    <!-- 页面头部 -->
     <view class="page-header">
       <text class="title">欢迎回来，{{ displayName }}</text>
       <text class="subtitle">{{ roleText }} | {{ currentDate }}</text>
     </view>
 
-    <!-- 统计卡片 -->
     <view class="stats-grid">
-      <!-- 管理员统计 -->
       <template v-if="userInfo.role === 'ADMIN'">
         <view class="stat-card" @click="goTo('/pages/admin/user-manage')">
           <view class="stat-icon admin-icon">
@@ -52,7 +49,6 @@
         </view>
       </template>
 
-      <!-- 教师统计 -->
       <template v-else-if="userInfo.role === 'TEACHER'">
         <view class="stat-card" @click="goTo('/pages/teacher/my-classes')">
           <view class="stat-icon teacher-icon">
@@ -96,7 +92,6 @@
         </view>
       </template>
 
-      <!-- 学生统计 -->
       <template v-else-if="userInfo.role === 'STUDENT'">
         <view class="stat-card" @click="goTo('/pages/student/exam-list')">
           <view class="stat-icon student-icon">
@@ -141,7 +136,26 @@
       </template>
     </view>
 
-    <!-- 管理员：最近日志 -->
+    <template v-if="userInfo.role === 'STUDENT'">
+      <view class="card">
+        <view class="nav-item" @click="goTo('/pages/student/my-classes')">
+          <view class="nav-icon">🏫</view>
+          <text class="nav-text">我的班级</text>
+          <text class="nav-arrow">›</text>
+        </view>
+        <view class="nav-item" @click="goTo('/pages/student/exam-list')">
+          <view class="nav-icon">📋</view>
+          <text class="nav-text">考试列表</text>
+          <text class="nav-arrow">›</text>
+        </view>
+        <view class="nav-item" @click="goTo('/pages/student/history')">
+          <view class="nav-icon">📝</view>
+          <text class="nav-text">考试历史</text>
+          <text class="nav-arrow">›</text>
+        </view>
+      </view>
+    </template>
+
     <template v-if="userInfo.role === 'ADMIN'">
       <view class="card">
         <view class="card-header">
@@ -163,8 +177,35 @@
       </view>
     </template>
 
-    <!-- 教师：最近考试 -->
     <template v-if="userInfo.role === 'TEACHER'">
+      <view class="card">
+        <view class="nav-item" @click="goTo('/pages/teacher/my-classes')">
+          <view class="nav-icon">🏫</view>
+          <text class="nav-text">班级管理</text>
+          <text class="nav-arrow">›</text>
+        </view>
+        <view class="nav-item" @click="goTo('/pages/teacher/subject-manage')">
+          <view class="nav-icon">📚</view>
+          <text class="nav-text">科目管理</text>
+          <text class="nav-arrow">›</text>
+        </view>
+        <view class="nav-item" @click="goTo('/pages/teacher/question-manage')">
+          <view class="nav-icon">❓</view>
+          <text class="nav-text">题库管理</text>
+          <text class="nav-arrow">›</text>
+        </view>
+        <view class="nav-item" @click="goTo('/pages/teacher/paper-manage')">
+          <view class="nav-icon">📄</view>
+          <text class="nav-text">试卷管理</text>
+          <text class="nav-arrow">›</text>
+        </view>
+        <view class="nav-item" @click="goTo('/pages/teacher/exam-manage')">
+          <view class="nav-icon">📅</view>
+          <text class="nav-text">考试管理</text>
+          <text class="nav-arrow">›</text>
+        </view>
+      </view>
+
       <view class="card">
         <view class="card-header">
           <view class="card-title">
@@ -179,10 +220,8 @@
               <text class="exam-title">{{ exam.title }}</text>
               <text class="exam-meta">{{ exam.className }} | {{ exam.startTime }}</text>
             </view>
-            <view class="exam-status">
-              <view :class="['status-tag', statusClass(exam.status)]">
-                <text class="status-text">{{ statusText(exam.status) }}</text>
-              </view>
+            <view :class="['status-tag', statusClass(exam.status)]">
+              <text class="status-text">{{ statusText(exam.status) }}</text>
             </view>
           </view>
           <view class="empty" v-if="recentExams.length === 0">
@@ -192,7 +231,6 @@
       </view>
     </template>
 
-    <!-- 学生：待考考试 -->
     <template v-if="userInfo.role === 'STUDENT'">
       <view class="card">
         <view class="card-header">
@@ -222,7 +260,6 @@
         </view>
       </view>
 
-      <!-- 考试须知 -->
       <view class="card tips-card">
         <view class="card-header">
           <view class="card-title">
@@ -255,7 +292,7 @@
 
 <script>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { examApi, examRecordApi, statisticsApi, logApi, userApi } from '../../utils/api'
+import { examApi, examRecordApi, statisticsApi, logApi, userApi, classApi } from '../../utils/api'
 
 export default {
   setup() {
@@ -322,6 +359,8 @@ export default {
         })
       }
     }
+
+    
 
     const loadStats = async () => {
       try {
@@ -562,6 +601,33 @@ export default {
   }
 }
 
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid #e5e5e5;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  .nav-icon {
+    font-size: 36rpx;
+    margin-right: 20rpx;
+  }
+
+  .nav-text {
+    flex: 1;
+    font-size: 32rpx;
+    color: #333;
+  }
+
+  .nav-arrow {
+    font-size: 40rpx;
+    color: #999;
+  }
+}
+
 .log-list {
   .log-item {
     display: flex;
@@ -638,6 +704,11 @@ export default {
         &.finished {
           background: rgba(100, 116, 139, 0.1);
           .status-text { color: #64748b; }
+        }
+
+        &.failed {
+          background: rgba(239, 68, 68, 0.1);
+          .status-text { color: #ef4444; }
         }
 
         .status-text {

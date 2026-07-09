@@ -1,9 +1,10 @@
 
 .class-chat[data-v-f2165426] {
-  min-height: 100vh;
+  height: 100vh;
   background-color: #f5f5f5;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 .chat-header[data-v-f2165426] {
   background: #fff;
@@ -39,7 +40,7 @@
 }
 .chat-body[data-v-f2165426] {
   flex: 1;
-  height: calc(100vh - 5.625rem);
+  overflow: hidden;
 }
 .message-list[data-v-f2165426] {
   padding: 0.75rem;

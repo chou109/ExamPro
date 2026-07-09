@@ -16,7 +16,7 @@
         >
           <view class="picker">
             <text>{{ currentSubjectText }}</text>
-            <uni-icons type="bottom" size="14" color="#666" />
+            <text class="picker-icon">▼</text>
           </view>
         </picker>
         <picker
@@ -27,7 +27,7 @@
         >
           <view class="picker">
             <text>{{ currentStatusText }}</text>
-            <uni-icons type="bottom" size="14" color="#666" />
+            <text class="picker-icon">▼</text>
           </view>
         </picker>
       </view>
@@ -44,7 +44,7 @@
         <view class="question-meta">
           <view class="meta-row">
             <view class="tag" :class="getTagClass(item.type)">
-              <text>{{ typeText(item.type) }}</text>
+              <text>{{ isMultiChoiceItem(item) ? '多选题' : typeText(item.type) }}</text>
             </view>
             <view class="tag" :class="item.mastered === 1 ? 'tag-success' : 'tag-warning'">
               <text>{{ item.mastered === 1 ? '已学会' : '未学会' }}</text>
@@ -76,7 +76,11 @@
       </view>
     </view>
 
-    <uni-load-more :status="loadStatus" />
+    <view class="load-more">
+    <text v-if="loadStatus === 'loading'" class="load-more-text">加载中...</text>
+    <text v-else-if="loadStatus === 'noMore'" class="load-more-text">没有更多数据</text>
+    <text v-else class="load-more-text load-more-more">点击加载更多</text>
+  </view>
 
     <!-- 查看答案弹窗 -->
     <view v-if="answerVisible" class="modal" @click="answerVisible = false">
@@ -84,7 +88,7 @@
         <view class="modal-header">
           <text class="modal-title">查看答案</text>
           <view class="modal-close" @click="answerVisible = false">
-            <uni-icons type="close" size="24" color="#333" />
+            <text class="close-icon">✕</text>
           </view>
         </view>
 
@@ -115,6 +119,62 @@
         </view>
       </view>
     </view>
+
+    <!-- 练习弹窗 -->
+    <view v-if="practiceVisible" class="modal" @click="practiceVisible = false">
+      <view class="modal-content practice-content" @click.stop>
+        <view class="modal-header">
+          <text class="modal-title">练习</text>
+          <view class="modal-close" @click="practiceVisible = false">
+            <text class="close-icon">✕</text>
+          </view>
+        </view>
+
+        <view v-if="practicingItem" class="practice-body">
+          <view class="question-type-tag">
+            <text>{{ isMultiChoice() ? '多选题' : typeText(practicingItem.type) }}</text>
+          </view>
+          <text class="answer-question-text">{{ practicingItem.content }}</text>
+
+          <view v-if="practicingItem.options" class="options-list">
+            <view
+              v-for="(option, index) in parseOptions(practicingItem.options)"
+              :key="index"
+              class="option-item"
+              :class="{ selected: userAnswer.includes(option.key), correct: showPracticeResult && isCorrectOption(option.key), wrong: showPracticeResult && isWrongOption(option.key) }"
+              @click="selectOption(option.key)"
+            >
+              <text class="option-key">{{ option.key }}</text>
+              <text class="option-value">{{ option.value }}</text>
+            </view>
+          </view>
+
+          <view v-if="showPracticeResult" class="practice-result">
+            <view class="result-row" :class="isAnswerCorrect ? 'correct' : 'wrong'">
+              <text class="result-icon">{{ isAnswerCorrect ? '✓' : '✗' }}</text>
+              <text class="result-text">{{ isAnswerCorrect ? '回答正确！' : '回答错误' }}</text>
+            </view>
+            <view class="answer-row">
+              <text class="label">你的答案：</text>
+              <text class="value" :class="isAnswerCorrect ? 'correct' : 'wrong'">{{ formatAnswer(userAnswer) }}</text>
+            </view>
+            <view class="answer-row">
+              <text class="label">正确答案：</text>
+              <text class="value correct">{{ practicingItem.correctAnswer }}</text>
+            </view>
+            <view v-if="practicingItem.analysis" class="analysis">
+              <text class="label">解析：</text>
+              <text class="value">{{ practicingItem.analysis }}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="modal-footer">
+          <button v-if="!showPracticeResult" class="close-btn primary" @click="submitPractice">提交答案</button>
+          <button v-else class="close-btn" @click="practiceVisible = false">关闭</button>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -133,6 +193,10 @@ const current = ref(1)
 const size = ref(10)
 const answerVisible = ref(false)
 const viewingAnswer = ref(null)
+const practiceVisible = ref(false)
+const practicingItem = ref(null)
+const userAnswer = ref([])
+const showPracticeResult = ref(false)
 
 const typeMap = {
   SINGLE_CHOICE: '单选题',
@@ -194,10 +258,107 @@ const handleViewAnswer = (item) => {
 }
 
 const handlePractice = (item) => {
-  uni.showToast({
-    title: '练习功能开发中',
-    icon: 'none'
-  })
+  practicingItem.value = item
+  userAnswer.value = []
+  showPracticeResult.value = false
+  practiceVisible.value = true
+}
+
+const parseOptions = (options) => {
+  try {
+    const parsed = typeof options === 'string' ? JSON.parse(options) : options
+    if (Array.isArray(parsed)) {
+      return parsed.map(item => ({
+        key: item.key || '',
+        value: item.content || item.value || ''
+      }))
+    }
+    return Object.entries(parsed).map(([key, value]) => ({ key, value }))
+  } catch {
+    return []
+  }
+}
+
+const isMultiChoiceItem = (item) => {
+  const type = item?.type
+  const correctAnswer = item?.correctAnswer || ''
+  return type === 'MULTIPLE_CHOICE' || correctAnswer.includes(',')
+}
+
+const isMultiChoice = () => {
+  return isMultiChoiceItem(practicingItem.value)
+}
+
+const selectOption = (key) => {
+  if (showPracticeResult.value) return
+  if (isMultiChoice()) {
+    const index = userAnswer.value.indexOf(key)
+    if (index > -1) {
+      userAnswer.value.splice(index, 1)
+    } else {
+      userAnswer.value.push(key)
+    }
+  } else {
+    userAnswer.value = [key]
+  }
+}
+
+const getCorrectAnswers = () => {
+  const correct = practicingItem.value?.correctAnswer || ''
+  return correct.split(',').map(a => a.trim()).filter(a => a)
+}
+
+const isCorrectOption = (key) => {
+  return getCorrectAnswers().includes(key)
+}
+
+const isWrongOption = (key) => {
+  return userAnswer.value.includes(key) && !isCorrectOption(key)
+}
+
+const isAnswerCorrect = computed(() => {
+  const user = [...userAnswer.value].sort()
+  const correct = getCorrectAnswers().sort()
+  if (user.length !== correct.length) return false
+  return user.every((val, idx) => val === correct[idx])
+})
+
+const formatAnswer = (answer) => {
+  return answer.length > 0 ? answer.join('') : '未作答'
+}
+
+const submitPractice = async () => {
+  if (userAnswer.value.length === 0) {
+    uni.showToast({
+      title: '请选择答案',
+      icon: 'none'
+    })
+    return
+  }
+
+  try {
+    await wrongQuestionApi.practice(practicingItem.value.id)
+
+    if (isAnswerCorrect.value) {
+      await wrongQuestionApi.correct(practicingItem.value.id)
+    }
+
+    showPracticeResult.value = true
+
+    const idx = tableData.value.findIndex(item => item.id === practicingItem.value.id)
+    if (idx > -1) {
+      tableData.value[idx].practicedCount++
+      if (isAnswerCorrect.value) {
+        tableData.value[idx].correctCount++
+      }
+    }
+  } catch (e) {
+    console.error(e)
+    uni.showToast({
+      title: '练习提交失败',
+      icon: 'none'
+    })
+  }
 }
 
 const handleToggleMastered = async (item) => {
@@ -323,6 +484,11 @@ onMounted(() => {
   background: #f5f5f5;
   border-radius: 12rpx;
   font-size: 28rpx;
+}
+
+.picker-icon {
+  font-size: 20rpx;
+  color: #666;
 }
 
 .search-btn {
@@ -494,6 +660,11 @@ onMounted(() => {
   padding: 8rpx;
 }
 
+.close-icon {
+  font-size: 32rpx;
+  color: #999;
+}
+
 .answer-content {
   padding: 32rpx;
 }
@@ -571,5 +742,128 @@ onMounted(() => {
   color: #fff;
   border-radius: 12rpx;
   font-size: 28rpx;
+}
+
+.load-more {
+  padding: 32rpx;
+  text-align: center;
+}
+
+.load-more-text {
+  font-size: 28rpx;
+  color: #999;
+}
+
+.load-more-more {
+  color: #409eff;
+}
+
+.practice-content {
+  max-width: 700rpx;
+}
+
+.practice-body {
+  padding: 32rpx;
+}
+
+.options-list {
+  margin-top: 24rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  border: 2rpx solid transparent;
+  transition: all 0.2s;
+}
+
+.option-item.selected {
+  background: #ecf5ff;
+  border-color: #409eff;
+}
+
+.option-item.correct {
+  background: #f0f9ff;
+  border-color: #67c23a;
+}
+
+.option-item.wrong {
+  background: #fef0f0;
+  border-color: #f56c6c;
+}
+
+.option-key {
+  width: 48rpx;
+  height: 48rpx;
+  line-height: 48rpx;
+  text-align: center;
+  background: #fff;
+  border-radius: 50%;
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #666;
+  margin-right: 16rpx;
+}
+
+.option-item.selected .option-key {
+  background: #409eff;
+  color: #fff;
+}
+
+.option-item.correct .option-key {
+  background: #67c23a;
+  color: #fff;
+}
+
+.option-item.wrong .option-key {
+  background: #f56c6c;
+  color: #fff;
+}
+
+.option-value {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.practice-result {
+  margin-top: 24rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid #eee;
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.result-row.correct {
+  color: #67c23a;
+}
+
+.result-row.wrong {
+  color: #f56c6c;
+}
+
+.result-icon {
+  font-size: 36rpx;
+  font-weight: bold;
+  margin-right: 12rpx;
+}
+
+.result-text {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.close-btn.primary {
+  background: #67c23a;
 }
 </style>

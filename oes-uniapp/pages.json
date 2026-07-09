@@ -25,6 +25,14 @@
       }
     },
     {
+      "path": "pages/common/message",
+      "style": {
+        "navigationBarTitleText": "消息",
+        "navigationBarBackgroundColor": "#dc2626",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
       "path": "pages/common/account",
       "style": {
         "navigationBarTitleText": "账号管理",
@@ -129,6 +137,54 @@
       }
     },
     {
+      "path": "pages/teacher/exam-monitor",
+      "style": {
+        "navigationBarTitleText": "考试监控",
+        "navigationBarBackgroundColor": "#dc2626",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/teacher/exam-edit",
+      "style": {
+        "navigationBarTitleText": "编辑考试",
+        "navigationBarBackgroundColor": "#dc2626",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/teacher/paper-edit",
+      "style": {
+        "navigationBarTitleText": "编辑试卷",
+        "navigationBarBackgroundColor": "#dc2626",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/teacher/paper-preview",
+      "style": {
+        "navigationBarTitleText": "试卷预览",
+        "navigationBarBackgroundColor": "#dc2626",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/teacher/exam-record-detail",
+      "style": {
+        "navigationBarTitleText": "答卷详情",
+        "navigationBarBackgroundColor": "#dc2626",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/teacher/exam-grade",
+      "style": {
+        "navigationBarTitleText": "评分",
+        "navigationBarBackgroundColor": "#dc2626",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
       "path": "pages/student/my-classes",
       "style": {
         "navigationBarTitleText": "我的班级",
@@ -204,6 +260,12 @@
         "text": "首页",
         "iconPath": "static/tabbar/home.png",
         "selectedIconPath": "static/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/common/message",
+        "text": "消息",
+        "iconPath": "static/tabbar/message.png",
+        "selectedIconPath": "static/tabbar/message-active.png"
       },
       {
         "pagePath": "pages/common/account",

@@ -5,11 +5,9 @@
 
 // API基础URL配置
 // 在H5环境下使用代理，其他环境直接使用服务器地址
-// #ifdef H5
-const BASE_URL = '/api'
-// #endif
 // #ifndef H5
-const BASE_URL = 'http://192.168.34.49:8081/api' // 替换为你的电脑IP地址
+// const BASE_URL = 'http://192.168.1.92:8081/api' // 替换为你的电脑IP地址
+const BASE_URL = 'http://192.168.34.49:8081/api' 
 // #endif
 
 /**

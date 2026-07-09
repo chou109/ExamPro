@@ -15,35 +15,20 @@
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item label="性别">
-                    <el-radio-group v-model="formData.gender">
-                      <el-radio value="男">男</el-radio>
-                      <el-radio value="女">女</el-radio>
-                    </el-radio-group>
-                  </el-form-item>
-                </el-col>
-              </el-row>
-              <el-row :gutter="20">
-                <el-col :span="12">
                   <el-form-item label="学号/工号">
                     <el-input v-model="formData.username" disabled />
                   </el-form-item>
                 </el-col>
+              </el-row>
+              <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="手机号">
                     <el-input v-model="formData.phone" placeholder="请输入手机号" />
                   </el-form-item>
                 </el-col>
-              </el-row>
-              <el-row :gutter="20">
                 <el-col :span="12">
                   <el-form-item label="邮箱">
                     <el-input v-model="formData.email" type="email" placeholder="请输入邮箱" />
-                  </el-form-item>
-                </el-col>
-                <el-col :span="12">
-                  <el-form-item label="单位（学校）">
-                    <el-input v-model="formData.school" placeholder="请输入学校名称" />
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -142,11 +127,9 @@ const countdown = ref(0)
 
 const formData = reactive({
   realName: '',
-  gender: '男',
   username: '',
   phone: '',
   email: '',
-  school: '',
   avatar: ''
 })
 
@@ -165,18 +148,44 @@ const loadUserInfo = () => {
   const userInfo = userStore.userInfo
   if (userInfo) {
     formData.realName = userInfo.realName || ''
-    formData.gender = userInfo.gender || '男'
     formData.username = userInfo.username || ''
     formData.phone = userInfo.phone || ''
     formData.email = userInfo.email || ''
-    formData.school = userInfo.school || ''
     formData.avatar = userInfo.avatar || ''
   }
 }
 
-const saveBasicInfo = () => {
-  // 模拟保存操作
-  ElMessage.success('基本资料保存成功')
+const saveBasicInfo = async () => {
+  try {
+    const userId = userStore.userInfo?.userId || userStore.userInfo?.id
+    if (!userId) {
+      ElMessage.error('用户信息异常')
+      return
+    }
+    
+    const res = await userApi.update({
+      id: userId,
+      realName: formData.realName,
+      phone: formData.phone,
+      email: formData.email,
+      avatar: formData.avatar
+    })
+    
+    if (res.code === 200) {
+      ElMessage.success('基本资料保存成功')
+      
+      if (userStore.userInfo) {
+        userStore.userInfo.realName = formData.realName
+        userStore.userInfo.phone = formData.phone
+        userStore.userInfo.email = formData.email
+        userStore.userInfo.avatar = formData.avatar
+      }
+    } else {
+      ElMessage.error(res.message || '保存失败')
+    }
+  } catch (error) {
+    ElMessage.error('保存失败：' + (error.message || '网络错误'))
+  }
 }
 
 const resetForm = () => {

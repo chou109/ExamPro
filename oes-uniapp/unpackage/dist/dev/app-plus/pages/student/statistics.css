@@ -41,6 +41,9 @@
   align-items: center;
   justify-content: center;
 }
+.stat-emoji[data-v-508c3e4d] {
+  font-size: 0.875rem;
+}
 .stat-info[data-v-508c3e4d] {
   flex: 1;
 }
@@ -142,6 +145,9 @@
 }
 .answer-icon.skip[data-v-508c3e4d] {
   background: #f4f4f5;
+}
+.answer-emoji[data-v-508c3e4d] {
+  font-size: 0.75rem;
 }
 .answer-info[data-v-508c3e4d] {
   flex: 1;

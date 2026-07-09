@@ -125,6 +125,12 @@
           "selectedIconPath": "/static/tabbar/home-active.png"
         },
         {
+          "pagePath": "pages/common/message",
+          "text": "消息",
+          "iconPath": "/static/tabbar/message.png",
+          "selectedIconPath": "/static/tabbar/message-active.png"
+        },
+        {
           "pagePath": "pages/common/account",
           "text": "我的",
           "iconPath": "/static/tabbar/user.png",

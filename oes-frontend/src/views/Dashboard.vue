@@ -137,29 +137,35 @@
       </template>
     </div>
 
-    <!-- 班级列表 - 仅对教师显示 -->
-    <el-row :gutter="24" v-if="classes.length > 0 && userInfo.role === 'TEACHER'">
+    <!-- 班级消息列表 - 教师和学生都显示 -->
+    <el-row :gutter="24" v-if="myClasses.length > 0">
       <el-col :span="24">
         <div class="card">
           <div class="card-header">
             <div class="card-header-icon">
-              <el-icon><Folder /></el-icon>
+              <el-icon><Message /></el-icon>
             </div>
-            <h3>我的班级</h3>
-            <el-button type="danger" link @click="$router.push('/classes')">
+            <h3>班级消息</h3>
+            <el-button type="danger" link v-if="userInfo.role === 'TEACHER'" @click="$router.push('/classes')">
               管理班级
             </el-button>
+            <el-button type="danger" link v-else @click="$router.push('/student/classes')">
+              我的班级
+            </el-button>
           </div>
-          <div class="class-list">
-            <div class="class-card" v-for="cls in classes" :key="cls.id" @click="goToClass(cls.id)">
-              <div class="class-info">
-                <h4>{{ cls.name || cls.className }}</h4>
-                <p class="class-department">{{ getDepartmentName(cls.departmentId) }}</p>
-                <p class="class-students">班级代码: {{ cls.code || '-' }}</p>
+          <div class="class-message-list">
+            <div class="class-message-item" v-for="item in myClasses" :key="item.class.id" @click="goToClassChat(item.class.id)">
+              <div class="class-message-icon">
+                <el-icon :size="36"><OfficeBuilding /></el-icon>
               </div>
-              <div class="class-actions">
-                <el-button type="danger" size="small">查看</el-button>
+              <div class="class-message-info">
+                <div class="class-message-header">
+                  <span class="class-message-name">{{ item.class.className }}</span>
+                  <span class="class-message-time">{{ formatMessageTime(item.class.lastMessageTime) }}</span>
+                </div>
+                <p class="class-message-content">{{ getLastMessage(item.class) }}</p>
               </div>
+              <el-icon class="class-message-arrow"><ArrowRight /></el-icon>
             </div>
           </div>
         </div>
@@ -298,7 +304,7 @@ import { useUserStore } from '../store'
 import { 
   User, OfficeBuilding, Folder, Check, Edit, Calendar, 
   Clock, CircleCheck, CircleClose, Plus, Document, CircleCheck as BarChart3, Check as InfoIcon,
-  ArrowRight, Ticket
+  ArrowRight, Ticket, Message
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -324,6 +330,7 @@ const roleText = computed(() => {
 const recentExams = ref([])
 const pendingExams = ref([])
 const classes = ref([])
+const myClasses = ref([])
 const recentLogs = ref([])
 const departments = ref([])
 const stats = ref({
@@ -460,6 +467,61 @@ const loadClasses = async () => {
   }
 }
 
+const loadMyClasses = async () => {
+  try {
+    const userId = userStore.userInfo?.userId || userStore.userInfo?.id
+    if (!userId) return
+    const res = await classApi.getMyClasses(userId)
+    if (res.code === 200) {
+      myClasses.value = res.data || []
+    }
+  } catch (e) {
+    console.error('加载我的班级失败:', e)
+  }
+}
+
+const goToClassChat = (classId) => {
+  if (userInfo.value.role === 'STUDENT') {
+    router.push(`/student/class/${classId}`)
+    } else {
+      router.push(`/teacher/class/${classId}`)
+  }
+}
+
+const getLastMessage = (cls) => {
+  if (!cls.lastMessage) return '暂无消息'
+  if (cls.lastMessage.startsWith('EXAM_NOTICE|')) {
+    return parseExamNotice(cls.lastMessage)
+  }
+  return cls.lastMessage
+}
+
+const parseExamNotice = (content) => {
+  if (!content?.startsWith('EXAM_NOTICE|')) return ''
+  const parts = content.split('|')
+  const noticeType = parts[1] || ''
+  const title = parts[2] || ''
+  if (noticeType === 'START') {
+    return '🚀 ' + title + ' 开始考试'
+  } else if (noticeType === 'PUBLISH') {
+    return '📢 ' + title + ' 发布通知'
+  } else if (noticeType === 'END') {
+    return '🔚 ' + title + ' 考试结束'
+  }
+  return '📝 ' + title
+}
+
+const formatMessageTime = (time) => {
+  if (!time) return ''
+  const date = new Date(time)
+  const now = new Date()
+  const diff = now - date
+  if (diff < 60000) return '刚刚'
+  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
+  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
+  return date.toLocaleDateString('zh-CN')
+}
+
 const loadStats = async () => {
   try {
     if (userInfo.value.role === 'ADMIN') {
@@ -533,8 +595,10 @@ onMounted(() => {
     loadClasses()
     loadRecentExams()
     loadDepartments()
+    loadMyClasses()
   } else if (userInfo.value.role === 'STUDENT') {
     loadPendingExams()
+    loadMyClasses()
   } else if (userInfo.value.role === 'ADMIN') {
     loadLogs()
     loadDepartments()
@@ -1049,6 +1113,99 @@ onMounted(() => {
   
   .exam-card {
     padding: 14px;
+  }
+}
+
+.class-message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.class-message-item {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #f1f5f9;
+    transform: translateX(4px);
+  }
+  
+  .class-message-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 16px;
+    flex-shrink: 0;
+  }
+  
+  .class-message-info {
+    flex: 1;
+    min-width: 0;
+    
+    .class-message-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      
+      .class-message-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+      }
+      
+      .class-message-time {
+        font-size: 12px;
+        color: #94a3b8;
+        flex-shrink: 0;
+      }
+    }
+    
+    .class-message-content {
+      font-size: 13px;
+      color: #64748b;
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+  }
+  
+  .class-message-arrow {
+    color: #94a3b8;
+    margin-left: 12px;
+    flex-shrink: 0;
+  }
+}
+
+@media screen and (max-width: 576px) {
+  .class-message-item {
+    padding: 14px;
+    
+    .class-message-icon {
+      width: 40px;
+      height: 40px;
+    }
+    
+    .class-message-name {
+      font-size: 13px;
+    }
+    
+    .class-message-content {
+      font-size: 12px;
+    }
   }
 }
 </style>

@@ -1,8 +1,8 @@
 <template>
   <div class="my-classes">
     <div class="page-header">
-      <h2>我的班级</h2>
-      <p>查看和管理您加入的班级</p>
+      <h2>班级消息</h2>
+      <p>查看班级最新动态</p>
     </div>
 
     <el-card class="join-card">
@@ -17,22 +17,29 @@
       </div>
     </el-card>
 
-    <div class="class-list">
-      <el-card 
+    <div class="class-message-list" v-if="classList.length > 0">
+      <div 
         v-for="item in classList" 
         :key="item.class.id" 
-        class="class-card"
+        class="class-message-card"
         @click="enterClass(item.class.id)"
       >
-        <div class="class-info">
-          <h3>{{ item.class.className }}</h3>
-          <p class="class-code">群号：{{ item.class.inviteCode }}</p>
-          <p class="class-role">角色：{{ getRoleText(item.role) }}</p>
+        <div class="class-message-icon">
+          <el-icon :size="36"><OfficeBuilding /></el-icon>
         </div>
-        <div class="class-actions">
-          <el-button type="danger" size="small">进入班级</el-button>
+        <div class="class-message-info">
+          <div class="class-message-header">
+            <span class="class-message-name">{{ item.class.className }}</span>
+            <span class="class-message-time">{{ getTimeText(item.class.lastMessageTime) }}</span>
+          </div>
+          <p class="class-message-content">{{ getMessageText(item.class) }}</p>
+          <div class="class-message-meta">
+            <span>群号：{{ item.class.inviteCode }}</span>
+            <span>角色：{{ getRoleText(item.role) }}</span>
+          </div>
         </div>
-      </el-card>
+        <el-icon class="class-message-arrow"><ArrowRight /></el-icon>
+      </div>
     </div>
 
     <el-empty v-if="classList.length === 0" description="暂无班级，输入群号加入班级吧" />
@@ -43,6 +50,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { OfficeBuilding, ArrowRight } from '@element-plus/icons-vue'
 import { useUserStore } from '../../store'
 import { classApi } from '../../utils/api'
 
@@ -107,6 +115,40 @@ const getRoleText = (role) => {
   return roleMap[role] || role
 }
 
+const getMessageText = (cls) => {
+  if (!cls || !cls.lastMessage) return '暂无消息'
+  if (cls.lastMessage.startsWith('EXAM_NOTICE|')) {
+    return parseExamNotice(cls.lastMessage)
+  }
+  return cls.lastMessage
+}
+
+const parseExamNotice = (content) => {
+  if (!content || !content.startsWith('EXAM_NOTICE|')) return ''
+  const parts = content.split('|')
+  const noticeType = parts[1] || ''
+  const title = parts[2] || ''
+  if (noticeType === 'START') {
+    return '🚀 ' + title + ' 开始考试'
+  } else if (noticeType === 'PUBLISH') {
+    return '📢 ' + title + ' 发布通知'
+  } else if (noticeType === 'END') {
+    return '🔚 ' + title + ' 考试结束'
+  }
+  return '📝 ' + title
+}
+
+const getTimeText = (time) => {
+  if (!time) return ''
+  const date = new Date(time)
+  const now = new Date()
+  const diff = now - date
+  if (diff < 60000) return '刚刚'
+  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
+  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
+  return date.toLocaleDateString('zh-CN')
+}
+
 onMounted(() => {
   loadClasses()
 })
@@ -125,123 +167,123 @@ onMounted(() => {
   margin-bottom: 20px;
   
   h2 {
-    font-size: clamp(20px, 5vw, 28px);
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0;
-    line-height: 1.3;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 4px;
   }
   
   p {
-    margin-top: 6px;
-    font-size: clamp(13px, 3vw, 14px);
-    color: #64748b;
-    line-height: 1.5;
+    font-size: 14px;
+    color: #666;
   }
 }
 
 .join-card {
-  margin-bottom: 24px;
-  background: white;
-  border-radius: 16px;
+  margin-bottom: 20px;
   padding: 20px;
+  border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-}
-
-.join-card {
-  position: sticky;
-  top: 24px;
-  z-index: 100;
+  
+  :deep(.el-card__body) {
+    padding: 0;
+  }
 }
 
 .join-form {
   display: flex;
   gap: 12px;
-  align-items: center;
-  width: 100%;
 }
 
 .join-input {
   flex: 1;
-  min-width: 0;
-  width: auto;
 }
 
-.join-form .el-button {
-  flex: 0 0 auto;
-  white-space: nowrap;
+.class-message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.class-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.class-card {
-  cursor: pointer;
-  transition: all 0.3s;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  
-  :deep(.el-card__body) {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-}
-
-.class-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-}
-
-.class-info {
-  flex: 1;
-}
-
-.class-info h3 {
-  margin: 0 0 8px 0;
-  font-size: 18px;
-}
-
-.class-code {
-  margin: 0 0 4px 0;
-  color: #666;
-  font-size: 14px;
-}
-
-.class-role {
-  margin: 0;
-  color: #1890ff;
-  font-size: 14px;
-}
-
-.class-actions {
+.class-message-card {
   display: flex;
   align-items: center;
-}
-
-@media screen and (max-width: 576px) {
-  .join-form {
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #f8fafc;
+    transform: translateX(4px);
   }
   
-  .join-form .el-input {
+  .class-message-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 20px;
+    flex-shrink: 0;
+  }
+  
+  .class-message-info {
     flex: 1;
     min-width: 0;
+    
+    .class-message-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      
+      .class-message-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1e293b;
+      }
+      
+      .class-message-time {
+        font-size: 13px;
+        color: #94a3b8;
+        flex-shrink: 0;
+        margin-left: 16px;
+      }
+    }
+    
+    .class-message-content {
+      font-size: 14px;
+      color: #64748b;
+      margin: 0 0 8px 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+    
+    .class-message-meta {
+      display: flex;
+      gap: 16px;
+      
+      span {
+        font-size: 13px;
+        color: #94a3b8;
+      }
+    }
   }
   
-  .join-form .el-button {
-    flex: 0 0 auto;
-    white-space: nowrap;
+  .class-message-arrow {
+    color: #94a3b8;
+    margin-left: 12px;
+    flex-shrink: 0;
   }
 }
 
-/* 响应式布局 */
 @media screen and (max-width: 768px) {
   .my-classes {
     padding: 0 4px;
@@ -255,32 +297,30 @@ onMounted(() => {
     padding: 14px;
   }
   
-  .class-list {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-  
-  .class-card :deep(.el-card__body) {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .class-info h3 {
-    font-size: 16px;
-  }
-  
-  .class-code,
-  .class-role {
-    font-size: 13px;
-  }
-  
-  .class-actions {
-    width: 100%;
-  }
-  
-  .class-actions .el-button {
-    width: 100%;
+  .class-message-card {
+    padding: 16px;
+    
+    .class-message-icon {
+      width: 48px;
+      height: 48px;
+      margin-right: 16px;
+    }
+    
+    .class-message-name {
+      font-size: 15px;
+    }
+    
+    .class-message-content {
+      font-size: 13px;
+    }
+    
+    .class-message-meta {
+      gap: 12px;
+      
+      span {
+        font-size: 12px;
+      }
+    }
   }
 }
 
@@ -289,12 +329,22 @@ onMounted(() => {
     padding: 12px;
   }
   
-  .class-card :deep(.el-card__body) {
+  .class-message-card {
     padding: 14px;
-  }
-  
-  .class-info h3 {
-    font-size: 15px;
+    
+    .class-message-icon {
+      width: 44px;
+      height: 44px;
+      margin-right: 14px;
+    }
+    
+    .class-message-name {
+      font-size: 14px;
+    }
+    
+    .class-message-time {
+      font-size: 12px;
+    }
   }
 }
 
@@ -303,17 +353,26 @@ onMounted(() => {
     padding: 10px;
   }
   
-  .class-card :deep(.el-card__body) {
+  .class-message-card {
     padding: 12px;
-  }
-  
-  .class-info h3 {
-    font-size: 14px;
-  }
-  
-  .class-code,
-  .class-role {
-    font-size: 12px;
+    
+    .class-message-icon {
+      width: 40px;
+      height: 40px;
+      margin-right: 12px;
+    }
+    
+    .class-message-name {
+      font-size: 13px;
+    }
+    
+    .class-message-content {
+      font-size: 12px;
+    }
+    
+    .class-message-meta span {
+      font-size: 11px;
+    }
   }
 }
 </style>

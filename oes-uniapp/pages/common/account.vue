@@ -2,8 +2,11 @@
   <view class="account-page">
     <!-- 用户信息头部 -->
     <view class="user-header">
-      <view class="avatar-box">
-        <image class="avatar" :src="userInfo.avatar || '/static/avatar.png'" mode="aspectFill" />
+      <view class="avatar-box" @click="showAvatarMenu">
+        <image class="avatar" :src="getAvatarUrl(userInfo.avatar)" mode="aspectFill" />
+        <view class="avatar-edit-icon">
+          <text class="edit-icon">✎</text>
+        </view>
       </view>
       <view class="user-info">
         <text class="username">{{ userInfo.realName || userInfo.username || '用户' }}</text>
@@ -30,6 +33,42 @@
             <text class="emoji-icon">🔒</text>
           </view>
           <text class="menu-text">修改密码</text>
+          <view class="menu-arrow">
+            <text class="arrow-icon">›</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 学习功能（仅学生） -->
+      <view class="menu-group" v-if="userInfo.role === 'STUDENT'">
+        <view class="menu-item" @click="goTo('/pages/student/statistics')">
+          <view class="menu-icon">
+            <text class="emoji-icon">📊</text>
+          </view>
+          <text class="menu-text">成绩分析</text>
+          <view class="menu-arrow">
+            <text class="arrow-icon">›</text>
+          </view>
+        </view>
+
+        <view class="menu-item" @click="goTo('/pages/student/wrong-questions')">
+          <view class="menu-icon">
+            <text class="emoji-icon">❌</text>
+          </view>
+          <text class="menu-text">错题本</text>
+          <view class="menu-arrow">
+            <text class="arrow-icon">›</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 教师功能（仅教师） -->
+      <view class="menu-group" v-if="userInfo.role === 'TEACHER'">
+        <view class="menu-item" @click="goTo('/pages/teacher/exam-record-manage')">
+          <view class="menu-icon">
+            <text class="emoji-icon">📝</text>
+          </view>
+          <text class="menu-text">考试记录</text>
           <view class="menu-arrow">
             <text class="arrow-icon">›</text>
           </view>
@@ -142,12 +181,38 @@
         <button class="about-close-btn" @click="closeAboutPopup">确定</button>
       </view>
     </view>
+
+    <!-- 头像操作菜单 -->
+    <view class="popup-mask" v-if="showAvatarMenuVisible" @click="closeAvatarMenu"></view>
+    <view class="avatar-menu-popup" v-if="showAvatarMenuVisible">
+      <view class="avatar-menu-content">
+        <view class="avatar-menu-item" @click="handleViewAvatar">
+          <text class="menu-item-icon">👁️</text>
+          <text class="menu-item-text">查看头像</text>
+        </view>
+        <view class="avatar-menu-item" @click="handleChangeAvatar">
+          <text class="menu-item-icon">📷</text>
+          <text class="menu-item-text">更换头像</text>
+        </view>
+        <view class="avatar-menu-cancel" @click="closeAvatarMenu">
+          <text class="menu-cancel-text">取消</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 查看头像弹窗 -->
+    <view class="popup-mask" v-if="showViewAvatar" @click="closeViewAvatar"></view>
+    <view class="view-avatar-popup" v-if="showViewAvatar">
+      <image class="view-avatar-img" :src="getAvatarUrl(userInfo.avatar)" mode="aspectFit" @click.stop />
+      <text class="view-avatar-close" @click="closeViewAvatar">✕</text>
+    </view>
   </view>
 </template>
 
 <script>
 import { ref, reactive, computed } from 'vue'
 import { authApi, userApi } from '../../utils/api'
+import { upload } from '../../utils/request'
 
 export default {
   setup() {
@@ -158,9 +223,23 @@ export default {
       return map[userInfo.value.role] || '用户'
     })
 
+    const getAvatarUrl = (avatar) => {
+      if (!avatar) {
+        const name = userInfo.value.realName || userInfo.value.username || '用户'
+        const firstChar = name.charAt(0)
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstChar)}&background=dc2626&color=fff&size=100`
+      }
+      if (avatar.startsWith('http')) {
+        return avatar
+      }
+      return 'http://192.168.34.49:8081' + avatar
+    }
+
     const showEditPopup = ref(false)
     const showPasswordPopup = ref(false)
     const showAboutPopup = ref(false)
+    const showAvatarMenuVisible = ref(false)
+    const showViewAvatar = ref(false)
 
     const editForm = reactive({
       username: userInfo.value.username || '',
@@ -207,15 +286,86 @@ export default {
       showAboutPopup.value = false
     }
 
+    const showAvatarMenu = () => {
+      showAvatarMenuVisible.value = true
+    }
+
+    const closeAvatarMenu = () => {
+      showAvatarMenuVisible.value = false
+    }
+
+    const handleViewAvatar = () => {
+      closeAvatarMenu()
+      showViewAvatar.value = true
+    }
+
+    const closeViewAvatar = () => {
+      showViewAvatar.value = false
+    }
+
+    const handleChangeAvatar = () => {
+      closeAvatarMenu()
+      uni.chooseImage({
+        count: 1,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera'],
+        success: (res) => {
+          const tempFilePath = res.tempFilePaths[0]
+          uploadAvatar(tempFilePath)
+        },
+        fail: () => {
+          uni.showToast({ title: '选择图片失败', icon: 'none' })
+        }
+      })
+    }
+
+    const uploadAvatar = async (filePath) => {
+      uni.showLoading({ title: '上传中...' })
+      try {
+        const result = await upload('/upload/avatar', filePath)
+        
+        if (result.code === 200) {
+          const avatarUrl = result.data
+          const userId = userInfo.value.userId || userInfo.value.id
+          
+          await userApi.update({
+            id: userId,
+            avatar: avatarUrl
+          })
+
+          userInfo.value.avatar = avatarUrl
+          uni.setStorageSync('userInfo', userInfo.value)
+          uni.showToast({ title: '上传成功', icon: 'success' })
+        } else {
+          uni.showToast({ title: result.message || '上传失败', icon: 'none' })
+        }
+      } catch (e) {
+        console.error(e)
+        uni.showToast({ title: '上传失败', icon: 'none' })
+      } finally {
+        uni.hideLoading()
+      }
+    }
+
+    const goTo = (url) => {
+      uni.navigateTo({ url })
+    }
+
     const saveEditInfo = async () => {
       if (!editForm.realName) {
         uni.showToast({ title: '请输入真实姓名', icon: 'none' })
         return
       }
 
+      const userId = userInfo.value.userId || userInfo.value.id
+      if (!userId) {
+        uni.showToast({ title: '用户信息异常', icon: 'none' })
+        return
+      }
+
       try {
         const res = await userApi.update({
-          id: userInfo.value.id,
+          id: userId,
           username: editForm.username,
           realName: editForm.realName,
           email: editForm.email,
@@ -307,9 +457,12 @@ export default {
     return {
       userInfo,
       roleText,
+      getAvatarUrl,
       showEditPopup,
       showPasswordPopup,
       showAboutPopup,
+      showAvatarMenuVisible,
+      showViewAvatar,
       editForm,
       passwordForm,
       showEditInfo,
@@ -318,10 +471,16 @@ export default {
       closePasswordPopup,
       showAbout,
       closeAboutPopup,
+      showAvatarMenu,
+      closeAvatarMenu,
+      handleViewAvatar,
+      closeViewAvatar,
+      handleChangeAvatar,
       saveEditInfo,
       savePassword,
       clearCache,
-      handleLogout
+      handleLogout,
+      goTo
     }
   }
 }
@@ -569,5 +728,100 @@ export default {
     color: #fff;
     font-size: 32rpx;
   }
+}
+
+.avatar-box {
+  position: relative;
+}
+
+.avatar-edit-icon {
+  position: absolute;
+  right: -4rpx;
+  bottom: -4rpx;
+  width: 36rpx;
+  height: 36rpx;
+  background: #dc2626;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3rpx solid #fff;
+
+  .edit-icon {
+    font-size: 20rpx;
+    color: #fff;
+  }
+}
+
+.avatar-menu-popup {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.avatar-menu-content {
+  background: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+  padding: 32rpx 0;
+}
+
+.avatar-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+
+  .menu-item-icon {
+    font-size: 40rpx;
+    margin-right: 16rpx;
+  }
+
+  .menu-item-text {
+    font-size: 32rpx;
+    color: #333;
+  }
+}
+
+.avatar-menu-cancel {
+  margin-top: 16rpx;
+  padding: 32rpx 0;
+  background: #f5f5f5;
+
+  .menu-cancel-text {
+    font-size: 32rpx;
+    color: #666;
+    text-align: center;
+    display: block;
+  }
+}
+
+.view-avatar-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.9);
+}
+
+.view-avatar-img {
+  width: 600rpx;
+  height: 600rpx;
+  border-radius: 16rpx;
+}
+
+.view-avatar-close {
+  position: absolute;
+  top: 60rpx;
+  right: 32rpx;
+  font-size: 48rpx;
+  color: #fff;
 }
 </style>

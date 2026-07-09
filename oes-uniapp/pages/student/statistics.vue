@@ -9,7 +9,7 @@
     <view class="stat-grid">
       <view class="stat-card" v-for="(item, index) in statItems" :key="index">
         <view class="stat-icon" :style="{ background: item.bgColor }">
-          <uni-icons :type="item.icon" size="24" color="#fff" />
+          <text class="stat-emoji">{{ item.emoji }}</text>
         </view>
         <view class="stat-info">
           <text class="stat-value">{{ item.value }}</text>
@@ -48,7 +48,7 @@
       <view class="answer-stats">
         <view class="answer-item">
           <view class="answer-icon correct">
-            <uni-icons type="checkmarkempty" size="20" color="#67c23a" />
+            <text class="answer-emoji">✓</text>
           </view>
           <view class="answer-info">
             <text class="answer-count">{{ stats.correctCount }}</text>
@@ -59,7 +59,7 @@
 
         <view class="answer-item">
           <view class="answer-icon wrong">
-            <uni-icons type="closeempty" size="20" color="#f56c6c" />
+            <text class="answer-emoji">✗</text>
           </view>
           <view class="answer-info">
             <text class="answer-count">{{ stats.wrongCount }}</text>
@@ -70,7 +70,7 @@
 
         <view class="answer-item">
           <view class="answer-icon skip">
-            <uni-icons type="minus" size="20" color="#909399" />
+            <text class="answer-emoji">—</text>
           </view>
           <view class="answer-info">
             <text class="answer-count">{{ stats.skippedCount }}</text>
@@ -86,7 +86,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useUserStore } from '../../store/index.js'
-import { statisticsApi } from '../../utils/api.js'
+import { examRecordApi } from '../../utils/api.js'
 
 const userStore = useUserStore()
 const stats = ref({
@@ -104,19 +104,19 @@ const statItems = computed(() => [
   {
     label: '总考试数',
     value: stats.value.totalExams,
-    icon: 'flag',
+    emoji: '📝',
     bgColor: '#667eea'
   },
   {
     label: '平均分',
     value: stats.value.avgScore,
-    icon: 'star',
+    emoji: '⭐',
     bgColor: '#f56c6c'
   },
   {
     label: '通过率',
     value: stats.value.passRate + '%',
-    icon: 'medal',
+    emoji: '🏅',
     bgColor: '#67c23a'
   }
 ])
@@ -145,13 +145,25 @@ const loadStatistics = async () => {
     const userId = userStore.userInfo?.userId
     if (!userId) return
 
-    const res = await statisticsApi.getStudentStatistics(userId)
-    if (res.code === 200) {
-      stats.value = res.data.basicStats || stats.value
-      subjectScores.value = res.data.subjectScores || []
+    const [statsRes, subjectRes] = await Promise.all([
+      examRecordApi.getStudentStats(),
+      examRecordApi.getStudentSubjectScores()
+    ])
 
-      // 为科目数据添加颜色
-      subjectScores.value = subjectScores.value.map((subject, index) => ({
+    if (statsRes.code === 200) {
+      const data = statsRes.data
+      stats.value = {
+        totalExams: data.completedExams || 0,
+        avgScore: data.averageScore || 0,
+        correctCount: 0,
+        wrongCount: data.wrongCount || 0,
+        skippedCount: 0,
+        passRate: 0
+      }
+    }
+
+    if (subjectRes.code === 200) {
+      subjectScores.value = subjectRes.data.map((subject, index) => ({
         ...subject,
         color: ['#409eff', '#67c23a', '#e6a23c', '#f56c6c', '#909399'][index % 5]
       }))
@@ -218,6 +230,10 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.stat-emoji {
+  font-size: 28rpx;
 }
 
 .stat-info {
@@ -342,6 +358,10 @@ onMounted(() => {
 
 .answer-icon.skip {
   background: #f4f4f5;
+}
+
+.answer-emoji {
+  font-size: 24rpx;
 }
 
 .answer-info {
