@@ -1,3 +1,8 @@
+<p align="center">
+  <a href="README_EN.md">English</a> |
+  <a href="README.md">简体中文</a>
+</p>
+
 # Online Exam System (ExamPro)
 
 An online exam system based on Vue + Spring Boot, supporting multiple question types, automatic paper generation, anti-cheating mechanisms, and score analysis.
