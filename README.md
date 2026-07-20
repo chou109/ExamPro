@@ -1,3 +1,8 @@
+<p align="center">
+  <a href="README_EN.md">English</a> |
+  <a href="README.md">简体中文</a>
+</p>
+
 # 在线考试系统 (ExamPro)
 
 一个基于 Vue + Spring Boot 的在线考试系统，支持多种题型、自动组卷、防作弊机制和成绩分析。
