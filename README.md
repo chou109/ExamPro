@@ -1,6 +1,6 @@
 # 在线考试系统 (ExamPro)
 
-<p align="center">
+<p>
   <a href="README_EN.md">English</a> |
   <a href="README.md">简体中文</a>
 </p>
