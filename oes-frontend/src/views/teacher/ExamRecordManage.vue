@@ -1,34 +1,34 @@
 <template>
   <div class="exam-record-manage">
     <div class="page-header">
-      <h2>阅卷与成绩管理</h2>
-      <p>查看考试成绩统计，进行错题分析</p>
+      <h2>{{ userStore.t('teacher.examRecordManagement') }}</h2>
+      <p>{{ userStore.t('teacher.examRecordManagementDesc') }}</p>
     </div>
 
     <div class="card">
       <div class="toolbar">
-        <el-select v-model="params.examId" placeholder="选择考试" style="width: 200px" clearable @change="handleExamChange">
+        <el-select v-model="params.examId" :placeholder="userStore.t('teacher.selectExam')" style="width: 200px" clearable @change="handleExamChange">
           <el-option v-for="e in exams" :key="e.id" :label="e.title" :value="e.id" />
         </el-select>
-        <el-select v-model="params.status" placeholder="状态" style="width: 120px" clearable @change="loadData">
-          <el-option label="未开始" value="NOT_STARTED" />
-          <el-option label="进行中" value="ONGOING" />
-          <el-option label="已交卷" value="SUBMITTED" />
+        <el-select v-model="params.status" :placeholder="userStore.t('common.status')" style="width: 120px" clearable @change="loadData">
+          <el-option :label="userStore.t('common.notStarted')" value="NOT_STARTED" />
+          <el-option :label="userStore.t('common.ongoing')" value="ONGOING" />
+          <el-option :label="userStore.t('common.submitted')" value="SUBMITTED" />
         </el-select>
-        <el-button type="danger" @click="loadData">搜索</el-button>
-        <el-button type="primary" @click="handleExport" v-if="params.examId">导出成绩</el-button>
+        <el-button type="danger" @click="loadData">{{ userStore.t('common.search') }}</el-button>
+        <el-button type="primary" @click="handleExport" v-if="params.examId">{{ userStore.t('teacher.exportScores') }}</el-button>
       </div>
 
       <!-- 成绩统计卡片 -->
       <div v-if="examStats" class="stats-section">
-        <h3>成绩统计</h3>
+        <h3>{{ userStore.t('teacher.scoreStatistics') }}</h3>
         <div class="stats-grid">
           <div class="stat-item">
             <div class="stat-icon highest">
               <el-icon><TrendCharts /></el-icon>
             </div>
             <div class="stat-info">
-              <span class="stat-label">最高分</span>
+              <span class="stat-label">{{ userStore.t('teacher.highestScore') }}</span>
               <span class="stat-value">{{ examStats.highestScore }}</span>
             </div>
           </div>
@@ -37,7 +37,7 @@
               <el-icon><ArrowDown /></el-icon>
             </div>
             <div class="stat-info">
-              <span class="stat-label">最低分</span>
+              <span class="stat-label">{{ userStore.t('teacher.lowestScore') }}</span>
               <span class="stat-value">{{ examStats.lowestScore }}</span>
             </div>
           </div>
@@ -46,7 +46,7 @@
               <el-icon><Tickets /></el-icon>
             </div>
             <div class="stat-info">
-              <span class="stat-label">平均分</span>
+              <span class="stat-label">{{ userStore.t('teacher.averageScore') }}</span>
               <span class="stat-value">{{ examStats.averageScore }}</span>
             </div>
           </div>
@@ -55,7 +55,7 @@
               <el-icon><TrendCharts /></el-icon>
             </div>
             <div class="stat-info">
-              <span class="stat-label">及格率</span>
+              <span class="stat-label">{{ userStore.t('teacher.passRate') }}</span>
               <span class="stat-value">{{ examStats.passRate }}%</span>
             </div>
           </div>
@@ -64,7 +64,7 @@
               <el-icon><UserFilled /></el-icon>
             </div>
             <div class="stat-info">
-              <span class="stat-label">参考人数</span>
+              <span class="stat-label">{{ userStore.t('teacher.totalStudents') }}</span>
               <span class="stat-value">{{ examStats.totalStudents }}</span>
             </div>
           </div>
@@ -73,7 +73,7 @@
               <el-icon><Tickets /></el-icon>
             </div>
             <div class="stat-info">
-              <span class="stat-label">及格人数</span>
+              <span class="stat-label">{{ userStore.t('teacher.passCount') }}</span>
               <span class="stat-value">{{ examStats.passCount }}</span>
             </div>
           </div>
@@ -82,23 +82,23 @@
 
       <!-- 错题分析 -->
       <div v-if="questionAnalysis.length > 0" class="analysis-section">
-        <h3>错题分析</h3>
+        <h3>{{ userStore.t('teacher.wrongQuestionAnalysis') }}</h3>
         <el-table :data="questionAnalysis" v-loading="analysisLoading" stripe>
-          <el-table-column prop="questionId" label="题目ID" width="100" />
-          <el-table-column prop="questionContent" label="题目内容" min-width="200">
+          <el-table-column prop="questionId" :label="userStore.t('teacher.questionId')" width="100" />
+          <el-table-column prop="questionContent" :label="userStore.t('teacher.questionContent')" min-width="200">
             <template #default="{ row }">
               <span :title="row.questionContent">{{ row.questionContent.length > 50 ? row.questionContent.substring(0, 50) + '...' : row.questionContent }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="questionType" label="题型" width="100">
+          <el-table-column prop="questionType" :label="userStore.t('teacher.questionType')" width="100">
             <template #default="{ row }">
               {{ typeText(row.questionType) }}
             </template>
           </el-table-column>
-          <el-table-column prop="score" label="分值" width="80" />
-          <el-table-column prop="totalAnswered" label="答题人数" width="100" />
-          <el-table-column prop="correctCount" label="正确人数" width="100" />
-          <el-table-column prop="correctRate" label="正确率" width="120">
+          <el-table-column prop="score" :label="userStore.t('teacher.score')" width="80" />
+          <el-table-column prop="totalAnswered" :label="userStore.t('teacher.totalAnswered')" width="100" />
+          <el-table-column prop="correctCount" :label="userStore.t('teacher.correctCount')" width="100" />
+          <el-table-column prop="correctRate" :label="userStore.t('teacher.correctRate')" width="120">
             <template #default="{ row }">
               <div class="rate-wrapper">
                 <el-progress :percentage="row.correctRate" :show-text="false" :stroke-width="8" />
@@ -111,28 +111,28 @@
 
       <!-- 学生成绩列表 -->
       <div class="records-section">
-        <h3>学生成绩列表</h3>
+        <h3>{{ userStore.t('teacher.studentScoreList') }}</h3>
         <el-table :data="tableData" v-loading="loading" stripe>
-          <el-table-column prop="id" label="ID" width="80" />
-          <el-table-column prop="studentName" label="学生姓名" width="120" />
-          <el-table-column prop="status" label="状态" width="100">
+          <el-table-column prop="id" :label="userStore.t('teacher.id')" width="80" />
+          <el-table-column prop="studentName" :label="userStore.t('teacher.studentName')" width="120" />
+          <el-table-column prop="status" :label="userStore.t('common.status')" width="100">
             <template #default="{ row }">
               <el-tag :type="statusType(row.status)">{{ statusText(row.status) }}</el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="score" label="得分" width="100" />
-          <el-table-column prop="screenSwitchCount" label="切屏次数" width="100" />
-          <el-table-column prop="isSuspicious" label="可疑" width="80">
+          <el-table-column prop="score" :label="userStore.t('teacher.score')" width="100" />
+          <el-table-column prop="screenSwitchCount" :label="userStore.t('teacher.screenSwitchCount')" width="100" />
+          <el-table-column prop="isSuspicious" :label="userStore.t('teacher.suspicious')" width="80">
             <template #default="{ row }">
-              <el-tag type="warning" v-if="row.isSuspicious">可疑</el-tag>
+              <el-tag type="warning" v-if="row.isSuspicious">{{ userStore.t('teacher.suspicious') }}</el-tag>
               <span v-else>-</span>
             </template>
           </el-table-column>
-          <el-table-column prop="startTime" label="开始时间" width="180" />
-          <el-table-column prop="submitTime" label="交卷时间" width="180" />
-          <el-table-column label="操作" width="100">
+          <el-table-column prop="startTime" :label="userStore.t('teacher.startTime')" width="180" />
+          <el-table-column prop="submitTime" :label="userStore.t('teacher.submitTime')" width="180" />
+          <el-table-column :label="userStore.t('common.operation')" width="100">
             <template #default="{ row }">
-              <el-button type="danger" link @click="handleDetail(row)">详情</el-button>
+              <el-button type="danger" link @click="handleDetail(row)">{{ userStore.t('common.detail') }}</el-button>
             </template>
           </el-table-column>
         </el-table>
@@ -157,6 +157,9 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { TrendCharts, ArrowDown, UserFilled, Tickets } from '@element-plus/icons-vue'
 import { examRecordApi, examApi } from '../../utils/api'
+import { useUserStore } from '../../store'
+
+const userStore = useUserStore()
 
 const loading = ref(false)
 const analysisLoading = ref(false)
@@ -170,14 +173,14 @@ const examStats = ref(null)
 const questionAnalysis = ref([])
 
 const statusType = (s) => ({ NOT_STARTED: 'info', ONGOING: 'warning', SUBMITTED: 'success' }[s])
-const statusText = (s) => ({ NOT_STARTED: '未开始', ONGOING: '进行中', SUBMITTED: '已交卷' }[s])
+const statusText = (s) => ({ NOT_STARTED: userStore.t('common.notStarted'), ONGOING: userStore.t('common.ongoing'), SUBMITTED: userStore.t('common.submitted') }[s])
 const typeText = (t) => ({
-  SINGLE_CHOICE: '单选题',
-  MULTIPLE_CHOICE: '多选题',
-  JUDGMENT: '判断题',
-  FILL_BLANK: '填空题',
-  ESSAY: '问答题',
-  PROGRAMMING: '编程题'
+  SINGLE_CHOICE: userStore.t('common.singleChoice'),
+  MULTIPLE_CHOICE: userStore.t('common.multipleChoice'),
+  JUDGMENT: userStore.t('common.judgment'),
+  FILL_BLANK: userStore.t('common.fillBlank'),
+  ESSAY: userStore.t('common.essay'),
+  PROGRAMMING: userStore.t('common.programming')
 }[t] || t)
 
 const loadData = async () => {
@@ -237,7 +240,7 @@ const handleExamChange = async () => {
 }
 
 const handleDetail = (row) => {
-  ElMessage.info('查看详情功能开发中')
+  ElMessage.info(userStore.t('teacher.detailInDevelopment'))
 }
 
 const handleExport = async () => {
@@ -245,7 +248,7 @@ const handleExport = async () => {
     const res = await examRecordApi.exportExamScores(params.examId)
     if (res.code === 200) {
       const data = res.data
-      let csv = '学生ID,成绩,交卷时间,状态\n'
+      let csv = userStore.t('teacher.csvHeader') + '\n'
       data.data.forEach(item => {
         csv += `${item.studentId},${item.score || ''},${item.submitTime || ''},${item.status || ''}\n`
       })
@@ -253,15 +256,15 @@ const handleExport = async () => {
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
-      link.download = `${data.examTitle}_成绩.csv`
+      link.download = `${data.examTitle}_${userStore.t('teacher.scores')}.csv`
       link.click()
       URL.revokeObjectURL(link.href)
       
-      ElMessage.success('导出成功')
+      ElMessage.success(userStore.t('teacher.exportSuccess'))
     }
   } catch (e) {
     console.error(e)
-    ElMessage.error('导出失败')
+    ElMessage.error(userStore.t('teacher.exportFailed'))
   }
 }
 

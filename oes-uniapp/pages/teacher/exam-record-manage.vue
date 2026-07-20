@@ -1,9 +1,6 @@
 <template>
   <view class="exam-record">
-    <view class="page-header">
-      <text class="title">考试记录</text>
-      <text class="subtitle">查看学生考试记录和答卷详情</text>
-    </view>
+    <CustomNavBar :title="userStore.t('common.examRecords')" :showBack="true" />
 
     <!-- 工具栏 -->
     <view class="toolbar">
@@ -15,7 +12,7 @@
           <view class="picker">{{ currentStatusText }}</view>
         </picker>
       </view>
-      <button class="search-btn" @click="loadData">搜索</button>
+      <button class="search-btn" @click="loadData">{{ userStore.t('common.search') }}</button>
     </view>
 
     <!-- 记录列表 -->
@@ -24,32 +21,32 @@
         <view class="record-header">
           <text class="student-name">{{ item.studentName }}</text>
           <view class="score-badge" :class="item.score >= 60 ? 'pass' : 'fail'">
-            <text>{{ item.score }}分</text>
+            <text>{{ item.score }}{{ userStore.t('common.score') }}</text>
           </view>
         </view>
 
         <view class="record-info">
           <view class="info-row">
             <text class="info-icon">📋</text>
-            <text class="info-text">考试：{{ item.examTitle }}</text>
+            <text class="info-text">{{ userStore.t('common.exam') }}：{{ item.examTitle }}</text>
           </view>
           <view class="info-row">
             <text class="info-icon">📅</text>
-            <text class="info-text">提交时间：{{ formatDateTime(item.submitTime) }}</text>
+            <text class="info-text">{{ userStore.t('common.submitTime') }}：{{ formatDateTime(item.submitTime) }}</text>
           </view>
           <view class="info-row">
             <text class="info-icon">⏱</text>
-            <text class="info-text">用时：{{ item.duration }}分钟</text>
+            <text class="info-text">{{ userStore.t('common.duration') }}：{{ item.duration }}{{ userStore.t('common.minutes') }}</text>
           </view>
           <view v-if="item.status === 'AUTO_SUBMITTED'" class="info-row">
             <text class="info-icon">⚠️</text>
-            <text class="info-text warning">强制收卷</text>
+            <text class="info-text warning">{{ userStore.t('common.autoSubmitted') }}</text>
           </view>
         </view>
 
         <view class="record-actions">
-          <button class="action-btn" @click="handleView(item)">查看答卷</button>
-          <button v-if="!item.score" class="action-btn primary" @click="handleGrade(item)">评分</button>
+          <button class="action-btn" @click="handleView(item)">{{ userStore.t('common.view') }}</button>
+          <button v-if="!item.score" class="action-btn primary" @click="handleGrade(item)">{{ userStore.t('teacher.grading') }}</button>
         </view>
       </view>
     </view>
@@ -59,8 +56,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useUserStore } from '../../store/index.js'
 import { examRecordApi, examApi } from '../../utils/api.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
+
+const userStore = useUserStore()
 
 const tableData = ref([])
 const exams = ref([])
@@ -73,30 +74,39 @@ const current = ref(1)
 const size = ref(10)
 
 const examOptions = computed(() => {
-  return [{ id: '', title: '全部考试' }, ...exams.value]
+  return [{ id: '', title: userStore.t('common.allExams') }, ...exams.value]
 })
 
-const statusOptions = [
-  { value: '', label: '全部状态' },
-  { value: 'SUBMITTED', label: '已提交' },
-  { value: 'AUTO_SUBMITTED', label: '强制收卷' },
-  { value: 'GRADED', label: '已评分' }
-]
+const statusOptions = computed(() => [
+  { value: '', label: userStore.t('common.all') },
+  { value: 'SUBMITTED', label: userStore.t('common.submitted') },
+  { value: 'AUTO_SUBMITTED', label: userStore.t('common.autoSubmitted') },
+  { value: 'GRADED', label: userStore.t('common.scored') }
+])
 
 const currentExamText = computed(() => {
   const option = examOptions.value.find(e => e.id === params.value.examId)
-  return option ? option.title : '全部考试'
+  return option ? option.title : userStore.t('common.all')
 })
 
 const currentStatusText = computed(() => {
-  const option = statusOptions.find(s => s.value === params.value.status)
-  return option ? option.label : '全部状态'
+  const option = statusOptions.value.find(s => s.value === params.value.status)
+  return option ? option.label : userStore.t('common.all')
 })
 
 const formatDateTime = (time) => {
   if (!time) return ''
   const date = new Date(time)
-  return date.toLocaleString('zh-CN')
+  if (userStore.language === 'zh') {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}`
+  } else {
+    return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+  }
 }
 
 const onExamChange = (e) => {
@@ -107,7 +117,7 @@ const onExamChange = (e) => {
 
 const onStatusChange = (e) => {
   const index = e.detail.value
-  params.value.status = statusOptions[index].value
+  params.value.status = statusOptions.value[index].value
   loadData()
 }
 
@@ -125,9 +135,9 @@ const handleGrade = (item) => {
 
 const loadExams = async () => {
   try {
-    const res = await examApi.list()
+    const res = await examApi.page({ current: 1, size: 100 })
     if (res.code === 200) {
-      exams.value = res.data
+      exams.value = res.data.records || []
     }
   } catch (e) {
     console.error(e)
@@ -151,12 +161,12 @@ const loadData = async () => {
       tableData.value = res.data.records
       loadStatus.value = res.data.records.length >= size.value ? 'more' : 'noMore'
     } else {
-      uni.showToast({ title: res.message || '加载失败', icon: 'none' })
+      uni.showToast({ title: res.message || userStore.t('common.loadFailed'), icon: 'none' })
       loadStatus.value = 'more'
     }
   } catch (e) {
     console.error(e)
-    uni.showToast({ title: '网络错误', icon: 'none' })
+    uni.showToast({ title: userStore.t('common.networkError'), icon: 'none' })
     loadStatus.value = 'more'
   }
 }
@@ -171,25 +181,8 @@ onMounted(() => {
 .exam-record {
   min-height: 100vh;
   background-color: #f5f5f5;
-  padding: 24rpx;
-}
-
-.page-header {
-  margin-bottom: 32rpx;
-}
-
-.title {
-  display: block;
-  font-size: 48rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 12rpx;
-}
-
-.subtitle {
-  display: block;
-  font-size: 28rpx;
-  color: #666;
+  padding: 140rpx 24rpx 24rpx;
+  position: relative;
 }
 
 .toolbar {

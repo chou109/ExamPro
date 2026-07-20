@@ -6,12 +6,12 @@
           <el-icon><ArrowLeft /></el-icon>
         </el-button>
         <h2>{{ className }}</h2>
-        <span class="member-count">{{ memberCount }} 名成员</span>
+        <span class="member-count">{{ memberCount }} {{ userStore.t('classChat.members') }}</span>
       </div>
       <div class="header-right">
         <el-button link @click="showMembers = !showMembers">
           <el-icon><User /></el-icon>
-          成员
+          {{ userStore.t('classChat.members') }}
         </el-button>
       </div>
     </div>
@@ -38,24 +38,24 @@
               <div class="notice-header">
                 <span class="notice-icon">{{ parseExamNotice(msg.content)?.noticeType === 'START' ? '🚀' : '📢' }}</span>
                 <span class="notice-title">{{ parseExamNotice(msg.content)?.title }}</span>
-                <span class="notice-badge">{{ parseExamNotice(msg.content)?.noticeType === 'START' ? '进行中' : '待开始' }}</span>
+                <span class="notice-badge">{{ parseExamNotice(msg.content)?.noticeType === 'START' ? userStore.t('common.ongoing') : userStore.t('common.pending') }}</span>
               </div>
               <div class="notice-info">
                 <div class="info-item">
                   <span class="info-icon">📅</span>
-                  <span>开始时间：{{ parseExamNotice(msg.content)?.startTime }}</span>
+                  <span>{{ userStore.t('classChat.startTime') }}：{{ parseExamNotice(msg.content)?.startTime }}</span>
                 </div>
                 <div class="info-item">
                   <span class="info-icon">🔚</span>
-                  <span>结束时间：{{ parseExamNotice(msg.content)?.endTime }}</span>
+                  <span>{{ userStore.t('classChat.endTime') }}：{{ parseExamNotice(msg.content)?.endTime }}</span>
                 </div>
                 <div class="info-item">
                   <span class="info-icon">⏱️</span>
-                  <span>考试时长：{{ parseExamNotice(msg.content)?.duration }}分钟</span>
+                  <span>{{ userStore.t('classChat.duration') }}：{{ parseExamNotice(msg.content)?.duration }}{{ userStore.t('classChat.minutes') }}</span>
                 </div>
               </div>
               <div class="notice-action">
-                <el-button type="primary" size="small" @click="goToExamList(msg)">{{ parseExamNotice(msg.content)?.noticeType === 'START' ? '进入考试' : '查看考试' }}</el-button>
+                <el-button type="primary" size="small" @click="goToExamList(msg)">{{ parseExamNotice(msg.content)?.noticeType === 'START' ? userStore.t('classChat.enterExam') : userStore.t('classChat.viewExam') }}</el-button>
               </div>
             </div>
             <p class="message-time">{{ formatTime(msg.createTime) }}</p>
@@ -67,7 +67,7 @@
         <div class="chat-input">
           <el-input 
             v-model="inputMessage" 
-            placeholder="输入消息..." 
+            :placeholder="userStore.t('classChat.enterMessage')" 
             style="flex: 1"
             @keyup.enter="sendMessage"
             :disabled="isMuted"
@@ -77,18 +77,18 @@
             @click="sendMessage"
             :disabled="!inputMessage.trim() || isMuted"
           >
-            发送
+            {{ userStore.t('classChat.send') }}
           </el-button>
         </div>
         <div v-if="isMuted" class="muted-tip">
-          您已被禁言
+          {{ userStore.t('classChat.muted') }}
         </div>
       </div>
     </div>
 
     <div class="members-panel" v-if="showMembers">
       <div class="panel-header">
-        <h3>班级成员</h3>
+        <h3>{{ userStore.t('classChat.classMembers') }}</h3>
         <el-button link @click="showMembers = false">
           <el-icon><Close /></el-icon>
         </el-button>
@@ -103,7 +103,7 @@
             <span class="member-name">{{ member.realName }}</span>
             <span :class="'member-role ' + member.role.toLowerCase()">{{ getRoleText(member.role) }}</span>
           </div>
-          <span v-if="member.muteUntil" class="mute-status">已禁言</span>
+          <span v-if="member.muteUntil" class="mute-status">{{ userStore.t('classChat.muted') }}</span>
         </div>
       </div>
     </div>
@@ -181,12 +181,17 @@ const loadClassInfo = async () => {
 const loadMembers = async () => {
   try {
     const res = await classApi.getClassMembers(classId.value)
-    if (res.code === 200) {
-      members.value = res.data
-      memberCount.value = res.data.length
+    if (res.code === 200 || res.success) {
+      const data = res.data || res.result || []
+      members.value = Array.isArray(data) ? data : (data.records || data.list || [])
+      memberCount.value = members.value.length
+    } else {
+      console.error('加载成员失败:', res)
+      ElMessage.error(res.message || '加载成员失败')
     }
   } catch (e) {
-    console.error(e)
+    console.error('加载成员失败:', e)
+    ElMessage.error('加载成员失败')
   }
 }
 
@@ -208,7 +213,7 @@ const sendMessage = async () => {
   try {
     const userId = userStore.userInfo?.userId || localStorage.getItem('userId')
     if (!userId) {
-      ElMessage.error('请先登录')
+      ElMessage.error(userStore.t('common.pleaseLogin'))
       return
     }
     const res = await classApi.sendMessage(classId.value, inputMessage.value, userId)
@@ -217,11 +222,11 @@ const sendMessage = async () => {
       inputMessage.value = ''
       scrollToBottom()
     } else {
-      ElMessage.error(res.message || '发送失败')
+      ElMessage.error(res.message || userStore.t('common.sendFailed'))
     }
   } catch (e) {
     console.error(e)
-    ElMessage.error('发送失败')
+    ElMessage.error(userStore.t('common.sendFailed'))
   }
 }
 
@@ -251,8 +256,8 @@ const scrollToBottom = () => {
 
 const getSenderName = (senderId) => {
   const member = members.value.find(m => m.userId == senderId)
-  if (!member) return '未知用户'
-  return member.realName || member.username || '未知用户'
+  if (!member) return userStore.t('common.unknownUser')
+  return member.realName || member.username || userStore.t('common.unknownUser')
 }
 
 const getSenderAvatar = (senderId) => {
@@ -263,14 +268,16 @@ const getSenderAvatar = (senderId) => {
 const formatTime = (time) => {
   if (!time) return ''
   const date = new Date(time)
-  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
 }
 
 const getRoleText = (role) => {
   const roleMap = {
-    OWNER: '所有者',
-    ADMIN: '管理员',
-    MEMBER: '成员'
+    OWNER: userStore.t('classChat.owner'),
+    ADMIN: userStore.t('classChat.admin'),
+    MEMBER: userStore.t('classChat.member')
   }
   return roleMap[role] || role
 }

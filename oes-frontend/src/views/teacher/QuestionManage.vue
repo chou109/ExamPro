@@ -1,53 +1,53 @@
 <template>
   <div class="question-manage">
     <div class="page-header">
-      <h2>题库管理</h2>
-      <p>管理考试题目，支持多种题型</p>
+      <h2>{{ userStore.t('teacher.questionManagement') }}</h2>
+      <p>{{ userStore.t('teacher.questionManagementDesc') }}</p>
     </div>
 
     <div class="card">
       <div class="toolbar">
-        <div class="filter-row">
-          <el-select v-model="params.subjectId" placeholder="选择科目" style="width: 180px" clearable @change="loadData">
+        <div class="toolbar-left">
+          <el-select v-model="params.subjectId" :placeholder="userStore.t('teacher.selectSubject')" class="subject-select" clearable @change="loadData">
             <el-option v-for="s in subjects" :key="s.id" :label="s.name" :value="s.id" />
           </el-select>
-          <el-select v-model="params.type" placeholder="题目类型" style="width: 160px" clearable @change="loadData">
-            <el-option label="单选题" value="SINGLE_CHOICE" />
-            <el-option label="多选题" value="MULTIPLE_CHOICE" />
-            <el-option label="判断题" value="JUDGMENT" />
-            <el-option label="填空题" value="FILL_BLANK" />
-            <el-option label="简答题" value="ESSAY" />
-            <el-option label="编程题" value="PROGRAMMING" />
+          <el-select v-model="params.type" :placeholder="userStore.t('teacher.questionType')" class="type-select" clearable @change="loadData">
+            <el-option :label="userStore.t('teacher.singleChoice')" value="SINGLE_CHOICE" />
+            <el-option :label="userStore.t('teacher.multipleChoice')" value="MULTIPLE_CHOICE" />
+            <el-option :label="userStore.t('teacher.judgment')" value="JUDGMENT" />
+            <el-option :label="userStore.t('teacher.fillBlank')" value="FILL_BLANK" />
+            <el-option :label="userStore.t('teacher.essay')" value="ESSAY" />
+            <el-option :label="userStore.t('teacher.programming')" value="PROGRAMMING" />
           </el-select>
         </div>
-        <div class="search-row">
-          <el-input v-model="params.keyword" placeholder="搜索题目内容" style="width: 200px" clearable @change="loadData" />
-          <el-button type="danger" @click="loadData">搜索</el-button>
+        <div class="toolbar-center">
+          <el-input v-model="params.keyword" :placeholder="userStore.t('teacher.searchQuestion')" class="search-input" clearable @change="loadData" />
+          <el-button type="danger" @click="loadData">{{ userStore.t('common.search') }}</el-button>
         </div>
-        <div class="action-row">
-          <el-button type="danger" @click="handleCreate">新增题目</el-button>
-          <el-button type="primary" @click="showImportDialog = true">批量导入</el-button>
+        <div class="toolbar-right">
+          <el-button type="danger" @click="handleCreate">{{ userStore.t('teacher.addQuestion') }}</el-button>
+          <el-button type="primary" @click="showImportDialog = true">{{ userStore.t('teacher.batchImport') }}</el-button>
         </div>
       </div>
 
       <el-table :data="tableData" v-loading="loading" stripe>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="type" label="类型" width="100">
+        <el-table-column prop="id" :label="userStore.t('teacher.id')" width="80" />
+        <el-table-column prop="type" :label="userStore.t('teacher.questionType')" width="100">
           <template #default="{ row }">
             <el-tag>{{ typeText(row.type) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="content" label="题目内容" show-overflow-tooltip />
-        <el-table-column prop="usedCount" label="使用次数" width="100" />
-        <el-table-column label="正确率" width="100">
+        <el-table-column prop="content" :label="userStore.t('teacher.questionContent')" show-overflow-tooltip />
+        <el-table-column prop="usedCount" :label="userStore.t('teacher.frequency')" width="100" />
+        <el-table-column :label="userStore.t('teacher.correctRate')" width="100">
           <template #default="{ row }">
             <span>{{ row.usedCount > 0 ? ((row.correctCount / row.usedCount) * 100).toFixed(1) + '%' : '-' }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="160" fixed="right">
+        <el-table-column :label="userStore.t('common.operation')" width="160" fixed="right">
           <template #default="{ row }">
-            <el-button type="danger" link @click="handleEdit(row)">编辑</el-button>
-            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+            <el-button type="danger" link @click="handleEdit(row)">{{ userStore.t('common.edit') }}</el-button>
+            <el-button type="danger" link @click="handleDelete(row)">{{ userStore.t('common.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -64,44 +64,44 @@
       />
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑题目' : '新增题目'" width="800px">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? userStore.t('teacher.editQuestion') : userStore.t('teacher.addQuestion')" width="800px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="科目" prop="subjectId">
+        <el-form-item :label="userStore.t('common.subject')" prop="subjectId">
           <el-select v-model="form.subjectId" style="width: 100%">
             <el-option v-for="s in subjects" :key="s.id" :label="s.name" :value="s.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="题目类型" prop="type">
+        <el-form-item :label="userStore.t('teacher.questionType')" prop="type">
           <el-select v-model="form.type" style="width: 100%" @change="handleTypeChange">
-            <el-option label="单选题" value="SINGLE_CHOICE" />
-            <el-option label="多选题" value="MULTIPLE_CHOICE" />
-            <el-option label="判断题" value="JUDGMENT" />
-            <el-option label="填空题" value="FILL_BLANK" />
-            <el-option label="简答题" value="ESSAY" />
-            <el-option label="编程题" value="PROGRAMMING" />
+            <el-option :label="userStore.t('teacher.singleChoice')" value="SINGLE_CHOICE" />
+            <el-option :label="userStore.t('teacher.multipleChoice')" value="MULTIPLE_CHOICE" />
+            <el-option :label="userStore.t('teacher.judgment')" value="JUDGMENT" />
+            <el-option :label="userStore.t('teacher.fillBlank')" value="FILL_BLANK" />
+            <el-option :label="userStore.t('teacher.essay')" value="ESSAY" />
+            <el-option :label="userStore.t('teacher.programming')" value="PROGRAMMING" />
           </el-select>
         </el-form-item>
 
         <template v-if="['SINGLE_CHOICE', 'MULTIPLE_CHOICE'].includes(form.type)">
-          <el-form-item label="选项数量" prop="optionCount">
+          <el-form-item :label="userStore.t('teacher.optionCount')" prop="optionCount">
             <el-select v-model="form.optionCount" style="width: 150px">
-              <el-option label="2个选项" :value="2" />
-              <el-option label="3个选项" :value="3" />
-              <el-option label="4个选项" :value="4" />
-              <el-option label="5个选项" :value="5" />
-              <el-option label="6个选项" :value="6" />
+              <el-option :label="'2' + userStore.t('teacher.optionUnit')" :value="2" />
+              <el-option :label="'3' + userStore.t('teacher.optionUnit')" :value="3" />
+              <el-option :label="'4' + userStore.t('teacher.optionUnit')" :value="4" />
+              <el-option :label="'5' + userStore.t('teacher.optionUnit')" :value="5" />
+              <el-option :label="'6' + userStore.t('teacher.optionUnit')" :value="6" />
             </el-select>
           </el-form-item>
         </template>
 
         <template v-if="['SINGLE_CHOICE', 'MULTIPLE_CHOICE', 'JUDGMENT'].includes(form.type)">
-          <el-form-item label="题目内容" prop="content">
+          <el-form-item :label="userStore.t('teacher.questionContent')" prop="content">
             <el-input v-model="form.content" type="textarea" :rows="3" />
           </el-form-item>
-          <el-form-item label="选项" v-for="(option, index) in form.options" :key="index" :label="getOptionLabel(index)">
-            <el-input v-model="option.content" :placeholder="'请输入' + getOptionLabel(index) + '选项内容'" />
+          <el-form-item v-for="(option, index) in form.options" :key="index" :label="getOptionLabel(index)">
+            <el-input v-model="option.content" :placeholder="userStore.t('teacher.enterOption') + getOptionLabel(index)" />
           </el-form-item>
-          <el-form-item label="正确答案" prop="answer">
+          <el-form-item :label="userStore.t('teacher.correctAnswer')" prop="answer">
             <el-select v-model="form.answer" :multiple="form.type === 'MULTIPLE_CHOICE'" style="width: 100%">
               <el-option v-for="(option, index) in form.options" :key="index" :label="getOptionLabel(index)" :value="getOptionLabel(index)" />
             </el-select>
@@ -109,106 +109,78 @@
         </template>
 
         <template v-if="form.type === 'FILL_BLANK'">
-          <el-form-item label="题目内容" prop="content">
-            <el-input v-model="form.content" type="textarea" :rows="3" placeholder="输入题目内容，在需要填空的位置输入 $blank$" />
+          <el-form-item :label="userStore.t('teacher.questionContent')" prop="content">
+            <el-input v-model="form.content" type="textarea" :rows="3" :placeholder="userStore.t('teacher.fillBlankPlaceholder')" />
           </el-form-item>
           <div class="blank-toolbar">
-            <el-button type="default" size="small" @click="insertBlank">插入填空标记</el-button>
-            <span class="hint">点击按钮在光标位置插入 "$blank$" 作为填空标记</span>
+            <el-button type="default" size="small" @click="insertBlank">{{ userStore.t('teacher.insertBlank') }}</el-button>
+            <span class="hint">{{ userStore.t('teacher.blankHint') }}</span>
           </div>
-          <el-form-item label="正确答案" prop="answer">
-            <el-input v-model="form.answer" placeholder="多个空用英文逗号分隔，如：答案1,答案2,答案3" />
+          <el-form-item :label="userStore.t('teacher.correctAnswer')" prop="answer">
+            <el-input v-model="form.answer" :placeholder="userStore.t('teacher.fillBlankAnswerPlaceholder')" />
           </el-form-item>
         </template>
 
         <template v-if="form.type === 'ESSAY'">
-          <el-form-item label="题目内容" prop="content">
+          <el-form-item :label="userStore.t('teacher.questionContent')" prop="content">
             <el-input v-model="form.content" type="textarea" :rows="5" />
           </el-form-item>
-          <el-form-item label="参考答案" prop="answer">
+          <el-form-item :label="userStore.t('teacher.referenceAnswer')" prop="answer">
             <el-input v-model="form.answer" type="textarea" :rows="3" />
           </el-form-item>
         </template>
 
         <template v-if="form.type === 'PROGRAMMING'">
-          <el-form-item label="题目内容" prop="content">
+          <el-form-item :label="userStore.t('teacher.questionContent')" prop="content">
             <el-input v-model="form.content" type="textarea" :rows="5" />
           </el-form-item>
-          <el-form-item label="参考答案" prop="answer">
+          <el-form-item :label="userStore.t('teacher.referenceAnswer')" prop="answer">
             <el-input v-model="form.answer" type="textarea" :rows="5" />
           </el-form-item>
         </template>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="danger" @click="handleSubmit">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ userStore.t('common.cancel') }}</el-button>
+        <el-button type="danger" @click="handleSubmit">{{ userStore.t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 批量导入对话框 -->
-    <el-dialog v-model="showImportDialog" title="批量导入题目" width="800px">
+    <el-dialog v-model="showImportDialog" :title="userStore.t('teacher.batchImport')" width="800px">
       <el-form ref="importFormRef" :model="importForm" label-width="120px">
-        <el-form-item label="选择科目" prop="subjectId">
+        <el-form-item :label="userStore.t('teacher.selectSubject')" prop="subjectId">
           <el-select v-model="importForm.subjectId" style="width: 100%">
             <el-option v-for="s in subjects" :key="s.id" :label="s.name" :value="s.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="题目文本">
+        <el-form-item :label="userStore.t('teacher.questionText')">
           <el-input 
             v-model="importForm.text" 
             type="textarea" 
             :rows="12" 
-            placeholder="请粘贴题目文本，支持以下格式：
-
-1. 单选题：
-1. 题目内容
-A. 选项一
-B. 选项二
-C. 选项三
-D. 选项四
-答案：B
-
-2. 多选题：
-2. 题目内容（多选）
-A. 选项一
-B. 选项二
-C. 选项三
-D. 选项四
-答案：A,B
-
-3. 判断题：
-3. 题目内容（对）
-或
-3. 题目内容（错）
-
-4. 填空题：
-4. 题目内容（答案：填空答案）
-
-5. 简答题：
-5. 题目内容
-（参考答案：答案内容）" />
+            :placeholder="userStore.t('teacher.importPlaceholder')" />
         </el-form-item>
         <el-form-item>
-          <el-alert title="格式说明" type="info" :closable="false">
+          <el-alert :title="userStore.t('teacher.formatInstructions')" type="info" :closable="false">
             <ul style="margin: 0; padding-left: 20px;">
-              <li><strong>题目编号：</strong>支持"1."、"一、"、"（一）"等格式</li>
-              <li><strong>选项格式：</strong>使用"A."、"B."、"C."、"D."开头</li>
-              <li><strong>答案标记：</strong>单独一行写"答案：A"或"答案：A,B"</li>
-              <li><strong>判断题：</strong>在题目末尾添加"（对）"或"（错）"</li>
-              <li><strong>填空题：</strong>使用"（答案：xxx）"或"【答案xxx】"</li>
-              <li><strong>简答题：</strong>使用"（参考答案：xxx）"</li>
+              <li><strong>{{ userStore.t('teacher.questionNumbering') }}：</strong>{{ userStore.t('teacher.numberingFormat') }}</li>
+              <li><strong>{{ userStore.t('teacher.optionFormat') }}：</strong>{{ userStore.t('teacher.optionFormatDesc') }}</li>
+              <li><strong>{{ userStore.t('teacher.answerMark') }}：</strong>{{ userStore.t('teacher.answerMarkDesc') }}</li>
+              <li><strong>{{ userStore.t('teacher.judgmentFormat') }}：</strong>{{ userStore.t('teacher.judgmentFormatDesc') }}</li>
+              <li><strong>{{ userStore.t('teacher.fillBlankFormat') }}：</strong>{{ userStore.t('teacher.fillBlankFormatDesc') }}</li>
+              <li><strong>{{ userStore.t('teacher.essayFormat') }}：</strong>{{ userStore.t('teacher.essayFormatDesc') }}</li>
             </ul>
           </el-alert>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showImportDialog = false">取消</el-button>
-        <el-button type="primary" @click="handleImport">开始导入</el-button>
+        <el-button @click="showImportDialog = false">{{ userStore.t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="handleImport">{{ userStore.t('teacher.startImport') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 导入结果对话框 -->
-    <el-dialog v-model="showImportResult" title="导入结果" width="600px">
+    <el-dialog v-model="showImportResult" :title="userStore.t('teacher.importResult')" width="600px">
       <div v-if="importResult">
         <div class="result-summary">
           <div :class="['result-icon', importResult.success ? 'success' : 'error']">
@@ -217,13 +189,13 @@ D. 选项四
           <div class="result-info">
             <p class="result-message">{{ importResult.message }}</p>
             <div class="result-stats">
-              <span class="stat-item">成功：<strong>{{ importResult.imported }}</strong></span>
-              <span class="stat-item">失败：<strong>{{ importResult.failed }}</strong></span>
+              <span class="stat-item">{{ userStore.t('teacher.success') }}：<strong>{{ importResult.imported }}</strong></span>
+              <span class="stat-item">{{ userStore.t('teacher.failed') }}：<strong>{{ importResult.failed }}</strong></span>
             </div>
           </div>
         </div>
         <div v-if="importResult.errors && importResult.errors.length > 0" class="result-errors">
-          <p class="errors-title">失败详情：</p>
+          <p class="errors-title">{{ userStore.t('teacher.failedDetails') }}：</p>
           <el-scrollbar style="max-height: 200px;">
             <ul class="errors-list">
               <li v-for="(error, index) in importResult.errors" :key="index">{{ error }}</li>
@@ -232,7 +204,7 @@ D. 选项四
         </div>
       </div>
       <template #footer>
-        <el-button type="primary" @click="showImportResult = false; showImportDialog = false">确定</el-button>
+        <el-button type="primary" @click="showImportResult = false; showImportDialog = false">{{ userStore.t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -242,7 +214,9 @@ D. 选项四
 import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { questionApi, subjectApi } from '../../utils/api'
+import { useUserStore } from '../../store'
 
+const userStore = useUserStore()
 const loading = ref(false)
 const tableData = ref([])
 const subjects = ref([])
@@ -280,14 +254,21 @@ const importForm = reactive({
 const importResult = ref(null)
 
 const rules = {
-  subjectId: [{ required: true, message: '请选择科目', trigger: 'change' }],
-  type: [{ required: true, message: '请选择题目类型', trigger: 'change' }],
-  content: [{ required: true, message: '请输入题目内容', trigger: 'blur' }],
-  answer: [{ required: true, message: '请输入正确答案', trigger: 'blur' }]
+  subjectId: [{ required: true, message: userStore.t('teacher.selectSubject'), trigger: 'change' }],
+  type: [{ required: true, message: userStore.t('teacher.selectQuestionType'), trigger: 'change' }],
+  content: [{ required: true, message: userStore.t('teacher.enterContent'), trigger: 'blur' }],
+  answer: [{ required: true, message: userStore.t('teacher.enterAnswer'), trigger: 'blur' }]
 }
 
 const typeText = (type) => {
-  const map = { SINGLE_CHOICE: '单选题', MULTIPLE_CHOICE: '多选题', JUDGMENT: '判断题', FILL_BLANK: '填空题', ESSAY: '简答题', PROGRAMMING: '编程题' }
+  const map = { 
+    SINGLE_CHOICE: userStore.t('teacher.singleChoice'), 
+    MULTIPLE_CHOICE: userStore.t('teacher.multipleChoice'), 
+    JUDGMENT: userStore.t('teacher.judgment'), 
+    FILL_BLANK: userStore.t('teacher.fillBlank'), 
+    ESSAY: userStore.t('teacher.essay'), 
+    PROGRAMMING: userStore.t('teacher.programming') 
+  }
   return map[type] || type
 }
 
@@ -308,8 +289,8 @@ const handleTypeChange = () => {
   
   if (form.type === 'JUDGMENT') {
     form.options = [
-      { key: 'A', content: '正确' },
-      { key: 'B', content: '错误' }
+      { key: 'A', content: userStore.t('teacher.correct') },
+      { key: 'B', content: userStore.t('teacher.incorrect') }
     ]
     form.optionCount = 2
   } else if (['SINGLE_CHOICE', 'MULTIPLE_CHOICE'].includes(form.type)) {
@@ -369,11 +350,9 @@ const handleEdit = (row) => {
   if (row.options) {
     try {
       const options = typeof row.options === 'string' ? JSON.parse(row.options) : row.options
-      // 处理数组格式的选项
       if (Array.isArray(options)) {
         form.options = options
       } else {
-        // 处理对象格式的选项（旧格式兼容）
         form.options = Object.keys(options).map(key => ({ key, content: options[key] }))
       }
       form.optionCount = form.options.length
@@ -382,8 +361,8 @@ const handleEdit = (row) => {
     }
   } else if (row.type === 'JUDGMENT') {
     form.options = [
-      { key: 'A', content: '正确' },
-      { key: 'B', content: '错误' }
+      { key: 'A', content: userStore.t('teacher.correct') },
+      { key: 'B', content: userStore.t('teacher.incorrect') }
     ]
     form.optionCount = 2
   } else {
@@ -415,38 +394,38 @@ const handleSubmit = async () => {
     
     const res = isEdit.value ? await questionApi.update(submitForm) : await questionApi.create(submitForm)
     if (res.code === 200) {
-      ElMessage.success('操作成功')
+      ElMessage.success(userStore.t('common.success'))
       dialogVisible.value = false
       loadData()
     } else {
-      ElMessage.error(res.message)
+      ElMessage.error(res.message || userStore.t('common.failed'))
     }
   } catch (e) {
-    ElMessage.error(e.message)
+    ElMessage.error(e.message || userStore.t('common.failed'))
   }
 }
 
 const handleDelete = async (row) => {
-  await ElMessageBox.confirm('确定要删除该题目吗？')
+  await ElMessageBox.confirm(userStore.t('teacher.confirmDeleteQuestion'))
   try {
     const res = await questionApi.delete(row.id)
     if (res.code === 200) {
-      ElMessage.success('删除成功')
+      ElMessage.success(userStore.t('common.success'))
       loadData()
     }
   } catch (e) {
-    ElMessage.error(e.message)
+    ElMessage.error(e.message || userStore.t('common.failed'))
   }
 }
 
 // 批量导入题目
 const handleImport = async () => {
   if (!importForm.subjectId) {
-    ElMessage.warning('请选择科目')
+    ElMessage.warning(userStore.t('teacher.selectSubject'))
     return
   }
   if (!importForm.text.trim()) {
-    ElMessage.warning('请输入题目文本')
+    ElMessage.warning(userStore.t('teacher.enterQuestionText'))
     return
   }
   
@@ -462,11 +441,11 @@ const handleImport = async () => {
         loadData()
       }
     } else {
-      ElMessage.error(res.message || '导入失败')
+      ElMessage.error(res.message || userStore.t('teacher.importFailed'))
     }
   } catch (e) {
     console.error('导入错误:', e)
-    ElMessage.error(e.response?.data?.message || e.message || '导入失败，请稍后重试')
+    ElMessage.error(e.response?.data?.message || e.message || userStore.t('teacher.importFailedRetry'))
   }
 }
 
@@ -519,22 +498,10 @@ onMounted(() => {
 }
 
 .toolbar {
+  display: flex;
+  gap: 16px;
+  align-items: center;
   margin-bottom: 20px;
-}
-
-.filter-row {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-
-.search-row {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
   position: sticky;
   top: 24px;
   z-index: 100;
@@ -545,11 +512,36 @@ onMounted(() => {
   margin: -20px -20px 20px;
 }
 
-.action-row {
+.toolbar-left {
   display: flex;
   gap: 12px;
   align-items: center;
-  flex-wrap: wrap;
+}
+
+.toolbar-center {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.toolbar-right {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.subject-select {
+  width: 180px;
+}
+
+.type-select {
+  width: 160px;
+}
+
+.search-input {
+  width: 200px;
 }
 
 .blank-toolbar {
@@ -755,14 +747,16 @@ onMounted(() => {
     overflow-x: auto;
   }
   
-  .filter-row,
-  .action-row {
-    gap: 10px;
+  .toolbar {
+    flex-wrap: wrap;
+    gap: 12px;
   }
   
-  .search-row {
-    margin: -16px -16px 16px;
-    padding: 14px;
+  .toolbar-left,
+  .toolbar-center,
+  .toolbar-right {
+    flex: 1;
+    justify-content: flex-start;
   }
   
   .question-count-grid {
@@ -783,10 +777,16 @@ onMounted(() => {
     padding: 14px;
   }
   
-  .filter-row {
-    flex-wrap: nowrap;
-    margin-bottom: 10px;
-
+  .toolbar {
+    flex-wrap: wrap;
+    margin: -14px -14px 14px;
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .toolbar-left {
+    width: 100%;
+    
     .el-select {
       flex: 1;
       min-width: 0;
@@ -794,25 +794,25 @@ onMounted(() => {
     }
   }
   
-  .search-row {
-    margin: -14px -14px 14px;
-    padding: 12px;
-    flex-wrap: nowrap;
-
+  .toolbar-center {
+    width: 100%;
+    justify-content: flex-start;
+    
     .el-input {
       flex: 1;
       min-width: 0;
       width: auto !important;
     }
-
+    
     .el-button {
       flex: 0 0 auto;
       white-space: nowrap;
     }
   }
   
-  .action-row {
-    flex-wrap: nowrap;
+  .toolbar-right {
+    width: 100%;
+    justify-content: flex-start;
   }
   
   .blank-toolbar {

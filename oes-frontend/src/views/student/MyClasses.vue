@@ -1,19 +1,19 @@
 <template>
   <div class="my-classes">
     <div class="page-header">
-      <h2>班级消息</h2>
-      <p>查看班级最新动态</p>
+      <h2>{{ userStore.t('common.messages') }}</h2>
+      <p>{{ userStore.t('student.viewLatest') }}</p>
     </div>
 
     <el-card class="join-card">
       <div class="join-form">
         <el-input 
           v-model="inviteCode" 
-          placeholder="请输入班级群号" 
+          :placeholder="userStore.t('student.enterClassCode')" 
           class="join-input"
           @keyup.enter="handleJoin"
         />
-        <el-button type="danger" @click="handleJoin">加入班级</el-button>
+        <el-button type="danger" @click="handleJoin">{{ userStore.t('student.joinClass') }}</el-button>
       </div>
     </el-card>
 
@@ -34,15 +34,15 @@
           </div>
           <p class="class-message-content">{{ getMessageText(item.class) }}</p>
           <div class="class-message-meta">
-            <span>群号：{{ item.class.inviteCode }}</span>
-            <span>角色：{{ getRoleText(item.role) }}</span>
+            <span>{{ userStore.t('common.inviteCode') }}：{{ item.class.inviteCode }}</span>
+            <span>{{ userStore.t('common.role') }}：{{ getRoleText(item.role) }}</span>
           </div>
         </div>
         <el-icon class="class-message-arrow"><ArrowRight /></el-icon>
       </div>
     </div>
 
-    <el-empty v-if="classList.length === 0" description="暂无班级，输入群号加入班级吧" />
+    <el-empty v-if="classList.length === 0" :description="userStore.t('student.noClass')" />
   </div>
 </template>
 
@@ -63,7 +63,7 @@ const loadClasses = async () => {
   try {
     const userId = userStore.userInfo?.userId || localStorage.getItem('userId')
     if (!userId) {
-      ElMessage.error('请先登录')
+      ElMessage.error(userStore.t('common.pleaseLogin'))
       return
     }
     const res = await classApi.getMyClasses(userId)
@@ -72,33 +72,33 @@ const loadClasses = async () => {
     }
   } catch (e) {
     console.error(e)
-    ElMessage.error('加载班级列表失败')
+    ElMessage.error(userStore.t('student.loadFailed'))
   }
 }
 
 const handleJoin = async () => {
   if (!inviteCode.value.trim()) {
-    ElMessage.warning('请输入班级群号')
+    ElMessage.warning(userStore.t('student.enterClassCode'))
     return
   }
   
   try {
     const userId = userStore.userInfo?.userId || localStorage.getItem('userId')
     if (!userId) {
-      ElMessage.error('请先登录')
+      ElMessage.error(userStore.t('common.pleaseLogin'))
       return
     }
     const res = await classApi.joinByCode(inviteCode.value, userId)
     if (res.code === 200) {
-      ElMessage.success('加入班级成功')
+      ElMessage.success(userStore.t('student.joinSuccess'))
       inviteCode.value = ''
       loadClasses()
     } else {
-      ElMessage.error(res.message || '加入班级失败')
+      ElMessage.error(res.message || userStore.t('student.joinFailed'))
     }
   } catch (e) {
     console.error(e)
-    ElMessage.error('加入班级失败')
+    ElMessage.error(userStore.t('student.joinFailed'))
   }
 }
 
@@ -108,15 +108,15 @@ const enterClass = (classId) => {
 
 const getRoleText = (role) => {
   const roleMap = {
-    OWNER: '所有者',
-    ADMIN: '管理员',
-    MEMBER: '普通成员'
+    OWNER: userStore.t('student.owner'),
+    ADMIN: userStore.t('common.admin'),
+    MEMBER: userStore.t('student.member')
   }
   return roleMap[role] || role
 }
 
 const getMessageText = (cls) => {
-  if (!cls || !cls.lastMessage) return '暂无消息'
+  if (!cls || !cls.lastMessage) return userStore.t('common.noData')
   if (cls.lastMessage.startsWith('EXAM_NOTICE|')) {
     return parseExamNotice(cls.lastMessage)
   }
@@ -129,11 +129,11 @@ const parseExamNotice = (content) => {
   const noticeType = parts[1] || ''
   const title = parts[2] || ''
   if (noticeType === 'START') {
-    return '🚀 ' + title + ' 开始考试'
+    return '🚀 ' + title + ' ' + userStore.t('student.examStarted')
   } else if (noticeType === 'PUBLISH') {
-    return '📢 ' + title + ' 发布通知'
+    return '📢 ' + title + ' ' + userStore.t('student.examPublished')
   } else if (noticeType === 'END') {
-    return '🔚 ' + title + ' 考试结束'
+    return '🔚 ' + title + ' ' + userStore.t('common.finished')
   }
   return '📝 ' + title
 }
@@ -143,10 +143,18 @@ const getTimeText = (time) => {
   const date = new Date(time)
   const now = new Date()
   const diff = now - date
-  if (diff < 60000) return '刚刚'
-  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
-  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
-  return date.toLocaleDateString('zh-CN')
+  const lang = userStore.language === 'zh' ? 'zh-CN' : 'en-US'
+  if (diff < 60000) return userStore.t('student.justNow')
+  if (diff < 3600000) return Math.floor(diff / 60000) + (userStore.language === 'zh' ? userStore.t('common.minutes') + userStore.t('student.ago') : userStore.t('student.minutesAgo'))
+  if (diff < 86400000) return Math.floor(diff / 3600000) + (userStore.language === 'zh' ? userStore.t('common.hours') + userStore.t('student.ago') : userStore.t('student.hoursAgo'))
+  if (userStore.language === 'zh') {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
 }
 
 onMounted(() => {

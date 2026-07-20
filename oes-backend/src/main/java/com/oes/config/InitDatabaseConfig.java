@@ -38,8 +38,6 @@ public class InitDatabaseConfig implements CommandLineRunner {
              Statement statement = connection.createStatement()) {
             
             executeSqlScript("/sql/ExamPro.sql", statement);
-            
-            System.out.println("Database initialized successfully from SQL script");
         }
     }
 
@@ -52,7 +50,6 @@ public class InitDatabaseConfig implements CommandLineRunner {
                  Statement statement = connection.createStatement()) {
                 
                 statement.executeUpdate("CREATE DATABASE IF NOT EXISTS `" + databaseName + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-                System.out.println("Database '" + databaseName + "' ensured");
             }
         } catch (Exception e) {
             System.err.println("Error creating database: " + e.getMessage());
@@ -339,7 +336,7 @@ public class InitDatabaseConfig implements CommandLineRunner {
                     "PRIMARY KEY (`id`)" +
                     ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-            System.out.println("Tables created manually");
+
         } catch (Exception e) {
             System.err.println("Error creating tables: " + e.getMessage());
         }

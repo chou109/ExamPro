@@ -1,9 +1,6 @@
 <template>
   <view class="statistics">
-    <view class="page-header">
-      <text class="title">成绩分析</text>
-      <text class="subtitle">查看您的学习数据分析</text>
-    </view>
+    <CustomNavBar :title="userStore.t('common.statistics')" :showBack="true" />
 
     <!-- 统计卡片 -->
     <view class="stat-grid">
@@ -21,17 +18,17 @@
     <!-- 科目成绩 -->
     <view class="card">
       <view class="card-header">
-        <text class="card-title">科目成绩</text>
+        <text class="card-title">{{ userStore.t('student.subjectScores') }}</text>
       </view>
       <view class="subject-list">
         <view class="subject-item" v-for="subject in subjectScores" :key="subject.subjectName">
           <view class="subject-info">
             <text class="subject-name">{{ subject.subjectName }}</text>
-            <text class="subject-exams">{{ subject.examCount }}次考试</text>
+            <text class="subject-exams">{{ subject.examCount }}{{ userStore.t('student.exams') }}</text>
           </view>
           <view class="subject-score">
             <text class="score-value">{{ subject.avgScore }}</text>
-            <text class="score-unit">分</text>
+            <text class="score-unit">{{ userStore.t('dashboard.scoreUnit') }}</text>
           </view>
           <view class="score-bar">
             <view class="bar-fill" :style="{ width: subject.avgScore + '%', background: subject.color }"></view>
@@ -43,7 +40,7 @@
     <!-- 答题情况 -->
     <view class="card">
       <view class="card-header">
-        <text class="card-title">答题情况</text>
+        <text class="card-title">{{ userStore.t('student.answerStats') }}</text>
       </view>
       <view class="answer-stats">
         <view class="answer-item">
@@ -52,7 +49,7 @@
           </view>
           <view class="answer-info">
             <text class="answer-count">{{ stats.correctCount }}</text>
-            <text class="answer-label">答对题数</text>
+            <text class="answer-label">{{ userStore.t('student.correctCount') }}</text>
           </view>
           <text class="answer-rate">{{ correctRate }}%</text>
         </view>
@@ -63,7 +60,7 @@
           </view>
           <view class="answer-info">
             <text class="answer-count">{{ stats.wrongCount }}</text>
-            <text class="answer-label">答错题数</text>
+            <text class="answer-label">{{ userStore.t('student.wrongCount') }}</text>
           </view>
           <text class="answer-rate">{{ wrongRate }}%</text>
         </view>
@@ -74,7 +71,7 @@
           </view>
           <view class="answer-info">
             <text class="answer-count">{{ stats.skippedCount }}</text>
-            <text class="answer-label">未答题数</text>
+            <text class="answer-label">{{ userStore.t('student.skippedCount') }}</text>
           </view>
           <text class="answer-rate">{{ skippedRate }}%</text>
         </view>
@@ -84,9 +81,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useUserStore } from '../../store/index.js'
 import { examRecordApi } from '../../utils/api.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
 
 const userStore = useUserStore()
 const stats = ref({
@@ -102,19 +100,19 @@ const subjectScores = ref([])
 
 const statItems = computed(() => [
   {
-    label: '总考试数',
+    label: userStore.t('student.totalExams'),
     value: stats.value.totalExams,
     emoji: '📝',
     bgColor: '#667eea'
   },
   {
-    label: '平均分',
+    label: userStore.t('student.avgScore'),
     value: stats.value.avgScore,
     emoji: '⭐',
     bgColor: '#f56c6c'
   },
   {
-    label: '通过率',
+    label: userStore.t('student.passRate'),
     value: stats.value.passRate + '%',
     emoji: '🏅',
     bgColor: '#67c23a'
@@ -171,7 +169,7 @@ const loadStatistics = async () => {
   } catch (e) {
     console.error(e)
     uni.showToast({
-      title: '加载统计数据失败',
+      title: userStore.t('common.failed'),
       icon: 'none'
     })
   }
@@ -186,31 +184,16 @@ onMounted(() => {
 .statistics {
   min-height: 100vh;
   background-color: #f5f5f5;
-  padding: 24rpx;
-}
-
-.page-header {
-  margin-bottom: 32rpx;
-}
-
-.title {
-  display: block;
-  font-size: 48rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 12rpx;
-}
-
-.subtitle {
-  display: block;
-  font-size: 28rpx;
-  color: #666;
+  padding: 0;
+  padding-top: 140rpx;
 }
 
 .stat-grid {
   display: flex;
   gap: 20rpx;
+  margin-top: 24rpx;
   margin-bottom: 24rpx;
+  padding: 0 24rpx;
 }
 
 .stat-card {
@@ -257,7 +240,7 @@ onMounted(() => {
   background: #fff;
   border-radius: 16rpx;
   padding: 28rpx;
-  margin-bottom: 24rpx;
+  margin: 0 24rpx 24rpx;
 }
 
 .card-header {

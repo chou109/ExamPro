@@ -1,14 +1,7 @@
 <script>
-import { useUserStore } from './store/index.js'
-
 export default {
   onLaunch: function() {
     console.log('App Launch')
-    const token = uni.getStorageSync('token')
-    if (token) {
-      const userStore = useUserStore()
-      userStore.getUserInfo()
-    }
   },
   onShow: function() {
     console.log('App Show')

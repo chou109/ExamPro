@@ -27,7 +27,7 @@ export const userApi = {
 // 院系管理API
 export const departmentApi = {
   tree: () => get('/departments/tree'),
-  list: () => get('/departments'),
+  list: (options = {}) => get('/departments', {}, options),
   getById: (id) => get(`/departments/${id}`),
   create: (data) => post('/departments', data),
   update: (data) => put('/departments', data),
@@ -49,6 +49,13 @@ export const classApi = {
   getMessages: (classId, current, size) => get(`/class/${classId}/messages`, { current, size }),
   sendMessage: (classId, content, senderId) => post(`/class/${classId}/message?senderId=${senderId}`, { content }),
   checkMemberRole: (classId, userId) => get(`/class/${classId}/member/${userId}/check`)
+}
+
+export const adminClassApi = {
+  page: (params, options = {}) => get('/classes/page', params, options),
+  create: (data) => post('/classes', data),
+  update: (data) => put('/classes', data),
+  delete: (id) => del(`/classes/${id}`)
 }
 
 // 日志管理API
@@ -123,7 +130,7 @@ export const examRecordApi = {
   start: (data) => post('/exam-records/start', data),
   saveAnswer: (data) => post('/exam-records/answer', data),
   autoSave: (data) => post('/exam-records/auto-save', data),
-  submit: (id) => post(`/exam-records/submit/${id}`),
+  submit: (id, data) => post(`/exam-records/submit/${id}`, data),
   autoSubmit: (id) => post(`/exam-records/auto-submit/${id}`),
   screenSwitch: (data) => post('/exam-records/screen-switch', data),
   reportLeave: (data) => post('/exam-records/report-leave', data),

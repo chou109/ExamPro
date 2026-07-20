@@ -1,23 +1,21 @@
 <template>
   <view class="manage-page">
-    <view class="page-header">
-      <text class="title">题库管理</text>
-    </view>
+    <CustomNavBar :title="userStore.t('common.questionManage')" :showBack="true" />
     
     <!-- 搜索栏 -->
     <view class="search-bar">
       <picker mode="selector" :range="subjectOptions" range-key="name" @change="onSubjectChange">
         <view class="picker">
-          <text class="picker-text">{{ selectedSubjectName || '选择科目' }}</text>
+          <text class="picker-text">{{ selectedSubjectName || userStore.t('common.selectSubject') }}</text>
         </view>
       </picker>
       <picker mode="selector" :range="questionTypes" range-key="label" @change="onTypeChange">
         <view class="picker">
-          <text class="picker-text">{{ selectedTypeName || '题目类型' }}</text>
+          <text class="picker-text">{{ selectedTypeName || userStore.t('common.questionType') }}</text>
         </view>
       </picker>
-      <input class="search-input" v-model="keyword" placeholder="搜索题目内容" />
-      <button class="search-btn" @click="loadData">搜索</button>
+      <input class="search-input" v-model="keyword" :placeholder="userStore.t('common.searchPlaceholder')" />
+      <button class="search-btn" @click="loadData">{{ userStore.t('common.search') }}</button>
     </view>
     
     <!-- 题目列表 -->
@@ -26,84 +24,84 @@
         <view class="item-info">
           <view :class="['type-tag', getTypeClass(item.type)]">{{ typeText(item.type) }}</view>
           <text class="item-title">{{ truncate(item.content, 50) }}</text>
-          <text class="item-meta">分值：{{ item.score }}分 | {{ getSubjectName(item.subjectId) }}</text>
+          <text class="item-meta">{{ userStore.t('common.score') }}：{{ item.score }} | {{ getSubjectName(item.subjectId) }}</text>
         </view>
         <view class="item-actions">
-          <text class="action-btn" @click="editQuestion(item)">编辑</text>
-          <text class="action-btn danger" @click="deleteQuestion(item)">删除</text>
+          <text class="action-btn" @click="editQuestion(item)">{{ userStore.t('common.edit') }}</text>
+          <text class="action-btn danger" @click="deleteQuestion(item)">{{ userStore.t('common.delete') }}</text>
         </view>
       </view>
       
       <view class="empty" v-if="questionList.length === 0">
-        <text class="empty-text">暂无题目数据</text>
+        <text class="empty-text">{{ userStore.t('common.noData') }}</text>
       </view>
     </view>
     
     <!-- 新增按钮 -->
     <view class="add-btn" @click="showQuestionForm = true">
       <text class="add-icon">➕</text>
-      <text class="add-text">新增题目</text>
+      <text class="add-text">{{ userStore.t('common.addQuestion') }}</text>
     </view>
     
     <!-- 批量导入按钮 -->
     <view class="import-btn" @click="showImportModal = true">
       <text class="import-icon">📤</text>
-      <text class="import-text">批量导入</text>
+      <text class="import-text">{{ userStore.t('common.batchImport') }}</text>
     </view>
 
     <!-- 题目编辑弹窗 -->
     <view v-if="showQuestionForm" class="modal" @click="showQuestionForm = false">
       <view class="question-modal" @click.stop>
         <view class="modal-header">
-          <text class="modal-title">{{ editingQuestion ? '编辑题目' : '新增题目' }}</text>
+          <text class="modal-title">{{ editingQuestion ? userStore.t('common.editQuestion') : userStore.t('common.addQuestion') }}</text>
           <view class="modal-close" @click="showQuestionForm = false">
             <text class="close-icon">✕</text>
           </view>
         </view>
         <scroll-view class="modal-body" scroll-y>
           <view class="form-item">
-            <text class="form-label">题目类型 *</text>
+            <text class="form-label">{{ userStore.t('common.questionType') }} *</text>
             <picker mode="selector" :range="questionTypes" range-key="label" @change="onFormTypeChange">
               <view class="form-picker">
-                <text>{{ selectedFormType.label || '请选择题目类型' }}</text>
+                <text>{{ selectedFormType.label || userStore.t('common.selectQuestionType') }}</text>
               </view>
             </picker>
           </view>
           <view class="form-item">
-            <text class="form-label">所属科目 *</text>
+            <text class="form-label">{{ userStore.t('common.subject') }} *</text>
             <picker mode="selector" :range="subjects" range-key="name" @change="onFormSubjectChange">
               <view class="form-picker">
-                <text>{{ selectedFormSubject?.name || '请选择科目' }}</text>
+                <text>{{ selectedFormSubject?.name || userStore.t('common.selectSubject') }}</text>
               </view>
             </picker>
           </view>
           <view class="form-item">
-            <text class="form-label">题目内容 *</text>
-            <textarea class="form-textarea" v-model="form.content" placeholder="请输入题目内容" />
+            <text class="form-label">{{ userStore.t('common.questionContent') }} *</text>
+            <textarea class="form-textarea" v-model="form.content" :placeholder="userStore.t('common.enterQuestionContent')" />
           </view>
           <view class="form-item" v-if="form.type !== 'ESSAY' && form.type !== 'FILL_BLANK'">
-            <text class="form-label">选项</text>
+            <text class="form-label">{{ userStore.t('common.options') }}</text>
             <view class="options-list">
               <view class="option-item" v-for="(opt, idx) in form.options" :key="idx">
                 <text class="option-label">{{ String.fromCharCode(65 + idx) }}.</text>
-                <input class="option-input" v-model="form.options[idx]" :placeholder="'选项' + String.fromCharCode(65 + idx)" />
+                <input class="option-input" v-model="form.options[idx]" :placeholder="userStore.t('common.option') + String.fromCharCode(65 + idx)" />
                 <text class="option-delete" v-if="form.options.length > 2" @click="removeOption(idx)">✕</text>
               </view>
             </view>
-            <button class="add-option-btn" @click="addOption" v-if="form.options.length < 6">添加选项</button>
+            <button class="add-option-btn" @click="addOption" v-if="form.options.length < 6">{{ userStore.t('common.addOption') }}</button>
           </view>
           <view class="form-item">
-            <text class="form-label">正确答案 *</text>
-            <input class="form-input" v-model="form.correctAnswer" placeholder="请输入正确答案" />
+            <text class="form-label">{{ userStore.t('common.correctAnswer') }} *</text>
+            <input class="form-input" v-model="form.correctAnswer" :placeholder="userStore.t('common.enterCorrectAnswer')" />
           </view>
           <view class="form-item">
-            <text class="form-label">分值</text>
-            <input class="form-input" type="number" v-model="form.score" placeholder="请输入分值" />
+            <text class="form-label">{{ userStore.t('common.score') }}</text>
+            <input class="form-input" type="number" v-model="form.score" :placeholder="userStore.t('common.enterScore')" />
           </view>
         </scroll-view>
         <view class="modal-footer">
-          <button class="modal-btn cancel" @click="showQuestionForm = false">取消</button>
-          <button class="modal-btn confirm" @click="submitQuestion">{{ editingQuestion ? '保存' : '创建' }}</button>
+          <button class="modal-btn cancel" @click="showQuestionForm = false">{{ userStore.t('common.cancel') }}</button>
+          <button class="modal-btn confirm" @click="submitQuestion">{{ editingQuestion ? userStore.t('common.save') : userStore.t('common.create') }}</button>
         </view>
       </view>
     </view>
@@ -112,54 +110,54 @@
     <view v-if="showImportModal" class="modal" @click="showImportModal = false">
       <view class="import-modal" @click.stop>
         <view class="modal-header">
-          <text class="modal-title">批量导入题目</text>
+          <text class="modal-title">{{ userStore.t('common.batchImport') }}</text>
           <view class="modal-close" @click="showImportModal = false">
             <text class="close-icon">✕</text>
           </view>
         </view>
         <scroll-view class="modal-body" scroll-y>
           <view class="form-item">
-            <text class="form-label">选择科目 *</text>
+            <text class="form-label">{{ userStore.t('common.subject') }} *</text>
             <picker mode="selector" :range="subjects" range-key="name" @change="onImportSubjectChange">
               <view class="form-picker">
-                <text>{{ importSubject?.name || '请选择科目' }}</text>
+                <text>{{ importSubject?.name || userStore.t('common.selectSubject') }}</text>
               </view>
             </picker>
           </view>
           <view class="form-item">
-            <text class="form-label">导入文本 *</text>
+            <text class="form-label">{{ userStore.t('common.importText') }} *</text>
             <view class="form-hint">
-              <text class="hint-title">格式说明（每行一题，使用|分隔）：</text>
+              <text class="hint-title">{{ userStore.t('common.formatDesc') }}：</text>
               <view class="hint-example">
-                <view class="hint-line" @click="copyExample('单选|题目内容是什么？|选项A内容|选项B内容|选项C内容|选项D内容|A|5')">
-                  <text>单选|题目内容是什么？|选项A内容|选项B内容|选项C内容|选项D内容|A|5</text>
+                <view class="hint-line" @click="copyExample('单选|Question content?|Option A|Option B|Option C|Option D|A|5')">
+                  <text>{{ userStore.language === 'zh' ? '单选|题目内容是什么？|选项A内容|选项B内容|选项C内容|选项D内容|A|5' : 'Single|Question content?|Option A|Option B|Option C|Option D|A|5' }}</text>
                   <text class="copy-icon">📋</text>
                 </view>
-                <view class="hint-line" @click="copyExample('多选|哪些是正确的？|选项A|选项B|选项C|选项D|A,C|10')">
-                  <text>多选|哪些是正确的？|选项A|选项B|选项C|选项D|A,C|10</text>
+                <view class="hint-line" @click="copyExample('多选|Which are correct?|Option A|Option B|Option C|Option D|A,C|10')">
+                  <text>{{ userStore.language === 'zh' ? '多选|哪些是正确的？|选项A|选项B|选项C|选项D|A,C|10' : 'Multi|Which are correct?|Option A|Option B|Option C|Option D|A,C|10' }}</text>
                   <text class="copy-icon">📋</text>
                 </view>
-                <view class="hint-line" @click="copyExample('判断|这句话是正确的|A|2')">
-                  <text>判断|这句话是正确的|A|2</text>
+                <view class="hint-line" @click="copyExample('判断|This statement is true|A|2')">
+                  <text>{{ userStore.language === 'zh' ? '判断|这句话是正确的|A|2' : 'Judge|This statement is true|A|2' }}</text>
                   <text class="copy-icon">📋</text>
                 </view>
-                <view class="hint-line" @click="copyExample('填空|答案是____|答案内容|5')">
-                  <text>填空|答案是____|答案内容|5</text>
+                <view class="hint-line" @click="copyExample('填空|Answer is ____|Answer content|5')">
+                  <text>{{ userStore.language === 'zh' ? '填空|答案是____|答案内容|5' : 'Fill|Answer is ____|Answer content|5' }}</text>
                   <text class="copy-icon">📋</text>
                 </view>
-                <view class="hint-line" @click="copyExample('简答|请简述原理|参考答案内容|15')">
-                  <text>简答|请简述原理|参考答案内容|15</text>
+                <view class="hint-line" @click="copyExample('简答|Please describe|Reference answer|15')">
+                  <text>{{ userStore.language === 'zh' ? '简答|请简述原理|参考答案内容|15' : 'Essay|Please describe|Reference answer|15' }}</text>
                   <text class="copy-icon">📋</text>
                 </view>
               </view>
-              <text class="hint-note">注：判断题正确答案填A，错误填B；多选题答案用逗号分隔。点击示例可复制</text>
+              <text class="hint-note">{{ userStore.t('common.importNote') }}</text>
             </view>
-            <textarea class="form-textarea" v-model="importText" placeholder="请粘贴题目文本..." />
+            <textarea class="form-textarea" v-model="importText" :placeholder="userStore.t('common.pasteQuestionText')" />
           </view>
         </scroll-view>
         <view class="modal-footer">
-          <button class="modal-btn cancel" @click="showImportModal = false">取消</button>
-          <button class="modal-btn confirm" @click="submitImport">导入</button>
+          <button class="modal-btn cancel" @click="showImportModal = false">{{ userStore.t('common.cancel') }}</button>
+          <button class="modal-btn confirm" @click="submitImport">{{ userStore.t('common.import') }}</button>
         </view>
       </view>
     </view>
@@ -167,11 +165,16 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { questionApi, subjectApi } from '../../utils/api'
+import { useUserStore } from '../../store/index.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
 
 export default {
+  components: { CustomNavBar },
   setup() {
+    const userStore = useUserStore()
+    
     const keyword = ref('')
     const questionList = ref([])
     const subjects = ref([])
@@ -185,13 +188,13 @@ export default {
     const importText = ref('')
     const importSubject = ref(null)
     
-    const questionTypes = [
-      { value: 'SINGLE_CHOICE', label: '单选题' },
-      { value: 'MULTIPLE_CHOICE', label: '多选题' },
-      { value: 'JUDGMENT', label: '判断题' },
-      { value: 'FILL_BLANK', label: '填空题' },
-      { value: 'ESSAY', label: '简答题' }
-    ]
+    const questionTypes = computed(() => [
+      { value: 'SINGLE_CHOICE', label: userStore.t('common.singleChoice') },
+      { value: 'MULTIPLE_CHOICE', label: userStore.t('common.multipleChoice') },
+      { value: 'JUDGMENT', label: userStore.t('common.trueFalse') },
+      { value: 'FILL_BLANK', label: userStore.t('common.fillBlank') },
+      { value: 'ESSAY', label: userStore.t('common.shortAnswer') }
+    ])
     
     const form = reactive({
       type: 'SINGLE_CHOICE',
@@ -203,7 +206,7 @@ export default {
     })
     
     const selectedFormType = computed(() => {
-      return questionTypes.find(t => t.value === form.type) || {}
+      return questionTypes.value.find(t => t.value === form.type) || {}
     })
     
     const selectedFormSubject = computed(() => {
@@ -211,27 +214,27 @@ export default {
     })
     
     const subjectOptions = computed(() => {
-      return [{ id: null, name: '全部' }, ...subjects.value]
+      return [{ id: null, name: userStore.t('common.all') }, ...subjects.value]
     })
     
     const selectedSubjectName = computed(() => {
-      const s = subjects.value.find(s => s.id === selectedSubjectId.value)
+      const s = subjectOptions.value.find(s => String(s.id) === String(selectedSubjectId.value))
       return s?.name || ''
     })
     
     const selectedTypeName = computed(() => {
-      const t = questionTypes.find(t => t.value === selectedTypeId.value)
+      const t = questionTypes.value.find(t => t.value === selectedTypeId.value)
       return t?.label || ''
     })
     
     const typeText = (type) => {
       const map = {
-        SINGLE_CHOICE: '单选',
-        MULTIPLE_CHOICE: '多选',
-        JUDGMENT: '判断',
-        FILL_BLANK: '填空',
-        ESSAY: '简答',
-        PROGRAMMING: '编程'
+        SINGLE_CHOICE: userStore.t('common.singleChoice'),
+        MULTIPLE_CHOICE: userStore.t('common.multipleChoice'),
+        JUDGMENT: userStore.t('common.judgment'),
+        FILL_BLANK: userStore.t('common.fillBlank'),
+        ESSAY: userStore.t('common.shortAnswer'),
+        PROGRAMMING: userStore.t('common.programming')
       }
       return map[type] || type
     }
@@ -249,7 +252,7 @@ export default {
     
     const getSubjectName = (subjectId) => {
     const s = subjects.value.find(s => String(s.id) === String(subjectId))
-    return s?.name || '未知科目'
+    return s?.name || userStore.t('common.unknownSubject')
   }
     
     const truncate = (text, len) => {
@@ -259,24 +262,30 @@ export default {
     
     const onSubjectChange = (e) => {
       const index = e.detail.value
-      if (subjects.value[index]) {
-        selectedSubjectId.value = subjects.value[index].id
+      if (subjectOptions.value[index]) {
+        selectedSubjectId.value = subjectOptions.value[index].id
+      } else {
+        selectedSubjectId.value = null
       }
+      loadData()
     }
     
     const onTypeChange = (e) => {
       const index = e.detail.value
-      if (questionTypes[index]) {
-        selectedTypeId.value = questionTypes[index].value
+      if (questionTypes.value[index]) {
+        selectedTypeId.value = questionTypes.value[index].value
+      } else {
+        selectedTypeId.value = ''
       }
+      loadData()
     }
     
     const onFormTypeChange = (e) => {
       const index = e.detail.value
-      form.type = questionTypes[index].value
+      form.type = questionTypes.value[index].value
       
       if (form.type === 'JUDGMENT') {
-        form.options = ['正确', '错误']
+        form.options = [userStore.t('common.correct'), userStore.t('common.wrong')]
       } else if (form.type === 'ESSAY' || form.type === 'FILL_BLANK') {
         form.options = []
       } else {
@@ -305,7 +314,7 @@ export default {
     
     const loadData = async () => {
       try {
-        uni.showLoading({ title: '加载中...' })
+        uni.showLoading({ title: userStore.t('common.loading') })
         const res = await questionApi.page({
           current: 1,
           size: 20,
@@ -317,7 +326,7 @@ export default {
           questionList.value = res.data.records
         }
       } catch (e) {
-        uni.showToast({ title: '加载失败', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.loadFailed'), icon: 'none' })
       } finally {
         uni.hideLoading()
       }
@@ -343,7 +352,7 @@ export default {
       form.score = item.score ? item.score.toString() : ''
       
       if (item.type === 'JUDGMENT') {
-        form.options = ['正确', '错误']
+        form.options = [userStore.t('common.correct'), userStore.t('common.wrong')]
       } else if (item.type === 'ESSAY' || item.type === 'FILL_BLANK') {
         form.options = []
       } else {
@@ -379,27 +388,28 @@ export default {
     
     const submitQuestion = async () => {
       if (!form.content.trim()) {
-        uni.showToast({ title: '请输入题目内容', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.enterQuestionContent'), icon: 'none' })
         return
       }
       if (!form.subjectId) {
-        uni.showToast({ title: '请选择科目', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.selectSubject'), icon: 'none' })
         return
       }
       if (!form.correctAnswer.trim()) {
-        uni.showToast({ title: '请输入正确答案', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.enterCorrectAnswer'), icon: 'none' })
         return
       }
       
       try {
-        uni.showLoading({ title: '保存中...' })
+        uni.showLoading({ title: userStore.t('common.saving') })
         
+        const filteredOptions = form.options.filter(o => o.trim())
         const questionData = {
           id: editingQuestion.value?.id || null,
           type: form.type,
-          subjectId: form.subjectId,
+          subjectId: Number(form.subjectId),
           content: form.content,
-          options: form.options.filter(o => o.trim()).join('|'),
+          options: JSON.stringify(filteredOptions),
           answer: form.correctAnswer,
           score: form.score ? parseInt(form.score) : 10
         }
@@ -412,16 +422,16 @@ export default {
         }
         
         if (res.code === 200) {
-          uni.showToast({ title: editingQuestion.value ? '修改成功' : '创建成功', icon: 'success' })
+          uni.showToast({ title: editingQuestion.value ? userStore.t('common.updateSuccess') : userStore.t('common.createSuccess'), icon: 'success' })
           showQuestionForm.value = false
           loadData()
           resetForm()
         } else {
-          uni.showToast({ title: res.message || '保存失败', icon: 'none' })
+          uni.showToast({ title: res.message || userStore.t('common.saveFailed'), icon: 'none' })
         }
       } catch (e) {
         console.error(e)
-        uni.showToast({ title: '保存失败', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.saveFailed'), icon: 'none' })
       } finally {
         uni.hideLoading()
       }
@@ -443,16 +453,16 @@ export default {
     
     const submitImport = async () => {
       if (!importSubject.value) {
-        uni.showToast({ title: '请选择科目', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.selectSubject'), icon: 'none' })
         return
       }
       if (!importText.value.trim()) {
-        uni.showToast({ title: '请输入导入文本', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.enterImportText'), icon: 'none' })
         return
       }
       
       try {
-        uni.showLoading({ title: '导入中...' })
+        uni.showLoading({ title: userStore.t('common.importing') })
         
         const lines = importText.value.trim().split('\n')
         const questions = []
@@ -466,7 +476,12 @@ export default {
             '多选': 'MULTIPLE_CHOICE',
             '判断': 'JUDGMENT',
             '填空': 'FILL_BLANK',
-            '简答': 'ESSAY'
+            '简答': 'ESSAY',
+            'Single': 'SINGLE_CHOICE',
+            'Multi': 'MULTIPLE_CHOICE',
+            'Judge': 'JUDGMENT',
+            'Fill': 'FILL_BLANK',
+            'Essay': 'ESSAY'
           }
           
           const typeKey = parts[0].trim()
@@ -490,7 +505,7 @@ export default {
             }
           } else if (type === 'JUDGMENT') {
             if (parts.length >= 4) {
-              question.options = '正确|错误'
+              question.options = userStore.t('common.correct') + '|' + userStore.t('common.wrong')
               question.correctAnswer = parts[2]?.trim() === '正确' || parts[2]?.trim() === 'A' ? 'A' : 'B'
               question.score = parseInt(parts[3]) || 10
             }
@@ -512,7 +527,7 @@ export default {
         }
         
         if (questions.length === 0) {
-          uni.showToast({ title: '未解析到有效题目', icon: 'none' })
+          uni.showToast({ title: userStore.t('common.noValidQuestions'), icon: 'none' })
           return
         }
         
@@ -526,7 +541,7 @@ export default {
           }
         }
         
-        uni.showToast({ title: `导入完成，成功${successCount}/${questions.length}题`, icon: 'success' })
+        uni.showToast({ title: userStore.t('common.importComplete') + ` ${successCount}/${questions.length}`, icon: 'success' })
         showImportModal.value = false
         importText.value = ''
         importSubject.value = null
@@ -534,7 +549,7 @@ export default {
         
       } catch (e) {
         console.error(e)
-        uni.showToast({ title: '导入失败', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.importFailed'), icon: 'none' })
       } finally {
         uni.hideLoading()
       }
@@ -544,39 +559,50 @@ export default {
       uni.setClipboardData({
         data: text,
         success: () => {
-          uni.showToast({ title: '复制成功', icon: 'success', duration: 1500 })
+          uni.showToast({ title: userStore.t('common.copySuccess'), icon: 'success', duration: 1500 })
         },
         fail: () => {
-          uni.showToast({ title: '复制失败', icon: 'none' })
+          uni.showToast({ title: userStore.t('common.copyFailed'), icon: 'none' })
         }
       })
     }
     
     const deleteQuestion = async (item) => {
       uni.showModal({
-        title: '提示',
-        content: `确定要删除此题目吗？`,
+        title: userStore.t('common.tip'),
+        content: userStore.t('common.confirmDelete'),
         success: async (res) => {
           if (res.confirm) {
             try {
               const result = await questionApi.delete(item.id)
               if (result.code === 200) {
-                uni.showToast({ title: '删除成功', icon: 'success' })
+                uni.showToast({ title: userStore.t('common.deleteSuccess'), icon: 'success' })
                 loadData()
               } else {
-                uni.showToast({ title: result.message || '删除失败', icon: 'none' })
+                uni.showToast({ title: result.message || userStore.t('common.deleteFailed'), icon: 'none' })
               }
             } catch (e) {
-              uni.showToast({ title: '删除失败', icon: 'none' })
+              uni.showToast({ title: userStore.t('common.deleteFailed'), icon: 'none' })
             }
           }
         }
       })
     }
     
+    const setPageTitle = () => {
+      uni.setNavigationBarTitle({
+        title: userStore.t('common.questionManage')
+      })
+    }
+
     onMounted(() => {
       loadSubjects()
       loadData()
+      setPageTitle()
+    })
+
+    watch(() => userStore.language, () => {
+      setPageTitle()
     })
     
     return {
@@ -611,7 +637,8 @@ export default {
       submitQuestion,
       submitImport,
       copyExample,
-      deleteQuestion
+      deleteQuestion,
+      userStore
     }
   }
 }
@@ -623,20 +650,9 @@ export default {
 .manage-page {
   min-height: 100vh;
   background-color: #f5f5f5;
+  padding-top: 140rpx;
   padding-bottom: 160rpx;
-}
-
-.page-header {
-  padding: 32rpx;
-  background: #fff;
-  margin-bottom: 24rpx;
-  
-  .title {
-    font-size: 40rpx;
-    font-weight: bold;
-    color: #333;
-    display: block;
-  }
+  position: relative;
 }
 
 .search-bar {

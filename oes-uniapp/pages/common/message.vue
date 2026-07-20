@@ -1,85 +1,120 @@
 <template>
   <view class="message-page">
-    <view class="page-header">
-      <text class="title">消息</text>
-    </view>
+    <CustomNavBar :title="userStore.t('common.message')" :showBack="true" />
 
-    <view class="tabs">
+    <view class="tabs" v-if="userInfo.role !== 'ADMIN'">
       <view 
         class="tab-item" 
         :class="{ active: activeTab === 'class' }" 
         @click="activeTab = 'class'"
       >
-        <text class="tab-text">班级消息</text>
+        <text class="tab-text">{{ userStore.t('common.classMessage') }}</text>
       </view>
       <view 
         class="tab-item" 
         :class="{ active: activeTab === 'system' }" 
         @click="activeTab = 'system'"
       >
-        <text class="tab-text">系统通知</text>
+        <text class="tab-text">{{ userStore.t('common.systemNotification') }}</text>
       </view>
     </view>
 
     <scroll-view class="content" scroll-y>
-      <template v-if="activeTab === 'class'">
-        <view class="class-list" v-if="myClasses.length > 0">
-          <view 
-            class="class-item" 
-            v-for="item in myClasses" 
-            :key="item.class.id" 
-            @click="goToClass(item.class)"
-          >
-            <view class="class-icon">
-              <text class="icon-emoji">🏫</text>
+      <template v-if="userInfo.role === 'ADMIN'">
+        <view class="admin-message">
+          <view class="admin-icon">⚙️</view>
+          <text class="admin-title">{{ userStore.t('admin.adminConsole') }}</text>
+          <text class="admin-desc">{{ userStore.t('admin.adminDesc') }}</text>
+          <view class="admin-actions">
+            <view class="admin-action-item" @click="goTo('/pages/admin/log-manage')">
+              <text class="action-icon">📋</text>
+              <text class="action-text">{{ userStore.t('common.systemLog') }}</text>
             </view>
-            <view class="class-info">
-              <view class="class-header">
-                <text class="class-name">{{ item.class.className }}</text>
-                <text class="class-time">{{ formatTime(item.class.lastMessageTime) }}</text>
-              </view>
-              <text class="last-message">{{ getLastMessage(item.class) }}</text>
+            <view class="admin-action-item" @click="goTo('/pages/admin/user-manage')">
+              <text class="action-icon">👥</text>
+              <text class="action-text">{{ userStore.t('common.userManage') }}</text>
             </view>
-            <view class="class-arrow">
-              <text class="arrow-icon">›</text>
+            <view class="admin-action-item" @click="goTo('/pages/admin/statistics')">
+              <text class="action-icon">📊</text>
+              <text class="action-text">{{ userStore.t('common.dataStatistics') }}</text>
             </view>
           </view>
-        </view>
-        <view class="empty" v-else>
-          <text class="empty-emoji">📭</text>
-          <text class="empty-text">暂无班级消息</text>
         </view>
       </template>
 
-      <template v-if="activeTab === 'system'">
-        <view class="system-list" v-if="systemMessages.length > 0">
-          <view class="system-item" v-for="msg in systemMessages" :key="msg.id">
-            <view class="system-icon">
-              <text class="icon-emoji">{{ msg.type === 'EXAM' ? '📝' : '📢' }}</text>
-            </view>
-            <view class="system-info">
-              <text class="system-title">{{ msg.title }}</text>
-              <text class="system-content">{{ msg.content }}</text>
-              <text class="system-time">{{ formatTime(msg.createTime) }}</text>
+      <template v-else>
+        <template v-if="activeTab === 'class'">
+          <view class="class-list" v-if="myClasses.length > 0">
+            <view 
+              class="class-item" 
+              v-for="item in myClasses" 
+              :key="item.class.id" 
+              @click="goToClass(item.class)"
+            >
+              <view class="class-icon">
+                <text class="icon-emoji">🏫</text>
+              </view>
+              <view class="class-info">
+                <view class="class-header">
+                  <text class="class-name">{{ item.class.className }}</text>
+                  <text class="class-time">{{ formatTime(item.class.lastMessageTime) }}</text>
+                </view>
+                <text class="last-message">{{ getLastMessage(item.class) }}</text>
+              </view>
+              <view class="class-arrow">
+                <text class="arrow-icon">›</text>
+              </view>
             </view>
           </view>
-        </view>
-        <view class="empty" v-else>
-          <text class="empty-emoji">🔔</text>
-          <text class="empty-text">暂无系统通知</text>
-        </view>
+          <view class="empty" v-else>
+            <text class="empty-emoji">📭</text>
+            <text class="empty-text">{{ userStore.t('common.noClassMessage') }}</text>
+          </view>
+        </template>
+
+        <template v-if="activeTab === 'system'">
+          <view class="system-list" v-if="systemMessages.length > 0">
+            <view class="system-item" v-for="msg in systemMessages" :key="msg.id">
+              <view class="system-icon">
+                <text class="icon-emoji">{{ msg.type === 'EXAM' ? '📝' : '📢' }}</text>
+              </view>
+              <view class="system-info">
+                <text class="system-title">{{ msg.title }}</text>
+                <text class="system-content">{{ msg.content }}</text>
+                <text class="system-time">{{ formatTime(msg.createTime) }}</text>
+              </view>
+            </view>
+          </view>
+          <view class="empty" v-else>
+            <text class="empty-emoji">🔔</text>
+            <text class="empty-text">{{ userStore.t('common.noSystemNotification') }}</text>
+          </view>
+        </template>
       </template>
     </scroll-view>
+
+    <CustomTabBar />
   </view>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { classApi } from '../../utils/api'
+import { useUserStore } from '../../store/index.js'
+import CustomTabBar from '../../components/CustomTabBar.vue'
+import CustomNavBar from '../../components/CustomNavBar.vue'
 
 export default {
+  components: { CustomTabBar, CustomNavBar },
   setup() {
-    const userInfo = ref(uni.getStorageSync('userInfo') || {})
+    const userStore = useUserStore()
+
+    const setPageTitle = () => {
+      uni.setNavigationBarTitle({ title: userStore.t('common.message') })
+    }
+
+    const userInfo = computed(() => userStore.userInfo || uni.getStorageSync('userInfo') || {})
     const activeTab = ref('class')
     const myClasses = ref([])
     const systemMessages = ref([])
@@ -92,7 +127,7 @@ export default {
     }
 
     const getLastMessage = (cls) => {
-      if (!cls.lastMessage) return '暂无消息'
+      if (!cls.lastMessage) return userStore.t('common.noMessage')
       if (cls.lastMessage.startsWith('EXAM_NOTICE|')) {
         return parseExamNotice(cls.lastMessage)
       }
@@ -105,11 +140,11 @@ export default {
       const noticeType = parts[1] || ''
       const title = parts[2] || ''
       if (noticeType === 'START') {
-        return '🚀 ' + title + ' 开始考试'
+        return '🚀 ' + title + ' ' + userStore.t('common.startExam')
       } else if (noticeType === 'PUBLISH') {
-        return '📢 ' + title + ' 发布通知'
+        return '📢 ' + title + ' ' + userStore.t('common.publishNotice')
       } else if (noticeType === 'END') {
-        return '🔚 ' + title + ' 考试结束'
+        return '🔚 ' + title + ' ' + userStore.t('common.examFinished')
       }
       return '📝 ' + title
     }
@@ -119,10 +154,17 @@ export default {
       const date = new Date(time)
       const now = new Date()
       const diff = now - date
-      if (diff < 60000) return '刚刚'
-      if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
-      if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
-      return date.toLocaleDateString('zh-CN')
+      if (diff < 60000) return userStore.t('common.justNow')
+      if (diff < 3600000) return Math.floor(diff / 60000) + userStore.t('common.minutesAgo')
+      if (diff < 86400000) return Math.floor(diff / 3600000) + userStore.t('common.hoursAgo')
+      if (userStore.language === 'zh') {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      } else {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      }
     }
 
     const loadMyClasses = async () => {
@@ -148,19 +190,44 @@ export default {
     }
 
     onMounted(async () => {
-      await loadMyClasses()
-      await loadSystemMessages()
+      if (userInfo.value.role === 'ADMIN') {
+        uni.hideTabBar()
+      }
+      setPageTitle()
+      if (userInfo.value.role !== 'ADMIN') {
+        await loadMyClasses()
+        await loadSystemMessages()
+      }
+    })
+
+    uni.$on('pageShow', () => {
+      if (userInfo.value.role !== 'ADMIN') {
+        loadMyClasses()
+      }
+      loadSystemMessages()
+    })
+
+    onShow(() => {
+      if (userInfo.value.role !== 'ADMIN') {
+        loadMyClasses()
+      }
+      loadSystemMessages()
+    })
+
+    watch(() => userStore.language, () => {
+      setPageTitle()
     })
 
     return {
-      userInfo,
-      activeTab,
-      myClasses,
-      systemMessages,
-      goToClass,
-      getLastMessage,
-      formatTime
-    }
+    userStore,
+    userInfo,
+    activeTab,
+    myClasses,
+    systemMessages,
+    goToClass,
+    getLastMessage,
+    formatTime
+  }
   }
 }
 </script>
@@ -169,18 +236,8 @@ export default {
 .message-page {
   min-height: 100vh;
   background: #f5f5f5;
-}
-
-.page-header {
-  padding: 24rpx 32rpx;
-  background: #fff;
-  border-bottom: 1rpx solid #eee;
-
-  .title {
-    font-size: 36rpx;
-    font-weight: 700;
-    color: #0f172a;
-  }
+  padding-top: 140rpx;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
 .tabs {
@@ -365,6 +422,59 @@ export default {
   .empty-text {
     font-size: 28rpx;
     color: #999;
+  }
+}
+
+.admin-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 32rpx;
+
+  .admin-icon {
+    font-size: 100rpx;
+    margin-bottom: 24rpx;
+  }
+
+  .admin-title {
+    font-size: 36rpx;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 12rpx;
+  }
+
+  .admin-desc {
+    font-size: 28rpx;
+    color: #999;
+    margin-bottom: 40rpx;
+  }
+
+  .admin-actions {
+    display: flex;
+    gap: 32rpx;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .admin-action-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #fff;
+    padding: 32rpx 24rpx;
+    border-radius: 16rpx;
+    box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.06);
+    min-width: 140rpx;
+
+    .action-icon {
+      font-size: 48rpx;
+      margin-bottom: 12rpx;
+    }
+
+    .action-text {
+      font-size: 26rpx;
+      color: #333;
+    }
   }
 }
 </style>

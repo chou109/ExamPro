@@ -1,14 +1,10 @@
 <template>
   <view class="class-chat">
+    <CustomNavBar :title="className" :showBack="true" />
+    
     <view class="chat-header">
       <view class="header-left">
-        <view class="back-btn" @click="goBack">
-          <text class="back-icon">‹</text>
-        </view>
-        <view class="header-info">
-          <text class="class-name">{{ className }}</text>
-          <text class="member-count">{{ memberCount }} 名成员</text>
-        </view>
+        <text class="member-count">{{ memberCount }} {{ userStore.t('common.members') }}</text>
       </view>
       <view class="header-right">
         <view class="member-btn" @click="showMembers = true">
@@ -41,7 +37,7 @@
                 <text class="notice-icon">{{ iconRocket }}</text>
                 <text class="notice-title">{{ getNoticeTitle(msg.content) }}</text>
                 <view class="notice-badge">
-                  <text>考试通知</text>
+                  <text>{{ userStore.t('common.examNotice') }}</text>
                 </view>
               </view>
               <view class="notice-info">
@@ -51,7 +47,7 @@
                 </view>
                 <view class="info-item">
                   <text class="info-icon">{{ iconTimer }}</text>
-                  <text>{{ getNoticeDuration(msg.content) }}分钟</text>
+                  <text>{{ getNoticeDuration(msg.content) }}{{ userStore.t('common.minutes') }}</text>
                 </view>
               </view>
             </view>
@@ -65,10 +61,10 @@
       <view class="chat-input">
         <input
           v-model="inputMessage"
-          placeholder="输入消息..."
+          :placeholder="userStore.t('common.enterMessage')"
           @confirm="sendMessage"
         />
-        <button class="send-btn" @click="sendMessage" :disabled="!inputMessage.trim()">发送</button>
+        <button class="send-btn" @click="sendMessage" :disabled="!inputMessage.trim()">{{ userStore.t('common.send') }}</button>
       </view>
     </view>
 
@@ -76,7 +72,7 @@
     <view v-if="showMembers" class="modal" @click="showMembers = false">
       <view class="modal-content" @click.stop>
         <view class="modal-header">
-          <text class="modal-title">班级成员</text>
+          <text class="modal-title">{{ userStore.t('common.classMembers') }}</text>
           <view class="modal-close" @click="showMembers = false">
             <text class="close-icon">✕</text>
           </view>
@@ -90,11 +86,11 @@
               </view>
             </view>
             <view v-if="member.muteUntil" class="mute-status">
-              <text>已禁言</text>
+              <text>{{ userStore.t('common.muted') }}</text>
             </view>
             <view v-if="canManageMember" class="member-actions">
-              <button v-if="!member.muteUntil" class="mute-btn" @click="handleMute(member)">禁言</button>
-              <button v-else class="unmute-btn" @click="handleUnmute(member)">解禁</button>
+              <button v-if="!member.muteUntil" class="mute-btn" @click="handleMute(member)">{{ userStore.t('common.mute') }}</button>
+              <button v-else class="unmute-btn" @click="handleUnmute(member)">{{ userStore.t('common.unmute') }}</button>
             </view>
           </view>
         </scroll-view>
@@ -106,14 +102,14 @@
       <view class="action-panel" @click.stop>
         <view class="action-item" @click="handleSendExamNotice">
           <text class="action-icon">📢</text>
-          <text>发布考试</text>
+          <text>{{ userStore.t('teacher.publishExam') }}</text>
         </view>
         <view class="action-item" @click="handleInvite">
           <text class="action-icon">👥</text>
-          <text>邀请成员</text>
+          <text>{{ userStore.t('common.inviteMembers') }}</text>
         </view>
         <view class="action-item danger" @click="showActions = false">
-          <text>取消</text>
+          <text>{{ userStore.t('common.cancel') }}</text>
         </view>
       </view>
     </view>
@@ -122,48 +118,48 @@
     <view v-if="showExamForm" class="modal" @click="showExamForm = false">
       <view class="exam-form-modal" @click.stop>
         <view class="modal-header">
-          <text class="modal-title">发布考试</text>
+          <text class="modal-title">{{ userStore.t('teacher.publishExam') }}</text>
           <view class="modal-close" @click="showExamForm = false">
             <text class="close-icon">✕</text>
           </view>
         </view>
         <scroll-view class="form-body" scroll-y>
           <view class="form-item">
-            <text class="form-label">考试标题</text>
-            <input class="form-input" v-model="examForm.title" placeholder="请输入考试标题" />
+            <text class="form-label">{{ userStore.t('teacher.examTitle') }}</text>
+            <input class="form-input" v-model="examForm.title" :placeholder="userStore.t('teacher.enterExamTitle')" />
           </view>
           <view class="form-item">
-            <text class="form-label">选择试卷</text>
-            <picker mode="selector" :range="papers" range-key="title" @change="onPaperChange">
+            <text class="form-label">{{ userStore.t('teacher.selectPaper') }}</text>
+            <picker mode="selector" :range="papers" range-key="title" @change="onPaperChange" :cancel-text="userStore.t('common.cancel')" :confirm-text="userStore.t('common.confirm')">
               <view class="form-picker">
-                <text>{{ selectedPaper?.title || '请选择试卷' }}</text>
+                <text>{{ selectedPaper?.title || userStore.t('teacher.selectPaper') }}</text>
               </view>
             </picker>
           </view>
           <view class="form-item">
-            <text class="form-label">考试时长（分钟）</text>
-            <input class="form-input" type="number" v-model="examForm.duration" placeholder="请输入考试时长" />
+            <text class="form-label">{{ userStore.t('teacher.duration') }}({{ userStore.t('common.minutes') }})</text>
+            <input class="form-input" type="number" v-model="examForm.duration" :placeholder="userStore.t('teacher.enterDuration')" />
           </view>
           <view class="form-item">
-            <text class="form-label">开始时间</text>
+            <text class="form-label">{{ userStore.t('teacher.startDate') }}</text>
             <picker mode="date" :value="examForm.startDate" @change="onStartDateChange">
               <view class="form-picker">
-                <text>{{ examForm.startDate || '请选择日期' }}</text>
+                <text>{{ examForm.startDate || userStore.t('common.selectDate') }}</text>
               </view>
             </picker>
           </view>
           <view class="form-item">
-            <text class="form-label">开始时间</text>
+            <text class="form-label">{{ userStore.t('teacher.startTime') }}</text>
             <picker mode="time" :value="examForm.startTime" @change="onStartTimeChange">
               <view class="form-picker">
-                <text>{{ examForm.startTime || '请选择时间' }}</text>
+                <text>{{ examForm.startTime || userStore.t('common.selectTime') }}</text>
               </view>
             </picker>
           </view>
         </scroll-view>
         <view class="modal-footer">
-          <button class="modal-btn cancel" @click="showExamForm = false">取消</button>
-          <button class="modal-btn confirm" @click="submitExam">发布考试</button>
+          <button class="modal-btn cancel" @click="showExamForm = false">{{ userStore.t('common.cancel') }}</button>
+          <button class="modal-btn confirm" @click="submitExam">{{ userStore.t('teacher.publishExam') }}</button>
         </view>
       </view>
     </view>
@@ -171,12 +167,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { ref, reactive, onMounted, nextTick, watch } from 'vue'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '../../store/index.js'
 import { classApi, examApi, paperApi } from '../../utils/api.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
 
 const userStore = useUserStore()
+
 const classId = ref('')
 const className = ref('')
 const memberCount = ref(0)
@@ -209,9 +207,11 @@ const selectedPaper = ref(null)
 
 const getRoleText = (role) => {
   return {
-    CREATOR: '创建者',
-    TEACHER: '教师',
-    STUDENT: '学生'
+    CREATOR: userStore.t('common.creator'),
+    OWNER: userStore.t('common.creator'),
+    TEACHER: userStore.t('common.teacher'),
+    STUDENT: userStore.t('common.student'),
+    MEMBER: userStore.t('common.student')
   }[role] || role
 }
 
@@ -227,13 +227,20 @@ const isExamNotice = (msg) => {
 const parseExamNotice = (content) => {
   if (!content?.startsWith('EXAM_NOTICE|')) return null
   const parts = content.split('|')
+  let examId = null
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (/^\d+$/.test(parts[i])) {
+      examId = parts[i]
+      break
+    }
+  }
   return {
     noticeType: parts[1],
     title: parts[2],
     startTime: parts[3],
     endTime: parts[4],
     duration: parts[5],
-    examId: parts[6]
+    examId: examId
   }
 }
 
@@ -253,13 +260,25 @@ const getNoticeDuration = (content) => {
 }
 
 const getSenderName = (senderId) => {
+  const selfId = userStore.userInfo?.userId || userStore.userInfo?.id
+  if (String(senderId) === String(selfId)) {
+    const realName = userStore.userInfo?.realName || userStore.userInfo?.real_name
+    return realName && realName.trim() !== '' ? realName : userStore.userInfo?.username || userStore.t('common.unknownUser')
+  }
   const member = members.value.find(m => String(m.userId) === String(senderId))
-  return member?.realName || '未知用户'
+  if (!member) {
+    return userStore.t('common.unknownUser')
+  }
+  const name = member.realName && member.realName.trim() !== '' ? member.realName : member.username
+  return name && name.trim() !== '' ? name : userStore.t('common.unknownUser')
 }
 
 const getSenderAvatar = (senderId) => {
   const member = members.value.find(m => String(m.userId) === String(senderId))
-  return member?.avatar || '/static/default-avatar.png'
+  const avatar = member?.avatar
+  if (!avatar) return '/static/default-avatar.png'
+  if (avatar.startsWith('http')) return avatar
+  return 'http://192.168.1.92:8081' + avatar
 }
 
 const formatTime = (time) => {
@@ -267,10 +286,17 @@ const formatTime = (time) => {
   const date = new Date(time)
   const now = new Date()
   const diff = now - date
-  if (diff < 60000) return '刚刚'
-  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
-  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
-  return date.toLocaleDateString('zh-CN')
+  if (diff < 60000) return userStore.t('common.justNow')
+  if (diff < 3600000) return Math.floor(diff / 60000) + userStore.t('common.minutesAgo')
+  if (diff < 86400000) return Math.floor(diff / 3600000) + userStore.t('common.hoursAgo')
+  if (userStore.language === 'zh') {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
 }
 
 const goBack = () => {
@@ -287,11 +313,11 @@ const sendMessage = async () => {
       inputMessage.value = ''
       loadMessages()
     } else {
-      uni.showToast({ title: res.message || '发送失败', icon: 'none' })
+      uni.showToast({ title: res.message || userStore.t('common.sendFailed'), icon: 'none' })
     }
   } catch (e) {
     console.error(e)
-    uni.showToast({ title: '网络错误', icon: 'none' })
+    uni.showToast({ title: userStore.t('common.networkError'), icon: 'none' })
   }
 }
 
@@ -309,7 +335,7 @@ const loadPapers = async () => {
     }
   } catch (e) {
     console.error('加载试卷失败:', e)
-    uni.showToast({ title: '加载试卷失败', icon: 'none' })
+    uni.showToast({ title: userStore.t('common.loadPaperFailed'), icon: 'none' })
   }
 }
 
@@ -331,24 +357,24 @@ const onStartTimeChange = (e) => {
 
 const submitExam = async () => {
   if (!examForm.title.trim()) {
-    uni.showToast({ title: '请输入考试标题', icon: 'none' })
+    uni.showToast({ title: userStore.t('teacher.enterExamTitle'), icon: 'none' })
     return
   }
   if (!selectedPaperId.value) {
-    uni.showToast({ title: '请选择试卷', icon: 'none' })
+    uni.showToast({ title: userStore.t('teacher.selectPaper'), icon: 'none' })
     return
   }
   if (!examForm.duration) {
-    uni.showToast({ title: '请输入考试时长', icon: 'none' })
+    uni.showToast({ title: userStore.t('teacher.enterDuration'), icon: 'none' })
     return
   }
   if (!examForm.startDate || !examForm.startTime) {
-    uni.showToast({ title: '请选择开始时间', icon: 'none' })
+    uni.showToast({ title: userStore.t('teacher.selectStartTime'), icon: 'none' })
     return
   }
 
   try {
-    uni.showLoading({ title: '发布中...' })
+    uni.showLoading({ title: userStore.t('common.publishing') })
     
     const startTime = `${examForm.startDate} ${examForm.startTime}:00`
     
@@ -364,10 +390,11 @@ const submitExam = async () => {
     const res = await examApi.create(examData)
     
     if (res.code === 200) {
-      uni.showToast({ title: '考试发布成功', icon: 'success' })
+      uni.showToast({ title: userStore.t('teacher.publishSuccess'), icon: 'success' })
       showExamForm.value = false
       
-      const noticeContent = `EXAM_NOTICE|PUBLISH|${examForm.title}|${startTime}||${examForm.duration}|${res.data.id}`
+      const examId = res.data.id !== undefined ? res.data.id : res.data
+      const noticeContent = `EXAM_NOTICE|PUBLISH|${examForm.title}|${startTime}||${examForm.duration}|${examId}`
       await classApi.sendMessage(classId.value, noticeContent, userStore.userInfo?.userId)
       
       examForm.title = ''
@@ -379,11 +406,11 @@ const submitExam = async () => {
       
       loadMessages()
     } else {
-      uni.showToast({ title: res.message || '发布失败', icon: 'none' })
+      uni.showToast({ title: res.message || userStore.t('common.publishFailed'), icon: 'none' })
     }
   } catch (e) {
     console.error('发布考试失败:', e)
-    uni.showToast({ title: '发布失败', icon: 'none' })
+    uni.showToast({ title: userStore.t('common.publishFailed'), icon: 'none' })
   } finally {
     uni.hideLoading()
   }
@@ -392,28 +419,36 @@ const submitExam = async () => {
 const handleInvite = () => {
   showActions.value = false
   uni.showModal({
-    title: '邀请成员',
-    content: `班级群号：${inviteCode}\n将此群号分享给需要加入的成员`,
-    showCancel: false
+    title: userStore.t('common.inviteMembers'),
+    content: `${userStore.t('common.inviteCode')}：${inviteCode.value}\n${userStore.t('common.shareInviteCode')}`,
+    showCancel: false,
+    success: () => {
+      uni.setClipboardData({
+        data: inviteCode.value,
+        success: () => {
+          uni.showToast({ title: userStore.t('common.copySuccess'), icon: 'success' })
+        }
+      })
+    }
   })
 }
 
 const handleMute = async (member) => {
   uni.showModal({
-    title: '禁言成员',
-    content: `确定要禁言 ${member.realName} 吗？`,
+    title: userStore.t('common.muteMember'),
+    content: `${userStore.t('common.confirmMute')} ${member.realName} ?`,
     success: async (res) => {
       if (res.confirm) {
         try {
           const result = await classApi.muteMember(classId.value, member.userId, 3600)
           if (result.code === 200) {
-            uni.showToast({ title: '已禁言', icon: 'success' })
+            uni.showToast({ title: userStore.t('common.muted'), icon: 'success' })
             loadMembers()
           } else {
-            uni.showToast({ title: result.message || '操作失败', icon: 'none' })
+            uni.showToast({ title: result.message || userStore.t('common.operationFailed'), icon: 'none' })
           }
         } catch (e) {
-          uni.showToast({ title: '网络错误', icon: 'none' })
+          uni.showToast({ title: userStore.t('common.networkError'), icon: 'none' })
         }
       }
     }
@@ -422,20 +457,20 @@ const handleMute = async (member) => {
 
 const handleUnmute = async (member) => {
   uni.showModal({
-    title: '解禁成员',
-    content: `确定要解除 ${member.realName} 的禁言吗？`,
+    title: userStore.t('common.unmuteMember'),
+    content: `${userStore.t('common.confirmUnmute')} ${member.realName} ?`,
     success: async (res) => {
       if (res.confirm) {
         try {
           const result = await classApi.unmuteMember(classId.value, member.userId)
           if (result.code === 200) {
-            uni.showToast({ title: '已解禁', icon: 'success' })
+            uni.showToast({ title: userStore.t('common.unmuted'), icon: 'success' })
             loadMembers()
           } else {
-            uni.showToast({ title: result.message || '操作失败', icon: 'none' })
+            uni.showToast({ title: result.message || userStore.t('common.operationFailed'), icon: 'none' })
           }
         } catch (e) {
-          uni.showToast({ title: '网络错误', icon: 'none' })
+          uni.showToast({ title: userStore.t('common.networkError'), icon: 'none' })
         }
       }
     }
@@ -447,7 +482,7 @@ const loadMessages = async () => {
     const res = await classApi.getMessages(classId.value, 1, 50)
     if (res.code === 200) {
       const records = res.data.records || res.data
-      messages.value = records.reverse()
+      messages.value = records
       nextTick(() => {
         scrollTop.value = 999999
       })
@@ -494,6 +529,10 @@ onLoad((options) => {
   loadMessages()
   loadMembers()
 })
+
+onShow(() => {
+  loadMembers()
+})
 </script>
 
 <style scoped>
@@ -503,6 +542,7 @@ onLoad((options) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding-top: 140rpx;
 }
 
 .chat-header {
@@ -517,28 +557,6 @@ onLoad((options) => {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 16rpx;
-}
-
-.back-btn {
-  padding: 8rpx;
-  
-  .back-icon {
-    font-size: 48rpx;
-    color: #333;
-    font-weight: bold;
-  }
-}
-
-.header-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.class-name {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #333;
 }
 
 .member-count {
@@ -548,7 +566,7 @@ onLoad((options) => {
 
 .header-right {
   display: flex;
-  gap: 16rpx;
+  gap: 12rpx;
 }
 
 .member-btn, .more-btn {

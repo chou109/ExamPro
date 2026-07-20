@@ -1,61 +1,63 @@
 <template>
   <view class="history">
-    <view class="page-header">
-      <view class="header-top">
-        <view class="back-btn" @click="handleBack">
-          <uni-icons type="back" size="32" color="#333" />
-        </view>
-        <text class="title">考试历史</text>
-        <view class="placeholder"></view>
-      </view>
-      <text class="subtitle">查看已完成考试的成绩和答卷详情</text>
-    </view>
+    <CustomNavBar :title="userStore.t('common.history')" :showBack="true" />
 
+    <!-- 内容区域 -->
+    <view class="content-area">
     <!-- 搜索栏 -->
     <view class="search-bar">
       <view class="search-input">
-        <uni-icons type="search" size="18" color="#999" />
-        <input type="text" v-model="keyword" placeholder="搜索考试名称" @confirm="handleSearch" />
+        <text class="search-icon">🔍</text>
+        <input type="text" v-model="keyword" :placeholder="userStore.t('student.searchExam')" @confirm="handleSearch" />
       </view>
-      <button class="search-btn" @click="handleSearch">搜索</button>
+      <button class="search-btn" @click="handleSearch">{{ userStore.t('common.search') }}</button>
     </view>
 
     <!-- 卡片列表 -->
     <view class="card-list">
       <view class="card-item" v-for="item in tableData" :key="item.id">
         <view class="card-header">
-          <text class="card-title">{{ item.examTitle }}</text>
-          <view class="score-badge" :class="item.score >= 60 ? 'pass' : 'fail'">
-            <text>{{ item.score }}分</text>
+          <text class="card-title">{{ item.exam?.title || item.examTitle || '未知考试' }}</text>
+          <view class="score-badge" :class="(item.score || 0) >= 60 ? 'pass' : 'fail'">
+            <text>{{ item.score || 0 }}{{ userStore.t('dashboard.scoreUnit') }}</text>
           </view>
         </view>
 
         <view class="card-info">
           <view class="info-row">
-            <uni-icons type="clock" size="16" color="#666" />
-            <text class="info-text">交卷时间：{{ item.submitTime }}</text>
+            <text class="clock-icon">🕐</text>
+            <text class="info-text">{{ userStore.t('student.submitTime') }}：{{ formatTime(item.submitTime) }}</text>
           </view>
         </view>
 
         <view class="card-actions">
-          <button class="detail-btn" @click="handleDetail(item)">查看详情</button>
+          <button class="detail-btn" @click="handleDetail(item)">{{ userStore.t('student.viewDetail') }}</button>
         </view>
       </view>
     </view>
 
-    <uni-load-more :status="loadStatus" />
+    <view v-if="loadStatus === 'loading'" class="load-more">
+      <text class="loading-text">{{ userStore.t('common.loading') }}...</text>
+    </view>
+    <view v-if="loadStatus === 'noMore'" class="load-more">
+      <text class="loading-text">{{ userStore.t('common.noMoreData') }}</text>
+    </view>
 
     <view v-if="!loading && tableData.length === 0" class="empty">
-      <uni-icons type="info" size="80" color="#999" />
-      <text class="empty-text">暂无考试记录</text>
+      <text class="empty-icon">📋</text>
+      <text class="empty-text">{{ userStore.t('student.noHistory') }}</text>
+    </view>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useUserStore } from '../../store/index.js'
 import { examRecordApi } from '../../utils/api.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
 
+const userStore = useUserStore()
 const tableData = ref([])
 const keyword = ref('')
 const loading = ref(false)
@@ -72,8 +74,19 @@ const handleSearch = () => {
 
 const handleDetail = (item) => {
   uni.navigateTo({
-    url: `/pages/student/exam-take?id=${item.examId}&recordId=${item.id}&review=1`
+    url: `/pages/student/exam-take?id=${item.examId || item.exam?.id}&recordId=${item.id}&review=1`
   })
+}
+
+const formatTime = (time) => {
+  if (!time) return '-'
+  const date = new Date(time)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}`
 }
 
 const loadData = async () => {
@@ -94,7 +107,7 @@ const loadData = async () => {
       current.value++
     } else {
       uni.showToast({
-        title: res.message || '加载失败',
+        title: res.message || userStore.t('common.failed'),
         icon: 'none'
       })
       loadStatus.value = 'more'
@@ -102,21 +115,13 @@ const loadData = async () => {
   } catch (e) {
     console.error(e)
     uni.showToast({
-      title: '网络错误',
+      title: userStore.t('student.networkError'),
       icon: 'none'
     })
     loadStatus.value = 'more'
   } finally {
     loading.value = false
   }
-}
-
-const handleBack = () => {
-  uni.navigateBack({
-    fail: () => {
-      uni.switchTab({ url: '/pages/student/index' })
-    }
-  })
 }
 
 onMounted(() => {
@@ -128,43 +133,12 @@ onMounted(() => {
 .history {
   min-height: 100vh;
   background-color: #f5f5f5;
+  padding: 0;
+  padding-top: 140rpx;
+}
+
+.content-area {
   padding: 24rpx;
-}
-
-.page-header {
-  margin-bottom: 32rpx;
-}
-
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12rpx;
-}
-
-.back-btn {
-  width: 64rpx;
-  height: 64rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.placeholder {
-  width: 64rpx;
-}
-
-.title {
-  display: inline-block;
-  font-size: 48rpx;
-  font-weight: bold;
-  color: #333;
-}
-
-.subtitle {
-  display: block;
-  font-size: 28rpx;
-  color: #666;
 }
 
 .search-bar {
@@ -183,6 +157,11 @@ onMounted(() => {
   background: #f5f5f5;
   border-radius: 12rpx;
   padding: 16rpx 24rpx;
+}
+
+.search-icon {
+  font-size: 28rpx;
+  color: #999;
 }
 
 .search-input input {
@@ -253,6 +232,11 @@ onMounted(() => {
   margin-bottom: 8rpx;
 }
 
+.clock-icon {
+  font-size: 28rpx;
+  color: #666;
+}
+
 .info-text {
   margin-left: 12rpx;
   font-size: 28rpx;
@@ -274,12 +258,26 @@ onMounted(() => {
   font-size: 28rpx;
 }
 
+.load-more {
+  text-align: center;
+  padding: 24rpx;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: #999;
+}
+
 .empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 120rpx 48rpx;
+}
+
+.empty-icon {
+  font-size: 80rpx;
 }
 
 .empty-text {

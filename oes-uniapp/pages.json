@@ -3,6 +3,7 @@
     {
       "path": "pages/common/login",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "登录",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -11,6 +12,7 @@
     {
       "path": "pages/common/register",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "注册",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -19,6 +21,7 @@
     {
       "path": "pages/common/dashboard",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "首页",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -27,6 +30,7 @@
     {
       "path": "pages/common/message",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "消息",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -35,6 +39,7 @@
     {
       "path": "pages/common/account",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "账号管理",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -43,6 +48,7 @@
     {
       "path": "pages/admin/user-manage",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "用户管理",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -51,6 +57,7 @@
     {
       "path": "pages/admin/department-manage",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "院系管理",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -59,6 +66,7 @@
     {
       "path": "pages/admin/class-manage",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "班级管理",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -67,6 +75,7 @@
     {
       "path": "pages/admin/log-manage",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "日志管理",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -75,6 +84,7 @@
     {
       "path": "pages/admin/statistics",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "数据统计",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -83,6 +93,7 @@
     {
       "path": "pages/teacher/my-classes",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "我的班级",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -91,6 +102,7 @@
     {
       "path": "pages/teacher/class-chat",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "班级聊天",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -99,6 +111,7 @@
     {
       "path": "pages/teacher/subject-manage",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "科目管理",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -107,6 +120,7 @@
     {
       "path": "pages/teacher/question-manage",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "题库管理",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -115,6 +129,7 @@
     {
       "path": "pages/teacher/paper-manage",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "试卷管理",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -123,6 +138,7 @@
     {
       "path": "pages/teacher/exam-manage",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "考试管理",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -131,6 +147,7 @@
     {
       "path": "pages/teacher/exam-record-manage",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "考试记录",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -139,6 +156,7 @@
     {
       "path": "pages/teacher/exam-monitor",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "考试监控",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -147,6 +165,7 @@
     {
       "path": "pages/teacher/exam-edit",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "编辑考试",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -155,6 +174,7 @@
     {
       "path": "pages/teacher/paper-edit",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "编辑试卷",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -163,6 +183,7 @@
     {
       "path": "pages/teacher/paper-preview",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "试卷预览",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -171,6 +192,7 @@
     {
       "path": "pages/teacher/exam-record-detail",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "答卷详情",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -179,6 +201,7 @@
     {
       "path": "pages/teacher/exam-grade",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "评分",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -187,6 +210,7 @@
     {
       "path": "pages/student/my-classes",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "我的班级",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -195,6 +219,7 @@
     {
       "path": "pages/student/class-chat",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "班级聊天",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -203,6 +228,7 @@
     {
       "path": "pages/student/exam-list",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "考试列表",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -211,6 +237,7 @@
     {
       "path": "pages/student/exam-take",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "参加考试",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white",
@@ -221,6 +248,7 @@
     {
       "path": "pages/student/history",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "考试历史",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -229,6 +257,7 @@
     {
       "path": "pages/student/wrong-questions",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "错题本",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -237,6 +266,7 @@
     {
       "path": "pages/student/statistics",
       "style": {
+        "navigationStyle": "custom",
         "navigationBarTitleText": "学习统计",
         "navigationBarBackgroundColor": "#dc2626",
         "navigationBarTextStyle": "white"
@@ -249,40 +279,14 @@
     "navigationBarBackgroundColor": "#dc2626",
     "backgroundColor": "#F8F8F8"
   },
-  "tabBar": {
-    "color": "#666666",
-    "selectedColor": "#dc2626",
-    "borderStyle": "black",
-    "backgroundColor": "#ffffff",
+  "condition": {
+    "current": 0,
     "list": [
       {
-        "pagePath": "pages/common/dashboard",
-        "text": "首页",
-        "iconPath": "static/tabbar/home.png",
-        "selectedIconPath": "static/tabbar/home-active.png"
-      },
-      {
-        "pagePath": "pages/common/message",
-        "text": "消息",
-        "iconPath": "static/tabbar/message.png",
-        "selectedIconPath": "static/tabbar/message-active.png"
-      },
-      {
-        "pagePath": "pages/common/account",
-        "text": "我的",
-        "iconPath": "static/tabbar/user.png",
-        "selectedIconPath": "static/tabbar/user-active.png"
+        "name": "测试",
+        "path": "pages/common/login",
+        "query": ""
       }
     ]
-  },
-	"condition" : { //模式配置，仅开发期间生效
-		"current": 0, //当前激活的模式(list 的索引项)
-		"list": [
-			{
-				"name": "测试", //模式名称
-				"path": "pages/common/login", //启动页面，必选
-				"query": "" //启动参数，在页面的onLoad函数里面得到
-			}
-		]
-	}
+  }
 }

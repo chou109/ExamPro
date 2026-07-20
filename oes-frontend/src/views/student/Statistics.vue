@@ -1,8 +1,8 @@
 <template>
   <div class="student-statistics">
     <div class="page-header">
-      <h2>成绩分析</h2>
-      <p>查看您的学习数据分析</p>
+      <h2>{{ userStore.t('common.scoreAnalysis') }}</h2>
+      <p>{{ userStore.t('student.viewAnalysis') }}</p>
     </div>
 
     <!-- 统计卡片 -->
@@ -22,17 +22,17 @@
       <!-- 科目成绩 -->
       <div class="card">
         <div class="card-header">
-          <h3>科目成绩</h3>
+          <h3>{{ userStore.t('student.subjectScores') }}</h3>
         </div>
         <div class="subject-list">
           <div class="subject-item" v-for="subject in subjectScores" :key="subject.subjectName">
             <div class="subject-info">
               <h4>{{ subject.subjectName }}</h4>
-              <p>{{ subject.examCount }}次考试</p>
+              <p>{{ subject.examCount }}{{ userStore.t('student.timesExam') }}</p>
             </div>
             <div class="subject-score">
               <span class="score-value">{{ subject.avgScore }}</span>
-              <span class="score-label">分</span>
+              <span class="score-label">{{ userStore.t('dashboard.scoreUnit') }}</span>
             </div>
             <div class="score-bar">
               <div class="bar-fill" :style="{ width: subject.avgScore + '%', background: subject.color }"></div>
@@ -44,7 +44,7 @@
       <!-- 答题情况 -->
       <div class="card">
         <div class="card-header">
-          <h3>答题情况</h3>
+          <h3>{{ userStore.t('student.answerStats') }}</h3>
         </div>
         <div class="answer-stats">
           <div class="answer-item">
@@ -53,7 +53,7 @@
             </div>
             <div class="answer-info">
               <span class="answer-count">{{ stats.correctCount }}</span>
-              <span class="answer-label">答对题数</span>
+              <span class="answer-label">{{ userStore.t('student.correctCount') }}</span>
             </div>
             <span class="answer-rate">{{ correctRate }}%</span>
           </div>
@@ -63,7 +63,7 @@
             </div>
             <div class="answer-info">
               <span class="answer-count">{{ stats.wrongCount }}</span>
-              <span class="answer-label">答错题数</span>
+              <span class="answer-label">{{ userStore.t('student.wrongCount') }}</span>
             </div>
             <span class="answer-rate">{{ wrongRate }}%</span>
           </div>
@@ -73,7 +73,7 @@
             </div>
             <div class="answer-info">
               <span class="answer-count">{{ stats.skippedCount }}</span>
-              <span class="answer-label">未答题数</span>
+              <span class="answer-label">{{ userStore.t('student.skippedCount') }}</span>
             </div>
             <span class="answer-rate">{{ skippedRate }}%</span>
           </div>
@@ -84,7 +84,7 @@
     <!-- 成绩趋势图 -->
     <div class="card full-width">
       <div class="card-header">
-        <h3>成绩趋势</h3>
+        <h3>{{ userStore.t('student.scoreTrend') }}</h3>
       </div>
       <div ref="scoreTrendChart" class="chart-container"></div>
     </div>
@@ -92,7 +92,7 @@
     <!-- 知识点掌握雷达图 -->
     <div class="card full-width">
       <div class="card-header">
-        <h3>知识点掌握情况</h3>
+        <h3>{{ userStore.t('student.knowledgeMastery') }}</h3>
       </div>
       <div ref="knowledgeRadarChart" class="chart-container"></div>
     </div>
@@ -104,7 +104,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { examRecordApi } from '../../utils/api'
 import * as echarts from 'echarts'
 import { SuccessFilled, Medal, TrendCharts, Warning, CircleCloseFilled, RemoveFilled } from '@element-plus/icons-vue'
+import { useUserStore } from '../../store'
 
+const userStore = useUserStore()
 const stats = ref({
   totalExams: 0,
   averageScore: 0,
@@ -115,10 +117,10 @@ const stats = ref({
 })
 
 const statItems = computed(() => [
-  { icon: SuccessFilled, value: stats.value.totalExams, label: '总考试数', bgColor: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)' },
-  { icon: Medal, value: stats.value.averageScore, label: '平均分', bgColor: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
-  { icon: TrendCharts, value: stats.value.highestScore, label: '最高分', bgColor: 'linear-gradient(135deg, #22c55e 0%, #15803d 100%)' },
-  { icon: Warning, value: stats.value.wrongCount, label: '错题数', bgColor: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }
+  { icon: SuccessFilled, value: stats.value.totalExams, label: userStore.t('student.totalExams'), bgColor: 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)' },
+  { icon: Medal, value: stats.value.averageScore, label: userStore.t('student.averageScore'), bgColor: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' },
+  { icon: TrendCharts, value: stats.value.highestScore, label: userStore.t('student.highestScore'), bgColor: 'linear-gradient(135deg, #22c55e 0%, #15803d 100%)' },
+  { icon: Warning, value: stats.value.wrongCount, label: userStore.t('student.wrongCount'), bgColor: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' }
 ])
 
 const subjectColors = ['#7f1d1d', '#991b1b', '#b91c1c', '#dc2626', '#ef4444', '#f87171', '#fb923c', '#f59e0b']
@@ -216,7 +218,7 @@ const initScoreTrendChart = () => {
       trigger: 'axis',
       formatter: function(params) {
         const index = params[0].dataIndex
-        return `${titles[index]}<br/>分数: ${params[0].value}分`
+        return `${titles[index]}<br/>${userStore.t('common.score')}: ${params[0].value}${userStore.t('dashboard.scoreUnit')}`
       }
     },
     grid: {
@@ -258,7 +260,7 @@ const initScoreTrendChart = () => {
     },
     series: [
       {
-        name: '分数',
+        name: userStore.t('common.score'),
         type: 'line',
         smooth: true,
         data: scores,
@@ -322,11 +324,11 @@ const initKnowledgeRadarChart = () => {
       formatter: function(params) {
         const index = params.dataIndex
         const data = knowledgeMasteryData.value[index]
-        return `${data.subjectName}<br/>掌握率: ${data.masteryRate}%<br/>正确率: ${data.correctRate}%<br/>总题数: ${data.totalQuestions}<br/>已学会: ${data.masteredQuestions}`
+        return `${data.subjectName}<br/>${userStore.t('student.knowledgeMastery')}: ${data.masteryRate}%<br/>${userStore.t('common.correctRate')}: ${data.correctRate}%<br/>${userStore.t('common.total')}: ${data.totalQuestions}<br/>${userStore.t('student.mastered')}: ${data.masteredQuestions}`
       }
     },
     legend: {
-      data: ['掌握率', '正确率'],
+      data: [userStore.t('student.knowledgeMastery'), userStore.t('common.correctRate')],
       bottom: 10,
       textStyle: {
         color: '#64748b'
@@ -362,12 +364,12 @@ const initKnowledgeRadarChart = () => {
     },
     series: [
       {
-        name: '知识点掌握',
+        name: userStore.t('student.knowledgeMastery'),
         type: 'radar',
         data: [
           {
             value: masteryRates,
-            name: '掌握率',
+            name: userStore.t('student.knowledgeMastery'),
             itemStyle: {
               color: '#dc2626'
             },
@@ -381,7 +383,7 @@ const initKnowledgeRadarChart = () => {
           },
           {
             value: correctRates,
-            name: '正确率',
+            name: userStore.t('common.correctRate'),
             itemStyle: {
               color: '#f59e0b'
             },

@@ -44,10 +44,8 @@ public class ExamExamController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             HttpServletRequest request) {
-        System.out.println("========== 学生考试列表接口被调用 ==========");
         String token = request.getHeader("Authorization").replace("Bearer ", "");
         Long studentId = jwtUtils.getUserIdFromToken(token);
-        System.out.println("学生ID: " + studentId);
         return R.ok(examExamService.studentPageWithStatus(current, size, studentId, keyword, status));
     }
 
@@ -86,8 +84,6 @@ public class ExamExamController {
 
     @PutMapping("/{id}/publish")
     public R<Void> publish(@PathVariable Long id, HttpServletRequest request) {
-        System.out.println("========== 发布考试接口被调用 ==========");
-        System.out.println("考试ID: " + id);
         try {
             examExamService.publishExam(id);
             ExamExam exam = examExamService.getById(id);
@@ -96,11 +92,8 @@ public class ExamExamController {
             sysLogService.saveLog(username, "发布考试", "PUT /api/exams/" + id + "/publish", 
                     "{\"id\":\"" + id + "\",\"title\":\"" + title + "\"}", 
                     request.getRemoteAddr());
-            System.out.println("========== 发布考试成功 ==========");
             return R.ok();
         } catch (Exception e) {
-            System.out.println("========== 发布考试失败: " + e.getMessage() + " ==========");
-            e.printStackTrace();
             return R.error(e.getMessage());
         }
     }

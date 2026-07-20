@@ -1,7 +1,8 @@
 <template>
   <view class="dashboard">
+    <CustomNavBar :title="userStore.t('common.home')" :showBack="false" />
     <view class="page-header">
-      <text class="title">欢迎回来，{{ displayName }}</text>
+      <text class="title">{{ userStore.t('dashboard.welcome') }}，{{ displayName }}</text>
       <text class="subtitle">{{ roleText }} | {{ currentDate }}</text>
     </view>
 
@@ -13,7 +14,7 @@
           </view>
           <view class="stat-info">
             <text class="stat-value">{{ stats.totalUsers }}</text>
-            <text class="stat-label">总用户数</text>
+            <text class="stat-label">{{ userStore.t('dashboard.totalUsers') }}</text>
           </view>
           <text class="arrow">›</text>
         </view>
@@ -23,7 +24,7 @@
           </view>
           <view class="stat-info">
             <text class="stat-value">{{ stats.studentCount }}</text>
-            <text class="stat-label">学生数</text>
+            <text class="stat-label">{{ userStore.t('login.student') }}{{ userStore.t('dashboard.count') }}</text>
           </view>
           <text class="arrow">›</text>
         </view>
@@ -33,7 +34,7 @@
           </view>
           <view class="stat-info">
             <text class="stat-value">{{ stats.teacherCount }}</text>
-            <text class="stat-label">教师数</text>
+            <text class="stat-label">{{ userStore.t('login.teacher') }}{{ userStore.t('dashboard.count') }}</text>
           </view>
           <text class="arrow">›</text>
         </view>
@@ -43,7 +44,7 @@
           </view>
           <view class="stat-info">
             <text class="stat-value">{{ stats.departmentCount }}</text>
-            <text class="stat-label">院系数</text>
+            <text class="stat-label">{{ userStore.t('dashboard.departmentCount') }}</text>
           </view>
           <text class="arrow">›</text>
         </view>
@@ -56,7 +57,7 @@
           </view>
           <view class="stat-info">
             <text class="stat-value">{{ stats.classCount }}</text>
-            <text class="stat-label">班级数</text>
+            <text class="stat-label">{{ userStore.t('dashboard.classCount') }}</text>
           </view>
           <text class="arrow">›</text>
         </view>
@@ -66,7 +67,7 @@
           </view>
           <view class="stat-info">
             <text class="stat-value">{{ stats.paperCount }}</text>
-            <text class="stat-label">试卷数</text>
+            <text class="stat-label">{{ userStore.t('dashboard.paperCount') }}</text>
           </view>
           <text class="arrow">›</text>
         </view>
@@ -76,7 +77,7 @@
           </view>
           <view class="stat-info">
             <text class="stat-value">{{ stats.questionCount }}</text>
-            <text class="stat-label">题目数</text>
+            <text class="stat-label">{{ userStore.t('dashboard.questionCount') }}</text>
           </view>
           <text class="arrow">›</text>
         </view>
@@ -86,7 +87,7 @@
           </view>
           <view class="stat-info">
             <text class="stat-value">{{ stats.examCount }}</text>
-            <text class="stat-label">考试数</text>
+            <text class="stat-label">{{ userStore.t('dashboard.examCount') }}</text>
           </view>
           <text class="arrow">›</text>
         </view>
@@ -99,7 +100,7 @@
           </view>
           <view class="stat-info">
             <text class="stat-value">{{ stats.pendingExams }}</text>
-            <text class="stat-label">待考考试</text>
+            <text class="stat-label">{{ userStore.t('dashboard.pendingExams') }}</text>
           </view>
           <text class="arrow">›</text>
         </view>
@@ -109,7 +110,7 @@
           </view>
           <view class="stat-info">
             <text class="stat-value">{{ stats.completedExams }}</text>
-            <text class="stat-label">已完成</text>
+            <text class="stat-label">{{ userStore.t('dashboard.completedExams') }}</text>
           </view>
           <text class="arrow">›</text>
         </view>
@@ -119,7 +120,7 @@
           </view>
           <view class="stat-info">
             <text class="stat-value">{{ stats.wrongCount }}</text>
-            <text class="stat-label">错题数</text>
+            <text class="stat-label">{{ userStore.t('dashboard.wrongCount') }}</text>
           </view>
           <text class="arrow">›</text>
         </view>
@@ -128,8 +129,8 @@
             <text class="emoji">📊</text>
           </view>
           <view class="stat-info">
-            <text class="stat-value">{{ stats.averageScore }}分</text>
-            <text class="stat-label">平均分</text>
+            <text class="stat-value">{{ stats.averageScore }}{{ userStore.t('dashboard.scoreUnit') }}</text>
+            <text class="stat-label">{{ userStore.t('dashboard.averageScore') }}</text>
           </view>
           <text class="arrow">›</text>
         </view>
@@ -140,17 +141,17 @@
       <view class="card">
         <view class="nav-item" @click="goTo('/pages/student/my-classes')">
           <view class="nav-icon">🏫</view>
-          <text class="nav-text">我的班级</text>
+          <text class="nav-text">{{ userStore.t('dashboard.myClasses') }}</text>
           <text class="nav-arrow">›</text>
         </view>
         <view class="nav-item" @click="goTo('/pages/student/exam-list')">
           <view class="nav-icon">📋</view>
-          <text class="nav-text">考试列表</text>
+          <text class="nav-text">{{ userStore.t('dashboard.examList') }}</text>
           <text class="nav-arrow">›</text>
         </view>
         <view class="nav-item" @click="goTo('/pages/student/history')">
           <view class="nav-icon">📝</view>
-          <text class="nav-text">考试历史</text>
+          <text class="nav-text">{{ userStore.t('dashboard.examHistory') }}</text>
           <text class="nav-arrow">›</text>
         </view>
       </view>
@@ -160,8 +161,42 @@
       <view class="card">
         <view class="card-header">
           <view class="card-title">
+            <text class="card-emoji">⚙️</text>
+            <text class="title-text">{{ userStore.t('dashboard.systemManagement') }}</text>
+          </view>
+        </view>
+        <view class="nav-item" @click="goTo('/pages/admin/user-manage')">
+          <view class="nav-icon">👥</view>
+          <text class="nav-text">{{ userStore.t('dashboard.userManagement') }}</text>
+          <text class="nav-arrow">›</text>
+        </view>
+        <view class="nav-item" @click="goTo('/pages/admin/department-manage')">
+          <view class="nav-icon">🏫</view>
+          <text class="nav-text">{{ userStore.t('dashboard.departmentManagement') }}</text>
+          <text class="nav-arrow">›</text>
+        </view>
+        <view class="nav-item" @click="goTo('/pages/admin/class-manage')">
+          <view class="nav-icon">📚</view>
+          <text class="nav-text">{{ userStore.t('dashboard.classManagement') }}</text>
+          <text class="nav-arrow">›</text>
+        </view>
+        <view class="nav-item" @click="goTo('/pages/admin/statistics')">
+          <view class="nav-icon">📊</view>
+          <text class="nav-text">{{ userStore.t('dashboard.dataStatistics') }}</text>
+          <text class="nav-arrow">›</text>
+        </view>
+        <view class="nav-item" @click="goTo('/pages/admin/log-manage')">
+          <view class="nav-icon">📋</view>
+          <text class="nav-text">{{ userStore.t('dashboard.systemLogs') }}</text>
+          <text class="nav-arrow">›</text>
+        </view>
+      </view>
+
+      <view class="card">
+        <view class="card-header">
+          <view class="card-title">
             <text class="card-emoji">📝</text>
-            <text class="title-text">最近操作日志</text>
+            <text class="title-text">{{ userStore.t('dashboard.recentLogs') }}</text>
           </view>
         </view>
         <view class="log-list">
@@ -171,7 +206,7 @@
             <view class="log-time">{{ log.createTime }}</view>
           </view>
           <view class="empty" v-if="recentLogs.length === 0">
-            <text class="empty-text">暂无日志</text>
+            <text class="empty-text">{{ userStore.t('common.noData') }}</text>
           </view>
         </view>
       </view>
@@ -181,27 +216,27 @@
       <view class="card">
         <view class="nav-item" @click="goTo('/pages/teacher/my-classes')">
           <view class="nav-icon">🏫</view>
-          <text class="nav-text">班级管理</text>
+          <text class="nav-text">{{ userStore.t('dashboard.classManagement') }}</text>
           <text class="nav-arrow">›</text>
         </view>
         <view class="nav-item" @click="goTo('/pages/teacher/subject-manage')">
           <view class="nav-icon">📚</view>
-          <text class="nav-text">科目管理</text>
+          <text class="nav-text">{{ userStore.t('dashboard.subjectManagement') }}</text>
           <text class="nav-arrow">›</text>
         </view>
         <view class="nav-item" @click="goTo('/pages/teacher/question-manage')">
           <view class="nav-icon">❓</view>
-          <text class="nav-text">题库管理</text>
+          <text class="nav-text">{{ userStore.t('dashboard.questionManagement') }}</text>
           <text class="nav-arrow">›</text>
         </view>
         <view class="nav-item" @click="goTo('/pages/teacher/paper-manage')">
           <view class="nav-icon">📄</view>
-          <text class="nav-text">试卷管理</text>
+          <text class="nav-text">{{ userStore.t('dashboard.paperManagement') }}</text>
           <text class="nav-arrow">›</text>
         </view>
         <view class="nav-item" @click="goTo('/pages/teacher/exam-manage')">
           <view class="nav-icon">📅</view>
-          <text class="nav-text">考试管理</text>
+          <text class="nav-text">{{ userStore.t('dashboard.examManagement') }}</text>
           <text class="nav-arrow">›</text>
         </view>
       </view>
@@ -210,22 +245,22 @@
         <view class="card-header">
           <view class="card-title">
             <text class="card-emoji">📅</text>
-            <text class="title-text">最近考试</text>
+            <text class="title-text">{{ userStore.t('dashboard.recentExams') }}</text>
           </view>
-          <text class="card-link" @click="goTo('/pages/teacher/exam-manage')">管理考试</text>
+          <text class="card-link" @click="goTo('/pages/teacher/exam-manage')">{{ userStore.t('dashboard.manageExams') }}</text>
         </view>
         <view class="exam-list">
           <view class="exam-item" v-for="exam in recentExams" :key="exam.id" @click="goToExam(exam)">
             <view class="exam-info">
               <text class="exam-title">{{ exam.title }}</text>
-              <text class="exam-meta">{{ exam.className }} | {{ exam.startTime }}</text>
+              <text class="exam-meta">{{ exam.className }} | {{ formatDateTime(exam.startTime) }}</text>
             </view>
             <view :class="['status-tag', statusClass(exam.status)]">
               <text class="status-text">{{ statusText(exam.status) }}</text>
             </view>
           </view>
           <view class="empty" v-if="recentExams.length === 0">
-            <text class="empty-text">暂无考试</text>
+            <text class="empty-text">{{ userStore.t('common.noData') }}</text>
           </view>
         </view>
       </view>
@@ -236,26 +271,26 @@
         <view class="card-header">
           <view class="card-title">
             <text class="card-emoji">⏰</text>
-            <text class="title-text">待考考试</text>
+            <text class="title-text">{{ userStore.t('dashboard.upcomingExams') }}</text>
           </view>
-          <text class="card-link" @click="goTo('/pages/student/exam-list')">全部考试</text>
+          <text class="card-link" @click="goTo('/pages/student/exam-list')">{{ userStore.t('dashboard.allExams') }}</text>
         </view>
         <view class="exam-list">
           <view class="exam-item" v-for="exam in pendingExams" :key="exam.id">
             <view class="exam-info">
               <text class="exam-title">{{ exam.title }}</text>
-              <text class="exam-meta">{{ exam.startTime }} | {{ exam.duration }}分钟</text>
+              <text class="exam-meta">{{ formatDateTime(exam.startTime) }} | {{ exam.duration }}{{ userStore.t('dashboard.minutes') }}</text>
             </view>
             <button
               class="exam-btn"
               :disabled="exam.status !== 'ONGOING'"
               @click="goToExam(exam)"
             >
-              <text class="btn-text">{{ exam.status === 'ONGOING' ? '进入考试' : '等待开始' }}</text>
+              <text class="btn-text">{{ exam.status === 'ONGOING' ? userStore.t('dashboard.enterExam') : userStore.t('dashboard.waiting') }}</text>
             </button>
           </view>
           <view class="empty" v-if="pendingExams.length === 0">
-            <text class="empty-text">暂无待考考试</text>
+            <text class="empty-text">{{ userStore.t('dashboard.noUpcomingExams') }}</text>
           </view>
         </view>
       </view>
@@ -264,42 +299,65 @@
         <view class="card-header">
           <view class="card-title">
             <text class="card-emoji">ℹ️</text>
-            <text class="title-text">考试须知</text>
+            <text class="title-text">{{ userStore.t('dashboard.examTips') }}</text>
           </view>
         </view>
         <view class="tips-list">
           <view class="tip-item">
             <text class="tip-number">1.</text>
-            <text class="tip-text">进入考试后请保持网络畅通</text>
+            <text class="tip-text">{{ userStore.t('dashboard.tip1') }}</text>
           </view>
           <view class="tip-item">
             <text class="tip-number">2.</text>
-            <text class="tip-text">考试过程中请勿频繁切换页面</text>
+            <text class="tip-text">{{ userStore.t('dashboard.tip2') }}</text>
           </view>
           <view class="tip-item">
             <text class="tip-number">3.</text>
-            <text class="tip-text">答案会自动保存，但建议手动提交</text>
+            <text class="tip-text">{{ userStore.t('dashboard.tip3') }}</text>
           </view>
           <view class="tip-item">
             <text class="tip-number">4.</text>
-            <text class="tip-text">考试结束后可查看错题分析</text>
+            <text class="tip-text">{{ userStore.t('dashboard.tip4') }}</text>
           </view>
         </view>
       </view>
     </template>
+
+    <CustomTabBar />
   </view>
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { examApi, examRecordApi, statisticsApi, logApi, userApi, classApi } from '../../utils/api'
+import { useUserStore } from '../../store/index.js'
+
+import CustomTabBar from '../../components/CustomTabBar.vue'
+import CustomNavBar from '../../components/CustomNavBar.vue'
 
 export default {
+  components: { CustomTabBar, CustomNavBar },
   setup() {
     const userInfo = ref(uni.getStorageSync('userInfo') || {})
+    const userStore = useUserStore()
+
+    const toggleLanguage = () => {
+      const newLang = userStore.language === 'zh' ? 'en' : 'zh'
+      userStore.changeLanguage(newLang)
+    }
+
+    const setNavBarTitle = () => {
+      uni.setNavigationBarTitle({
+        title: userStore.t('common.home')
+      })
+    }
+
+    watch(() => userStore.language, () => {
+      setNavBarTitle()
+    })
 
     const displayName = computed(() => {
-      const name = userInfo.value.realName
+      const name = userInfo.value.realName || userInfo.value.real_name
       const username = userInfo.value.username
       return (name && name.trim()) ? name : username
     })
@@ -307,12 +365,16 @@ export default {
     const currentDate = computed(() => {
       const now = new Date()
       const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }
-      return now.toLocaleDateString('zh-CN', options)
+      return now.toLocaleDateString(userStore.language === 'zh' ? 'zh-CN' : 'en-US', options)
     })
 
     const roleText = computed(() => {
-      const map = { ADMIN: '管理员', TEACHER: '教师', STUDENT: '学生' }
-      return map[userInfo.value.role] || '用户'
+      const map = { 
+        ADMIN: userStore.t('login.admin'), 
+        TEACHER: userStore.t('login.teacher'), 
+        STUDENT: userStore.t('login.student') 
+      }
+      return map[userInfo.value.role] || userStore.t('common.user')
     })
 
     const stats = ref({
@@ -340,7 +402,11 @@ export default {
     }
 
     const statusText = (status) => {
-      const map = { PENDING: '待开始', ONGOING: '进行中', FINISHED: '已结束' }
+      const map = { 
+        PENDING: userStore.t('common.statusPending'), 
+        ONGOING: userStore.t('common.statusOngoing'), 
+        FINISHED: userStore.t('common.statusFinished') 
+      }
       return map[status] || status
     }
 
@@ -364,28 +430,35 @@ export default {
 
     const loadStats = async () => {
       try {
+        const token = uni.getStorageSync('token')
+        console.log('当前token:', token ? '存在' : '不存在')
+        console.log('当前用户角色:', userInfo.value.role)
+        
         if (userInfo.value.role === 'ADMIN') {
           const res = await statisticsApi.overview()
+          console.log('ADMIN统计数据:', res)
           if (res.code === 200) {
             stats.value = {
-              totalUsers: res.data.totalUsers || 0,
-              studentCount: res.data.studentCount || 0,
-              teacherCount: res.data.teacherCount || 0,
-              departmentCount: res.data.departmentCount || 0
+              totalUsers: res.data.total_users || res.data.totalUsers || 0,
+              studentCount: res.data.student_count || res.data.studentCount || 0,
+              teacherCount: res.data.teacher_count || res.data.teacherCount || 0,
+              departmentCount: res.data.department_count || res.data.departmentCount || 0
             }
           }
         } else if (userInfo.value.role === 'TEACHER') {
           const res = await statisticsApi.teacherStats()
+          console.log('TEACHER统计数据:', res)
           if (res.code === 200) {
             stats.value = {
-              classCount: res.data.classCount || 0,
-              paperCount: res.data.paperCount || 0,
-              questionCount: res.data.questionCount || 0,
-              examCount: res.data.examCount || 0
+              classCount: res.data.total_classes || res.data.classCount || 0,
+              paperCount: res.data.total_papers || res.data.paperCount || 0,
+              questionCount: res.data.total_questions || res.data.questionCount || 0,
+              examCount: res.data.total_exams || res.data.examCount || 0
             }
           }
         } else if (userInfo.value.role === 'STUDENT') {
           const res = await examRecordApi.getStudentStats()
+          console.log('STUDENT统计数据:', res)
           if (res.code === 200) {
             stats.value = {
               pendingExams: res.data.pendingExams || 0,
@@ -446,10 +519,23 @@ export default {
     const formatDateTime = (dateTime) => {
       if (!dateTime) return '-'
       const date = new Date(dateTime)
-      return date.toLocaleString('zh-CN')
+      if (userStore.language === 'zh') {
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        const hours = String(date.getHours()).padStart(2, '0')
+        const minutes = String(date.getMinutes()).padStart(2, '0')
+        return `${year}-${month}-${day} ${hours}:${minutes}`
+      } else {
+        return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+      }
     }
 
     onMounted(async () => {
+      if (userInfo.value.role === 'ADMIN') {
+        uni.hideTabBar()
+      }
+      setNavBarTitle()
       await loadStats()
 
       if (userInfo.value.role === 'ADMIN') {
@@ -463,6 +549,7 @@ export default {
 
     return {
       userInfo,
+      userStore,
       displayName,
       currentDate,
       roleText,
@@ -472,6 +559,7 @@ export default {
       recentLogs,
       statusClass,
       statusText,
+      toggleLanguage,
       goTo,
       goToExam
     }
@@ -481,24 +569,29 @@ export default {
 
 <style lang="scss">
 .dashboard {
-  padding: 24rpx;
+  padding: 0;
   min-height: 100vh;
   background: #f5f5f5;
+  position: relative;
+  padding-top: 140rpx;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
 .page-header {
-  margin-bottom: 24rpx;
+  padding: 24rpx;
 
   .title {
     font-size: 36rpx;
     font-weight: 700;
     color: #0f172a;
     margin-bottom: 8rpx;
+    display: block;
   }
 
   .subtitle {
     font-size: 26rpx;
     color: #64748b;
+    display: block;
   }
 }
 

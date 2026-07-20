@@ -1,18 +1,14 @@
 <template>
   <view class="exam-list">
-    <view class="page-header">
-      <text class="title">考试列表</text>
-      <text class="subtitle">查看并参加待进行的考试</text>
-    </view>
+    <CustomNavBar :title="userStore.t('common.examList')" :showBack="true" />
 
-    <!-- 搜索和筛选区域 -->
     <view class="search-bar">
       <view class="search-input">
-        <uni-icons type="search" size="18" color="#999" />
+        <text class="icon-search">🔍</text>
         <input
           type="text"
           v-model="searchForm.keyword"
-          placeholder="搜索考试名称"
+          :placeholder="userStore.t('student.searchExam')"
           @confirm="handleSearch"
         />
       </view>
@@ -25,59 +21,65 @@
         >
           <view class="picker">
             <text>{{ currentStatusText }}</text>
-            <uni-icons type="bottom" size="14" color="#666" />
+            <text class="icon-arrow">▼</text>
           </view>
         </picker>
-        <button class="search-btn" @click="handleSearch">搜索</button>
+        <button class="search-btn" @click="handleSearch">{{ userStore.t('common.search') }}</button>
       </view>
     </view>
 
-    <!-- 考试列表 -->
     <view class="exam-grid">
-      <view class="exam-card" v-for="item in tableData" :key="item.exam.id">
-        <view class="exam-header">
-          <text class="exam-title">{{ item.exam.title }}</text>
-          <view class="exam-status" :class="'status-' + getStatusClass(item)">
-            <text>{{ getExamStatusText(item) }}</text>
-          </view>
-        </view>
-
-        <view class="exam-info">
-          <view class="info-item">
-            <uni-icons type="clock" size="16" color="#666" />
-            <text>{{ item.exam.duration }} 分钟</text>
-          </view>
-          <view class="info-item">
-            <uni-icons type="flag" size="16" color="#666" />
-            <text>总分 {{ item.exam.totalScore }}</text>
-          </view>
-          <view class="info-item">
-            <uni-icons type="calendar" size="16" color="#666" />
-            <text>{{ formatTime(item.exam.startTime) }}</text>
-          </view>
-        </view>
-
-        <view class="exam-actions">
-          <button
-            class="join-btn"
-            :class="getButtonClass(item)"
-            :disabled="!canJoin(item) && !canView(item)"
-            @click="handleJoin(item.exam)"
-          >
-            <text>{{ getButtonText(item) }}</text>
-          </button>
+      <view class="exam-card" v-for="item in tableData" :key="item.id">
+      <view class="exam-header">
+        <text class="exam-title">{{ item.title }}</text>
+        <view class="exam-status" :class="'status-' + getStatusClass(item)">
+          <text>{{ getExamStatusText(item) }}</text>
         </view>
       </view>
+
+      <view class="exam-info">
+        <view class="info-item">
+          <text class="icon-clock">⏱️</text>
+          <text>{{ item.duration }} {{ userStore.t('common.minutes') }}</text>
+        </view>
+        <view class="info-item">
+          <text class="icon-flag">🏆</text>
+          <text>{{ userStore.t('common.total') }} {{ item.totalScore || item.paper?.totalScore || 0 }}{{ userStore.t('dashboard.scoreUnit') }}</text>
+        </view>
+        <view class="info-item">
+          <text class="icon-calendar">📅</text>
+          <text>{{ formatTime(item.startTime) }}</text>
+        </view>
+      </view>
+
+      <view class="exam-actions">
+        <button
+          class="join-btn"
+          :class="getButtonClass(item)"
+          :disabled="!canJoin(item) && !canView(item)"
+          @click="handleJoin(item)"
+        >
+          <text>{{ getButtonText(item) }}</text>
+        </button>
+      </view>
+    </view>
     </view>
 
-    <uni-load-more :status="loadStatus" />
+    <view class="load-more" v-if="loadStatus === 'loading'">
+      <text>加载中...</text>
+    </view>
+    <view class="load-more" v-else-if="loadStatus === 'noMore'">
+      <text>{{ userStore.t('common.noMore') }}</text>
+    </view>
   </view>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '../../store/index.js'
 import { examApi } from '../../utils/api.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
 
 const userStore = useUserStore()
 const tableData = ref([])
@@ -86,16 +88,16 @@ const searchForm = ref({
   status: ''
 })
 
-const statusOptions = [
-  { label: '全部', value: '' },
-  { label: '待开始', value: 'PENDING' },
-  { label: '进行中', value: 'ONGOING' },
-  { label: '已结束', value: 'FINISHED' }
-]
+const statusOptions = computed(() => [
+  { label: userStore.t('common.all'), value: '' },
+  { label: userStore.t('common.pending'), value: 'PENDING' },
+  { label: userStore.t('common.ongoing'), value: 'ONGOING' },
+  { label: userStore.t('common.finished'), value: 'FINISHED' }
+])
 
 const currentStatusText = computed(() => {
-  const option = statusOptions.find(o => o.value === searchForm.value.status)
-  return option ? option.label : '全部'
+  const option = statusOptions.value.find(o => o.value === searchForm.value.status)
+  return option ? option.label : userStore.t('common.all')
 })
 
 const loadStatus = ref('more')
@@ -103,30 +105,34 @@ const loadStatus = ref('more')
 const formatTime = (time) => {
   if (!time) return ''
   const date = new Date(time)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hour = String(date.getHours()).padStart(2, '0')
-  const minute = String(date.getMinutes()).padStart(2, '0')
-  return `${year}-${month}-${day} ${hour}:${minute}`
+  if (userStore.language === 'zh') {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}`
+  } else {
+    return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+  }
 }
 
 const getStatusClass = (item) => {
   if (item.studentStatus === 'AUTO_SUBMITTED') return 'danger'
   if (item.studentStatus === 'SUBMITTED') return 'success'
-  if (item.exam.status === 'ONGOING') return 'warning'
+  if (item.status === 'ONGOING') return 'warning'
   return 'info'
 }
 
 const getExamStatusText = (item) => {
-  if (item.studentStatus === 'AUTO_SUBMITTED') return '强制收卷'
-  if (item.studentStatus === 'SUBMITTED') return '已完成'
-  if (item.exam.status === 'ONGOING') return '进行中'
-  return '即将开始'
+  if (item.studentStatus === 'AUTO_SUBMITTED') return userStore.t('student.autoSubmitted')
+  if (item.studentStatus === 'SUBMITTED') return userStore.t('common.finished')
+  if (item.status === 'ONGOING') return userStore.t('common.ongoing')
+  return userStore.t('common.pending')
 }
 
 const canJoin = (item) => {
-  return item.exam.status === 'ONGOING' &&
+  return item.status === 'ONGOING' &&
     item.studentStatus !== 'SUBMITTED' &&
     item.studentStatus !== 'AUTO_SUBMITTED'
 }
@@ -137,23 +143,23 @@ const canView = (item) => {
 
 const getButtonText = (item) => {
   if (item.studentStatus === 'SUBMITTED' || item.studentStatus === 'AUTO_SUBMITTED') {
-    return '查看详情'
+    return userStore.t('student.viewDetail')
   }
-  if (item.exam.status === 'ONGOING') return '进入考试'
-  return '等待开始'
+  if (item.status === 'ONGOING') return userStore.t('student.enterExam')
+  return userStore.t('student.waiting')
 }
 
 const getButtonClass = (item) => {
   if (item.studentStatus === 'SUBMITTED' || item.studentStatus === 'AUTO_SUBMITTED') {
     return 'btn-success'
   }
-  if (item.exam.status === 'ONGOING') return 'btn-danger'
+  if (item.status === 'ONGOING') return 'btn-danger'
   return 'btn-disabled'
 }
 
 const onStatusChange = (e) => {
   const index = e.detail.value
-  searchForm.value.status = statusOptions[index].value
+  searchForm.value.status = statusOptions.value[index].value
   handleSearch()
 }
 
@@ -185,7 +191,7 @@ const loadData = async () => {
       loadStatus.value = res.data.records.length >= 20 ? 'more' : 'noMore'
     } else {
       uni.showToast({
-        title: res.message || '加载失败',
+        title: res.message || userStore.t('common.failed'),
         icon: 'none'
       })
       loadStatus.value = 'more'
@@ -193,7 +199,7 @@ const loadData = async () => {
   } catch (e) {
     console.error(e)
     uni.showToast({
-      title: '网络错误',
+      title: userStore.t('student.networkError'),
       icon: 'none'
     })
     loadStatus.value = 'more'
@@ -203,38 +209,26 @@ const loadData = async () => {
 onMounted(() => {
   loadData()
 })
+
+onShow(() => {
+  loadData()
+})
 </script>
 
 <style scoped>
 .exam-list {
   min-height: 100vh;
   background-color: #f5f5f5;
-  padding: 24rpx;
-}
-
-.page-header {
-  margin-bottom: 32rpx;
-}
-
-.title {
-  display: block;
-  font-size: 48rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 12rpx;
-}
-
-.subtitle {
-  display: block;
-  font-size: 28rpx;
-  color: #666;
+  padding: 0;
+  padding-top: 140rpx;
+  position: relative;
 }
 
 .search-bar {
   background: #fff;
   border-radius: 16rpx;
   padding: 24rpx;
-  margin-bottom: 24rpx;
+  margin: 24rpx;
 }
 
 .search-input {
@@ -250,6 +244,15 @@ onMounted(() => {
   flex: 1;
   margin-left: 12rpx;
   font-size: 28rpx;
+}
+
+.icon-search, .icon-clock, .icon-flag, .icon-calendar {
+  font-size: 28rpx;
+}
+
+.icon-arrow {
+  font-size: 20rpx;
+  color: #666;
 }
 
 .filter-row {
@@ -281,7 +284,7 @@ onMounted(() => {
 }
 
 .exam-grid {
-  margin-top: 24rpx;
+  padding: 0 24rpx;
 }
 
 .exam-card {
@@ -375,6 +378,13 @@ onMounted(() => {
 
 .btn-disabled {
   background: #f5f5f5;
+  color: #999;
+}
+
+.load-more {
+  text-align: center;
+  padding: 32rpx;
+  font-size: 26rpx;
   color: #999;
 }
 </style>

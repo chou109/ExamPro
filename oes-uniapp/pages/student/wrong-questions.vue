@@ -1,9 +1,6 @@
 <template>
   <view class="wrong-questions">
-    <view class="page-header">
-      <text class="title">错题本</text>
-      <text class="subtitle">自动收录所有答错的题目，支持反复练习</text>
-    </view>
+    <CustomNavBar :title="userStore.t('common.wrongQuestions')" :showBack="true" />
 
     <!-- 工具栏 -->
     <view class="toolbar">
@@ -31,7 +28,7 @@
           </view>
         </picker>
       </view>
-      <button class="search-btn" @click="loadData">搜索</button>
+      <button class="search-btn" @click="loadData">{{ userStore.t('common.search') }}</button>
     </view>
 
     <!-- 题目列表 -->
@@ -44,49 +41,49 @@
         <view class="question-meta">
           <view class="meta-row">
             <view class="tag" :class="getTagClass(item.type)">
-              <text>{{ isMultiChoiceItem(item) ? '多选题' : typeText(item.type) }}</text>
+              <text>{{ isMultiChoiceItem(item) ? userStore.t('student.multipleChoice') : typeText(item.type) }}</text>
             </view>
             <view class="tag" :class="item.mastered === 1 ? 'tag-success' : 'tag-warning'">
-              <text>{{ item.mastered === 1 ? '已学会' : '未学会' }}</text>
+              <text>{{ item.mastered === 1 ? userStore.t('student.mastered') : userStore.t('student.notMastered') }}</text>
             </view>
           </view>
 
           <view class="progress-row">
-            <text class="progress-label">通过率：</text>
+            <text class="progress-label">{{ userStore.t('student.passRateText') }}：</text>
             <view class="progress-bar">
               <view class="progress-fill" :style="{ width: getPassRate(item) + '%' }"></view>
             </view>
             <text class="progress-text">{{ getPassRate(item) }}%</text>
           </view>
 
-          <text class="practice-count">练习次数：{{ item.practicedCount }}</text>
+          <text class="practice-count">{{ userStore.t('student.practiceCount') }}：{{ item.practicedCount }}</text>
         </view>
 
         <view class="question-actions">
-          <button class="action-btn" @click="handleViewAnswer(item)">查看答案</button>
-          <button class="action-btn primary" @click="handlePractice(item)">练习</button>
+          <button class="action-btn" @click="handleViewAnswer(item)">{{ userStore.t('student.viewAnswer') }}</button>
+          <button class="action-btn primary" @click="handlePractice(item)">{{ userStore.t('student.practice') }}</button>
           <button
             class="action-btn"
             :class="item.mastered === 1 ? 'warning' : 'success'"
             @click="handleToggleMastered(item)"
           >
-            {{ item.mastered === 1 ? '标记未学会' : '标记已学会' }}
+            {{ item.mastered === 1 ? userStore.t('student.markNotMastered') : userStore.t('student.markMastered') }}
           </button>
         </view>
       </view>
     </view>
 
     <view class="load-more">
-    <text v-if="loadStatus === 'loading'" class="load-more-text">加载中...</text>
-    <text v-else-if="loadStatus === 'noMore'" class="load-more-text">没有更多数据</text>
-    <text v-else class="load-more-text load-more-more">点击加载更多</text>
+    <text v-if="loadStatus === 'loading'" class="load-more-text">{{ userStore.t('student.loadingMore') }}</text>
+    <text v-else-if="loadStatus === 'noMore'" class="load-more-text">{{ userStore.t('student.noMoreData') }}</text>
+    <text v-else class="load-more-text load-more-more">{{ userStore.t('student.clickLoadMore') }}</text>
   </view>
 
     <!-- 查看答案弹窗 -->
     <view v-if="answerVisible" class="modal" @click="answerVisible = false">
       <view class="modal-content" @click.stop>
         <view class="modal-header">
-          <text class="modal-title">查看答案</text>
+          <text class="modal-title">{{ userStore.t('student.viewAnswer') }}</text>
           <view class="modal-close" @click="answerVisible = false">
             <text class="close-icon">✕</text>
           </view>
@@ -99,23 +96,23 @@
           <text class="answer-question-text">{{ viewingAnswer.content }}</text>
 
           <view class="answer-row">
-            <text class="label">错误答案：</text>
-            <text class="value wrong">{{ viewingAnswer.wrongAnswer || '未记录' }}</text>
+            <text class="label">{{ userStore.t('student.wrongAnswer') }}：</text>
+            <text class="value wrong">{{ viewingAnswer.wrongAnswer || userStore.t('common.noData') }}</text>
           </view>
 
           <view class="answer-row">
-            <text class="label">正确答案：</text>
+            <text class="label">{{ userStore.t('student.correctAnswer') }}：</text>
             <text class="value correct">{{ viewingAnswer.correctAnswer }}</text>
           </view>
 
           <view v-if="viewingAnswer.analysis" class="analysis">
-            <text class="label">解析：</text>
+            <text class="label">{{ userStore.t('student.analysis') }}：</text>
             <text class="value">{{ viewingAnswer.analysis }}</text>
           </view>
         </view>
 
         <view class="modal-footer">
-          <button class="close-btn" @click="answerVisible = false">关闭</button>
+          <button class="close-btn" @click="answerVisible = false">{{ userStore.t('common.cancel') }}</button>
         </view>
       </view>
     </view>
@@ -124,7 +121,7 @@
     <view v-if="practiceVisible" class="modal" @click="practiceVisible = false">
       <view class="modal-content practice-content" @click.stop>
         <view class="modal-header">
-          <text class="modal-title">练习</text>
+          <text class="modal-title">{{ userStore.t('student.practice') }}</text>
           <view class="modal-close" @click="practiceVisible = false">
             <text class="close-icon">✕</text>
           </view>
@@ -132,7 +129,7 @@
 
         <view v-if="practicingItem" class="practice-body">
           <view class="question-type-tag">
-            <text>{{ isMultiChoice() ? '多选题' : typeText(practicingItem.type) }}</text>
+            <text>{{ isMultiChoice() ? userStore.t('student.multipleChoice') : typeText(practicingItem.type) }}</text>
           </view>
           <text class="answer-question-text">{{ practicingItem.content }}</text>
 
@@ -152,26 +149,26 @@
           <view v-if="showPracticeResult" class="practice-result">
             <view class="result-row" :class="isAnswerCorrect ? 'correct' : 'wrong'">
               <text class="result-icon">{{ isAnswerCorrect ? '✓' : '✗' }}</text>
-              <text class="result-text">{{ isAnswerCorrect ? '回答正确！' : '回答错误' }}</text>
+              <text class="result-text">{{ isAnswerCorrect ? userStore.t('student.answerCorrect') : userStore.t('student.answerWrong') }}</text>
             </view>
             <view class="answer-row">
-              <text class="label">你的答案：</text>
+              <text class="label">{{ userStore.t('student.yourAnswer') }}：</text>
               <text class="value" :class="isAnswerCorrect ? 'correct' : 'wrong'">{{ formatAnswer(userAnswer) }}</text>
             </view>
             <view class="answer-row">
-              <text class="label">正确答案：</text>
+              <text class="label">{{ userStore.t('student.correctAnswer') }}：</text>
               <text class="value correct">{{ practicingItem.correctAnswer }}</text>
             </view>
             <view v-if="practicingItem.analysis" class="analysis">
-              <text class="label">解析：</text>
+              <text class="label">{{ userStore.t('student.analysis') }}：</text>
               <text class="value">{{ practicingItem.analysis }}</text>
             </view>
           </view>
         </view>
 
         <view class="modal-footer">
-          <button v-if="!showPracticeResult" class="close-btn primary" @click="submitPractice">提交答案</button>
-          <button v-else class="close-btn" @click="practiceVisible = false">关闭</button>
+          <button v-if="!showPracticeResult" class="close-btn primary" @click="submitPractice">{{ userStore.t('common.submit') }}</button>
+          <button v-else class="close-btn" @click="practiceVisible = false">{{ userStore.t('common.cancel') }}</button>
         </view>
       </view>
     </view>
@@ -179,9 +176,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useUserStore } from '../../store/index.js'
 import { wrongQuestionApi, subjectApi } from '../../utils/api.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
 
+const userStore = useUserStore()
 const tableData = ref([])
 const subjects = ref([])
 const params = ref({
@@ -198,36 +198,36 @@ const practicingItem = ref(null)
 const userAnswer = ref([])
 const showPracticeResult = ref(false)
 
-const typeMap = {
-  SINGLE_CHOICE: '单选题',
-  MULTIPLE_CHOICE: '多选题',
-  JUDGMENT: '判断题',
-  FILL_BLANK: '填空题',
-  ESSAY: '简答题',
-  PROGRAMMING: '编程题'
-}
+const typeMap = computed(() => ({
+  SINGLE_CHOICE: userStore.t('common.singleChoice'),
+  MULTIPLE_CHOICE: userStore.t('common.multipleChoice'),
+  JUDGMENT: userStore.t('common.trueFalse'),
+  FILL_BLANK: userStore.t('common.fillBlank'),
+  ESSAY: userStore.t('common.shortAnswer'),
+  PROGRAMMING: userStore.t('common.programming')
+}))
 
 const subjectOptions = computed(() => {
-  return [{ id: '', name: '全部科目' }, ...subjects.value]
+  return [{ id: '', name: userStore.t('student.allSubjects') }, ...subjects.value]
 })
 
-const statusOptions = [
-  { value: '', label: '全部状态' },
-  { value: '0', label: '未学会' },
-  { value: '1', label: '已学会' }
-]
+const statusOptions = computed(() => [
+  { value: '', label: userStore.t('common.all') },
+  { value: '0', label: userStore.t('student.notMastered') },
+  { value: '1', label: userStore.t('student.mastered') }
+])
 
 const currentSubjectText = computed(() => {
   const option = subjectOptions.value.find(s => s.id === params.value.subjectId)
-  return option ? option.name : '全部科目'
+  return option ? option.name : userStore.t('student.allSubjects')
 })
 
 const currentStatusText = computed(() => {
-  const option = statusOptions.find(s => s.value === params.value.mastered)
-  return option ? option.label : '全部状态'
+  const option = statusOptions.value.find(s => s.value === params.value.mastered)
+  return option ? option.label : userStore.t('common.all')
 })
 
-const typeText = (type) => typeMap[type] || type
+const typeText = (type) => typeMap.value[type] || type
 
 const getTagClass = (type) => {
   return {
@@ -248,7 +248,7 @@ const onSubjectChange = (e) => {
 
 const onStatusChange = (e) => {
   const index = e.detail.value
-  params.value.mastered = statusOptions[index].value
+  params.value.mastered = statusOptions.value[index].value
   loadData()
 }
 
@@ -324,13 +324,13 @@ const isAnswerCorrect = computed(() => {
 })
 
 const formatAnswer = (answer) => {
-  return answer.length > 0 ? answer.join('') : '未作答'
+  return answer.length > 0 ? answer.join('') : userStore.t('student.unanswered')
 }
 
 const submitPractice = async () => {
   if (userAnswer.value.length === 0) {
     uni.showToast({
-      title: '请选择答案',
+      title: userStore.t('student.pleaseSelectAnswer'),
       icon: 'none'
     })
     return
@@ -355,7 +355,7 @@ const submitPractice = async () => {
   } catch (e) {
     console.error(e)
     uni.showToast({
-      title: '练习提交失败',
+      title: userStore.t('common.failed'),
       icon: 'none'
     })
   }
@@ -367,19 +367,19 @@ const handleToggleMastered = async (item) => {
     const res = await wrongQuestionApi.updateMastered(item.id, newMastered)
     if (res.code === 200) {
       uni.showToast({
-        title: '标记成功',
+        title: userStore.t('common.success'),
         icon: 'success'
       })
       item.mastered = newMastered
     } else {
       uni.showToast({
-        title: res.message || '操作失败',
+        title: res.message || userStore.t('common.failed'),
         icon: 'none'
       })
     }
   } catch (e) {
     uni.showToast({
-      title: '网络错误',
+      title: userStore.t('student.networkError'),
       icon: 'none'
     })
   }
@@ -407,14 +407,15 @@ const loadData = async () => {
       current: current.value,
       size: size.value,
       subjectId: params.value.subjectId,
-      mastered: params.value.mastered
+      mastered: params.value.mastered,
+      userId: userStore.userId
     })
     if (res.code === 200) {
       tableData.value = res.data.records
       loadStatus.value = res.data.records.length >= size.value ? 'more' : 'noMore'
     } else {
       uni.showToast({
-        title: res.message || '加载失败',
+        title: res.message || userStore.t('common.failed'),
         icon: 'none'
       })
       loadStatus.value = 'more'
@@ -422,7 +423,7 @@ const loadData = async () => {
   } catch (e) {
     console.error(e)
     uni.showToast({
-      title: '网络错误',
+      title: userStore.t('student.networkError'),
       icon: 'none'
     })
     loadStatus.value = 'more'
@@ -439,32 +440,16 @@ onMounted(() => {
 .wrong-questions {
   min-height: 100vh;
   background-color: #f5f5f5;
-  padding: 24rpx;
-}
-
-.page-header {
-  margin-bottom: 32rpx;
-}
-
-.title {
-  display: block;
-  font-size: 48rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 12rpx;
-}
-
-.subtitle {
-  display: block;
-  font-size: 28rpx;
-  color: #666;
+  padding: 0;
+  padding-top: 140rpx;
+  position: relative;
 }
 
 .toolbar {
   background: #fff;
   border-radius: 16rpx;
   padding: 24rpx;
-  margin-bottom: 24rpx;
+  margin: 24rpx;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -503,6 +488,7 @@ onMounted(() => {
 
 .question-list {
   margin-top: 24rpx;
+  padding: 0 24rpx;
 }
 
 .question-item {

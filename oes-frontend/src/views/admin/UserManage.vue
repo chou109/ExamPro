@@ -1,50 +1,50 @@
 <template>
   <div class="user-manage">
     <div class="page-header">
-      <h2>用户管理</h2>
-      <p>管理系统用户，包括学生和教师账号</p>
+      <h2>{{ userStore.t('admin.userManagement') }}</h2>
+      <p>{{ userStore.t('admin.userManagementDesc') }}</p>
     </div>
 
     <div class="card">
       <div class="toolbar">
-        <el-input v-model="keyword" placeholder="搜索用户名或姓名" style="width: 240px" clearable />
-        <el-select v-model="role" placeholder="选择角色" style="width: 140px" clearable>
-          <el-option label="学生" value="STUDENT" />
-          <el-option label="教师" value="TEACHER" />
-          <el-option label="管理员" value="ADMIN" />
+        <el-input v-model="keyword" :placeholder="userStore.t('admin.searchUsernameOrName')" style="width: 240px" clearable />
+        <el-select v-model="role" :placeholder="userStore.t('common.selectRole')" style="width: 140px" clearable>
+          <el-option :label="userStore.t('common.student')" value="STUDENT" />
+          <el-option :label="userStore.t('common.teacher')" value="TEACHER" />
+          <el-option :label="userStore.t('common.admin')" value="ADMIN" />
         </el-select>
-        <el-button type="danger" @click="loadData">搜索</el-button>
-        <el-button type="danger" @click="handleCreate">新增用户</el-button>
+        <el-button type="danger" @click="loadData">{{ userStore.t('common.search') }}</el-button>
+        <el-button type="danger" @click="handleCreate">{{ userStore.t('admin.createUser') }}</el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" stripe>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="username" label="用户名" />
-        <el-table-column prop="realName" label="姓名" />
-        <el-table-column prop="role" label="角色" width="100">
+        <el-table-column prop="id" :label="userStore.t('common.id')" width="80" />
+        <el-table-column prop="username" :label="userStore.t('admin.username')" />
+        <el-table-column prop="realName" :label="userStore.t('admin.realName')" />
+        <el-table-column prop="role" :label="userStore.t('common.role')" width="100">
           <template #default="{ row }">
             <el-tag :type="row.role === 'ADMIN' ? 'danger' : row.role === 'TEACHER' ? 'warning' : 'success'">
-              {{ row.role === 'ADMIN' ? '管理员' : row.role === 'TEACHER' ? '教师' : '学生' }}
+              {{ getRoleText(row.role) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="email" label="邮箱" />
-        <el-table-column prop="phone" label="电话" />
-        <el-table-column prop="status" label="状态" width="80">
+        <el-table-column prop="email" :label="userStore.t('admin.email')" />
+        <el-table-column prop="phone" :label="userStore.t('admin.phone')" />
+        <el-table-column prop="status" :label="userStore.t('common.status')" width="80">
           <template #default="{ row }">
             <el-tag :type="row.status === 1 ? 'success' : 'danger'">
-              {{ row.status === 1 ? '正常' : '禁用' }}
+              {{ row.status === 1 ? userStore.t('admin.normal') : userStore.t('admin.disabled') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="180" />
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column prop="createTime" :label="userStore.t('admin.createTime')" width="180" />
+        <el-table-column :label="userStore.t('common.operation')" width="200" fixed="right">
           <template #default="{ row }">
-            <el-button type="danger" link @click="handleEdit(row)">编辑</el-button>
+            <el-button type="danger" link @click="handleEdit(row)">{{ userStore.t('common.edit') }}</el-button>
             <el-button type="danger" link @click="handleStatus(row)">
-              {{ row.status === 1 ? '禁用' : '启用' }}
+              {{ row.status === 1 ? userStore.t('admin.disable') : userStore.t('admin.enable') }}
             </el-button>
-            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+            <el-button type="danger" link @click="handleDelete(row)">{{ userStore.t('common.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -61,34 +61,34 @@
       />
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑用户' : '新增用户'" width="500px">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? userStore.t('admin.editUser') : userStore.t('admin.createUser')" width="500px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="用户名" prop="username">
+        <el-form-item :label="userStore.t('admin.username')" prop="username">
           <el-input v-model="form.username" :disabled="isEdit" />
         </el-form-item>
-        <el-form-item label="姓名" prop="realName">
+        <el-form-item :label="userStore.t('admin.realName')" prop="realName">
           <el-input v-model="form.realName" />
         </el-form-item>
-        <el-form-item label="角色" prop="role">
+        <el-form-item :label="userStore.t('common.role')" prop="role">
           <el-select v-model="form.role" style="width: 100%">
-            <el-option label="学生" value="STUDENT" />
-            <el-option label="教师" value="TEACHER" />
-            <el-option label="管理员" value="ADMIN" />
+            <el-option :label="userStore.t('common.student')" value="STUDENT" />
+            <el-option :label="userStore.t('common.teacher')" value="TEACHER" />
+            <el-option :label="userStore.t('common.admin')" value="ADMIN" />
           </el-select>
         </el-form-item>
-        <el-form-item label="密码" :prop="isEdit ? '' : 'password'">
-          <el-input v-model="form.password" type="password" show-password :placeholder="isEdit ? '留空则不修改' : ''" />
+        <el-form-item :label="userStore.t('admin.password')" :prop="isEdit ? '' : 'password'">
+          <el-input v-model="form.password" type="password" show-password :placeholder="isEdit ? userStore.t('admin.leaveBlankNoChange') : ''" />
         </el-form-item>
-        <el-form-item label="邮箱" prop="email">
+        <el-form-item :label="userStore.t('admin.email')" prop="email">
           <el-input v-model="form.email" />
         </el-form-item>
-        <el-form-item label="电话" prop="phone">
+        <el-form-item :label="userStore.t('admin.phone')" prop="phone">
           <el-input v-model="form.phone" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="danger" @click="handleSubmit">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ userStore.t('common.cancel') }}</el-button>
+        <el-button type="danger" @click="handleSubmit">{{ userStore.t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -99,6 +99,9 @@ import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { userApi } from '../../utils/api'
+import { useUserStore } from '../../store'
+
+const userStore = useUserStore()
 
 const keyword = ref('')
 const role = ref('')
@@ -133,11 +136,20 @@ const handleRouteChange = () => {
   }
 }
 
+const getRoleText = (role) => {
+  const roleMap = {
+    ADMIN: userStore.t('common.admin'),
+    TEACHER: userStore.t('common.teacher'),
+    STUDENT: userStore.t('common.student')
+  }
+  return roleMap[role] || role
+}
+
 const rules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  realName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-  role: [{ required: true, message: '请选择角色', trigger: 'change' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+  username: [{ required: true, message: userStore.t('admin.enterUsername'), trigger: 'blur' }],
+  realName: [{ required: true, message: userStore.t('admin.enterRealName'), trigger: 'blur' }],
+  role: [{ required: true, message: userStore.t('common.selectRole'), trigger: 'change' }],
+  password: [{ required: true, message: userStore.t('admin.enterPassword'), trigger: 'blur' }]
 }
 
 const loadData = async () => {
@@ -174,40 +186,40 @@ const handleSubmit = async () => {
   try {
     const res = isEdit.value ? await userApi.update(form) : await userApi.create(form)
     if (res.code === 200) {
-      ElMessage.success('操作成功')
+      ElMessage.success(userStore.t('common.success'))
       dialogVisible.value = false
       loadData()
     } else {
-      ElMessage.error(res.message)
+      ElMessage.error(res.message || userStore.t('common.failed'))
     }
   } catch (e) {
-    ElMessage.error(e.message)
+    ElMessage.error(e.message || userStore.t('common.failed'))
   }
 }
 
 const handleStatus = async (row) => {
-  await ElMessageBox.confirm(`确定要${row.status === 1 ? '禁用' : '启用'}该用户吗？`)
+  await ElMessageBox.confirm(row.status === 1 ? userStore.t('admin.confirmDisable') : userStore.t('admin.confirmEnable'))
   try {
     const res = await userApi.changeStatus(row.id, row.status === 1 ? 0 : 1)
     if (res.code === 200) {
-      ElMessage.success('操作成功')
+      ElMessage.success(userStore.t('common.success'))
       loadData()
     }
   } catch (e) {
-    ElMessage.error(e.message)
+    ElMessage.error(e.message || userStore.t('common.failed'))
   }
 }
 
 const handleDelete = async (row) => {
-  await ElMessageBox.confirm('确定要删除该用户吗？')
+  await ElMessageBox.confirm(userStore.t('admin.confirmDeleteUser'))
   try {
     const res = await userApi.delete(row.id)
     if (res.code === 200) {
-      ElMessage.success('删除成功')
+      ElMessage.success(userStore.t('common.success'))
       loadData()
     }
   } catch (e) {
-    ElMessage.error(e.message)
+    ElMessage.error(e.message || userStore.t('common.failed'))
   }
 }
 

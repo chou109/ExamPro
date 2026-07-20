@@ -7,32 +7,35 @@
         </div>
         <h1>ExamPro</h1>
       </div>
-      <p class="slogan">专业的在线考试系统，让学习更高效</p>
+      <p class="slogan">{{ userStore.t('login.slogan') }}</p>
       <div class="features">
         <div class="feature">
           <el-icon><Check /></el-icon>
-          <span>丰富的题型支持</span>
+          <span>{{ userStore.t('login.feature1') }}</span>
         </div>
         <div class="feature">
           <el-icon><Check /></el-icon>
-          <span>智能防作弊机制</span>
+          <span>{{ userStore.t('login.feature2') }}</span>
         </div>
         <div class="feature">
           <el-icon><Check /></el-icon>
-          <span>自动评分系统</span>
+          <span>{{ userStore.t('login.feature3') }}</span>
         </div>
         <div class="feature">
           <el-icon><Check /></el-icon>
-          <span>全面的数据分析</span>
+          <span>{{ userStore.t('login.feature4') }}</span>
         </div>
       </div>
     </div>
     <div class="login-right">
       <div class="login-card">
+        <div class="lang-switch" @click="toggleLanguage">
+          {{ userStore.language === 'zh' ? 'EN' : '中文' }}
+        </div>
         <!-- 学生/教师登录 -->
         <div v-if="!showAdminLogin && !showRegister">
-          <h2>欢迎回来</h2>
-          <p class="subtitle">请选择登录身份</p>
+          <h2>{{ userStore.t('login.welcome') }}</h2>
+          <p class="subtitle">{{ userStore.t('login.selectRole') }}</p>
           
           <div class="login-tabs">
             <div 
@@ -41,7 +44,7 @@
               @click="loginType = 'student'"
             >
               <el-icon><User /></el-icon>
-              <span>学生登录</span>
+              <span>{{ userStore.t('login.student') }}{{ userStore.t('common.login') }}</span>
             </div>
             <div 
               class="login-tab" 
@@ -49,7 +52,7 @@
               @click="loginType = 'teacher'"
             >
               <el-icon><UserFilled /></el-icon>
-              <span>教师登录</span>
+              <span>{{ userStore.t('login.teacher') }}{{ userStore.t('common.login') }}</span>
             </div>
           </div>
           
@@ -57,7 +60,7 @@
             <el-form-item prop="username">
               <el-input
                 v-model="form.username"
-                :placeholder="loginType === 'student' ? '请输入学生用户名' : '请输入教师用户名'"
+                :placeholder="loginType === 'student' ? userStore.t('login.studentUsername') : userStore.t('login.teacherUsername')"
                 size="large"
                 :prefix-icon="User"
               />
@@ -66,7 +69,7 @@
               <el-input
                 v-model="form.password"
                 type="password"
-                placeholder="请输入密码"
+                :placeholder="userStore.t('login.passwordPlaceholder')"
                 size="large"
                 :prefix-icon="Lock"
                 show-password
@@ -74,27 +77,27 @@
             </el-form-item>
             <el-form-item>
               <el-button type="danger" size="large" :loading="loading" native-type="submit" class="login-btn">
-                {{ loginType === 'student' ? '学生登录' : '教师登录' }}
+                {{ loginType === 'student' ? userStore.t('login.student') : userStore.t('login.teacher') }}{{ userStore.t('common.login') }}
               </el-button>
             </el-form-item>
           </el-form>
           
           <div class="action-buttons">
-            <el-button type="danger" plain @click="showAdminLogin = true">管理员登录</el-button>
-            <el-button type="primary" plain @click="openRegister">去注册</el-button>
+            <el-button type="danger" plain @click="showAdminLogin = true">{{ userStore.t('login.admin') }}{{ userStore.t('common.login') }}</el-button>
+            <el-button type="primary" plain @click="openRegister">{{ userStore.t('login.goRegister') }}</el-button>
           </div>
         </div>
         
         <!-- 管理员登录 -->
         <div v-else-if="showAdminLogin && !showRegister">
-          <h2>管理员登录</h2>
-          <p class="subtitle">请输入管理员账号</p>
+          <h2>{{ userStore.t('login.admin') }}{{ userStore.t('common.login') }}</h2>
+          <p class="subtitle">{{ userStore.t('login.adminAccount') }}</p>
           
           <el-form ref="formRef" :model="form" :rules="rules" @submit.prevent="handleLogin">
             <el-form-item prop="username">
               <el-input
                 v-model="form.username"
-                placeholder="请输入管理员用户名"
+                :placeholder="userStore.t('login.adminUsername')"
                 size="large"
                 :prefix-icon="User"
               />
@@ -103,7 +106,7 @@
               <el-input
                 v-model="form.password"
                 type="password"
-                placeholder="请输入密码"
+                :placeholder="userStore.t('login.passwordPlaceholder')"
                 size="large"
                 :prefix-icon="Lock"
                 show-password
@@ -111,20 +114,20 @@
             </el-form-item>
             <el-form-item>
               <el-button type="danger" size="large" :loading="loading" native-type="submit" class="login-btn">
-                管理员登录
+                {{ userStore.t('login.admin') }}{{ userStore.t('common.login') }}
               </el-button>
             </el-form-item>
           </el-form>
           
           <div class="action-buttons single">
-            <el-button type="danger" plain @click="showAdminLogin = false">回到学生/教师端</el-button>
+            <el-button type="danger" plain @click="showAdminLogin = false">{{ userStore.t('login.backToStudentTeacher') }}</el-button>
           </div>
         </div>
         
         <!-- 注册界面 -->
         <div v-else-if="showRegister">
-          <h2>创建账号</h2>
-          <p class="subtitle">请选择身份并填写注册信息</p>
+          <h2>{{ userStore.t('login.createAccount') }}</h2>
+          <p class="subtitle">{{ userStore.t('login.registerInfo') }}</p>
           
           <div class="login-tabs">
             <div 
@@ -133,7 +136,7 @@
               @click="registerForm.role = 'STUDENT'"
             >
               <el-icon><User /></el-icon>
-              <span>学生</span>
+              <span>{{ userStore.t('login.student') }}</span>
             </div>
             <div 
               class="login-tab" 
@@ -141,7 +144,7 @@
               @click="registerForm.role = 'TEACHER'"
             >
               <el-icon><UserFilled /></el-icon>
-              <span>教师</span>
+              <span>{{ userStore.t('login.teacher') }}</span>
             </div>
           </div>
           
@@ -149,7 +152,7 @@
             <el-form-item prop="username">
               <el-input
                 v-model="registerForm.username"
-                placeholder="请输入用户名"
+                :placeholder="userStore.t('login.usernamePlaceholder')"
                 size="large"
                 :prefix-icon="User"
               />
@@ -158,7 +161,7 @@
               <el-input
                 v-model="registerForm.password"
                 type="password"
-                placeholder="请输入密码"
+                :placeholder="userStore.t('login.passwordPlaceholder')"
                 size="large"
                 :prefix-icon="Lock"
                 show-password
@@ -168,7 +171,7 @@
               <el-input
                 v-model="registerForm.confirmPassword"
                 type="password"
-                placeholder="请确认密码"
+                :placeholder="userStore.t('login.confirmPassword')"
                 size="large"
                 :prefix-icon="Lock"
                 show-password
@@ -177,7 +180,7 @@
             <el-form-item prop="departmentId">
               <el-select
                 v-model="registerForm.departmentId"
-                placeholder="请选择学院"
+                :placeholder="userStore.t('login.selectDepartment')"
                 size="large"
               >
                 <el-option
@@ -190,21 +193,14 @@
             </el-form-item>
             <el-form-item>
               <el-button type="danger" size="large" :loading="registerLoading" native-type="submit" class="login-btn">
-                注册
+                {{ userStore.t('common.register') }}
               </el-button>
             </el-form-item>
           </el-form>
           
           <div class="action-buttons single">
-            <el-button type="primary" plain @click="backToLogin">去登录</el-button>
+            <el-button type="primary" plain @click="backToLogin">{{ userStore.t('login.goLogin') }}</el-button>
           </div>
-        </div>
-        
-        <div class="demo-accounts">
-          <p>演示账号：</p>
-          <el-tag v-if="!showAdminLogin && !showRegister && loginType === 'student'">学生: s / stu</el-tag>
-          <el-tag v-if="!showAdminLogin && !showRegister && loginType === 'teacher'">教师: t / tchr</el-tag>
-          <el-tag v-if="showAdminLogin && !showRegister">管理员: a / admin</el-tag>
         </div>
       </div>
     </div>
@@ -244,32 +240,38 @@ const showAdminLogin = ref(false)
 const showRegister = ref(false)
 const departments = ref([])
 
+const toggleLanguage = () => {
+  const newLang = userStore.language === 'zh' ? 'en' : 'zh'
+  userStore.changeLanguage(newLang)
+  location.reload()
+}
+
 const validateConfirmPassword = (rule, value, callback) => {
   if (value === '') {
-    callback(new Error('请再次输入密码'))
+    callback(new Error(userStore.t('login.confirmPassword')))
   } else if (value !== registerForm.password) {
-    callback(new Error('两次输入密码不一致'))
+    callback(new Error(userStore.t('login.passwordNotMatch')))
   } else {
     callback()
   }
 }
 
 const rules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+  username: [{ required: true, message: userStore.t('login.usernamePlaceholder'), trigger: 'blur' }],
+  password: [{ required: true, message: userStore.t('login.passwordPlaceholder'), trigger: 'blur' }]
 }
 
 const registerRules = {
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '用户名长度应为3-20个字符', trigger: 'blur' }
+    { required: true, message: userStore.t('login.usernamePlaceholder'), trigger: 'blur' },
+    { min: 3, max: 20, message: userStore.t('login.usernameLength'), trigger: 'blur' }
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度应为6-20个字符', trigger: 'blur' }
+    { required: true, message: userStore.t('login.passwordPlaceholder'), trigger: 'blur' },
+    { min: 6, max: 20, message: userStore.t('login.passwordLength'), trigger: 'blur' }
   ],
   confirmPassword: [
-    { required: true, message: '请确认密码', trigger: 'blur' },
+    { required: true, message: userStore.t('login.confirmPassword'), trigger: 'blur' },
     { validator: validateConfirmPassword, trigger: 'blur' }
   ]
 }
@@ -284,26 +286,24 @@ const handleLogin = async () => {
     
     // 验证登录类型是否匹配
     if (showAdminLogin.value) {
-      // 管理员登录界面只允许 ADMIN 角色登录
       if (result.role !== 'ADMIN') {
-        throw new Error('不存在此管理员账号')
+        throw new Error(userStore.t('login.adminNotFound'))
       }
     } else {
-      // 学生/教师登录界面只允许对应角色登录
       const expectedRole = loginType.value === 'student' ? 'STUDENT' : 'TEACHER'
       if (result.role !== expectedRole) {
-        throw new Error(loginType.value === 'student' ? '不存在此学生账号' : '不存在此教师账号')
+        throw new Error(loginType.value === 'student' ? userStore.t('login.studentNotFound') : userStore.t('login.teacherNotFound'))
       }
     }
     
     ElMessage({
-      message: '登录成功',
+      message: userStore.t('common.loginSuccess'),
       type: 'success',
       customClass: 'custom-success-message'
     })
     router.push('/dashboard')
   } catch (e) {
-    ElMessage.error(e.message || '登录失败')
+    ElMessage.error(e.message || userStore.t('common.failed'))
   } finally {
     loading.value = false
   }
@@ -334,15 +334,14 @@ const handleRegister = async () => {
     })
     
     ElMessage({
-      message: '注册成功，请登录',
+      message: userStore.t('common.registerSuccess'),
       type: 'success',
       customClass: 'custom-success-message'
     })
     
-    // 注册成功后返回登录界面
     backToLogin()
   } catch (e) {
-    ElMessage.error(e.message || '注册失败')
+    ElMessage.error(e.message || userStore.t('common.failed'))
   } finally {
     registerLoading.value = false
   }
@@ -482,6 +481,27 @@ const openRegister = () => {
   width: 100%;
   max-width: 360px;
   padding: 40px;
+  position: relative;
+}
+
+.lang-switch {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 8px 16px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-size: 13px;
+  color: #FF6A6A;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lang-switch:hover {
+  background: #fff5f5;
+  transform: scale(1.05);
 }
 
 .login-card h2 {
@@ -501,23 +521,6 @@ const openRegister = () => {
   width: 100%;
   height: 48px;
   font-size: 16px;
-}
-
-.demo-accounts {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #e2e8f0;
-}
-
-.demo-accounts p {
-  color: #64748b;
-  font-size: 13px;
-  margin-bottom: 12px;
-}
-
-.demo-accounts .el-tag {
-  margin-right: 8px;
-  margin-bottom: 8px;
 }
 
 .login-tabs {
@@ -651,11 +654,6 @@ const openRegister = () => {
   
   .subtitle {
     margin-bottom: 24px;
-  }
-  
-  .demo-accounts {
-    margin-top: 16px;
-    padding-top: 16px;
   }
 }
 

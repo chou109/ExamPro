@@ -1,18 +1,15 @@
 <template>
   <view class="class-chat">
+    <CustomNavBar :title="userStore.t('common.classChat')" :showBack="true" />
+    
     <view class="chat-header">
-      <view class="header-left">
-        <view class="back-btn" @click="goBack">
-          <uni-icons type="back" size="20" color="#333" />
-        </view>
-        <view class="header-info">
-          <text class="class-name">{{ className }}</text>
-          <text class="member-count">{{ memberCount }} 名成员</text>
-        </view>
+      <view class="header-info">
+        <text class="class-name">{{ className }}</text>
+        <text class="member-count">{{ memberCount }} {{ userStore.t('common.members') }}</text>
       </view>
       <view class="header-right">
         <view class="member-btn" @click="showMembers = true">
-          <uni-icons type="person" size="20" color="#666" />
+          <text class="member-icon">👥</text>
         </view>
       </view>
     </view>
@@ -52,7 +49,7 @@
                 </view>
                 <view class="info-item">
                   <text class="info-icon">{{ iconTimer }}</text>
-                  <text>{{ getNoticeDuration(msg.content) }}分钟</text>
+                  <text>{{ getNoticeDuration(msg.content) }}{{ userStore.t('common.minutes') }}</text>
                 </view>
               </view>
               <button class="notice-btn" @click="goToExamDetail(msg)">
@@ -69,14 +66,14 @@
       <view class="chat-input">
         <input
           v-model="inputMessage"
-          placeholder="输入消息..."
+          :placeholder="userStore.t('common.enterMessage')"
           :disabled="isMuted"
           @confirm="sendMessage"
         />
-        <button class="send-btn" @click="sendMessage" :disabled="!inputMessage.trim() || isMuted">发送</button>
+        <button class="send-btn" @click="sendMessage" :disabled="!inputMessage.trim() || isMuted">{{ userStore.t('common.send') }}</button>
       </view>
       <view v-if="isMuted" class="muted-tip">
-        <text>您已被禁言</text>
+        <text>{{ userStore.t('common.muted') }}</text>
       </view>
     </view>
 
@@ -84,7 +81,7 @@
     <view v-if="showMembers" class="modal" @click="showMembers = false">
       <view class="modal-content" @click.stop>
         <view class="modal-header">
-          <text class="modal-title">班级成员</text>
+          <text class="modal-title">{{ userStore.t('common.classMembers') }}</text>
           <view class="modal-close" @click="showMembers = false">
             <uni-icons type="close" size="24" color="#333" />
           </view>
@@ -92,13 +89,13 @@
         <scroll-view class="members-list" scroll-y>
           <view class="member-item" v-for="member in members" :key="member.userId">
             <view class="member-info">
-              <text class="member-name">{{ member.realName }}</text>
+              <text class="member-name">{{ member.realName || member.username || userStore.t('common.unknownUser') }}</text>
               <view class="member-role" :class="'role-' + member.role.toLowerCase()">
                 <text>{{ getRoleText(member.role) }}</text>
               </view>
             </view>
             <view v-if="member.muteUntil" class="mute-status">
-              <text>已禁言</text>
+              <text>{{ userStore.t('common.muted') }}</text>
             </view>
           </view>
         </scroll-view>
@@ -108,10 +105,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { ref, onMounted, nextTick, watch } from 'vue'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import { useUserStore } from '../../store/index.js'
 import { classApi } from '../../utils/api.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
 
 const userStore = useUserStore()
 const classId = ref('')
@@ -132,9 +130,11 @@ const iconTimer = '⏱'
 
 const getRoleText = (role) => {
   return {
-    CREATOR: '创建者',
-    TEACHER: '教师',
-    STUDENT: '学生'
+    CREATOR: userStore.t('common.creator'),
+    OWNER: userStore.t('common.creator'),
+    TEACHER: userStore.t('common.teacher'),
+    STUDENT: userStore.t('common.student'),
+    MEMBER: userStore.t('common.student')
   }[role] || role
 }
 
@@ -144,13 +144,25 @@ const isSelfMessage = (senderId) => {
 }
 
 const getSenderName = (senderId) => {
+  const selfId = userStore.userInfo?.userId || userStore.userInfo?.id
+  if (String(senderId) === String(selfId)) {
+    const realName = userStore.userInfo?.realName || userStore.userInfo?.real_name
+    return realName && realName.trim() !== '' ? realName : userStore.userInfo?.username || userStore.t('common.unknownUser')
+  }
   const member = members.value.find(m => String(m.userId) === String(senderId))
-  return member?.realName || '未知用户'
+  if (!member) {
+    return userStore.t('common.unknownUser')
+  }
+  const name = member.realName && member.realName.trim() !== '' ? member.realName : member.username
+  return name && name.trim() !== '' ? name : userStore.t('common.unknownUser')
 }
 
 const getSenderAvatar = (senderId) => {
   const member = members.value.find(m => String(m.userId) === String(senderId))
-  return member?.avatar || '/static/default-avatar.png'
+  const avatar = member?.avatar
+  if (!avatar) return '/static/default-avatar.png'
+  if (avatar.startsWith('http')) return avatar
+  return 'http://192.168.1.92:8081' + avatar
 }
 
 const isExamNotice = (msg) => {
@@ -168,14 +180,14 @@ const sendMessage = async () => {
       loadMessages()
     } else {
       uni.showToast({
-        title: res.message || '发送失败',
+        title: res.message || userStore.t('common.sendFailed'),
         icon: 'none'
       })
     }
   } catch (e) {
     console.error(e)
     uni.showToast({
-      title: '网络错误',
+      title: userStore.t('common.networkError'),
       icon: 'none'
     })
   }
@@ -184,13 +196,20 @@ const sendMessage = async () => {
 const parseExamNotice = (content) => {
   if (!content?.startsWith('EXAM_NOTICE|')) return null
   const parts = content.split('|')
+  let examId = null
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (/^\d+$/.test(parts[i])) {
+      examId = parts[i]
+      break
+    }
+  }
   return {
     noticeType: parts[1],
     title: parts[2],
     startTime: parts[3],
     endTime: parts[4],
     duration: parts[5],
-    examId: parts[6]
+    examId: examId
   }
 }
 
@@ -201,12 +220,12 @@ const getNoticeIcon = (content) => {
 
 const getNoticeBadge = (content) => {
   const notice = parseExamNotice(content)
-  return notice?.noticeType === 'START' ? '进行中' : '待开始'
+  return notice?.noticeType === 'START' ? userStore.t('common.ongoing') : userStore.t('common.pending')
 }
 
 const getNoticeBtnText = (content) => {
   const notice = parseExamNotice(content)
-  return notice?.noticeType === 'START' ? '进入考试' : '查看考试'
+  return notice?.noticeType === 'START' ? userStore.t('student.enterExam') : userStore.t('student.viewExam')
 }
 
 const getNoticeTitle = (content) => {
@@ -234,23 +253,39 @@ const formatTime = (time) => {
   const date = new Date(time)
   const now = new Date()
   const diff = now - date
-  if (diff < 60000) return '刚刚'
-  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
-  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
-  return date.toLocaleDateString('zh-CN')
-}
-
-const goBack = () => {
-  uni.navigateBack()
+  if (diff < 60000) return userStore.t('common.justNow')
+  if (diff < 3600000) return Math.floor(diff / 60000) + userStore.t('common.minutesAgo')
+  if (diff < 86400000) return Math.floor(diff / 3600000) + userStore.t('common.hoursAgo')
+  if (userStore.language === 'zh') {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
 }
 
 const goToExamDetail = (msg) => {
   const examNotice = parseExamNotice(msg.content)
-  if (examNotice && examNotice.examId) {
-    uni.navigateTo({
-      url: `/pages/student/exam-take?id=${examNotice.examId}`
+  if (!examNotice) {
+    uni.showToast({
+      title: userStore.t('common.invalidExamId'),
+      icon: 'none'
     })
+    return
   }
+  const examId = examNotice.examId
+  if (!examId || !/^\d+$/.test(String(examId))) {
+    uni.showToast({
+      title: userStore.t('common.invalidExamId'),
+      icon: 'none'
+    })
+    return
+  }
+  uni.navigateTo({
+    url: `/pages/student/exam-take?id=${examId}`
+  })
 }
 
 const loadMessages = async () => {
@@ -258,7 +293,7 @@ const loadMessages = async () => {
     const res = await classApi.getMessages(classId.value, 1, 50)
     if (res.code === 200) {
       const records = res.data.records || res.data
-      messages.value = records.reverse()
+      messages.value = records
       nextTick(() => {
         scrollTop.value = 999999
       })
@@ -307,6 +342,10 @@ onLoad((options) => {
   loadMessages()
   loadMembers()
 })
+
+onShow(() => {
+  loadMembers()
+})
 </script>
 
 <style scoped>
@@ -316,6 +355,7 @@ onLoad((options) => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  padding-top: 140rpx;
 }
 
 .chat-header {
@@ -325,16 +365,6 @@ onLoad((options) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-}
-
-.back-btn {
-  padding: 8rpx;
 }
 
 .header-info {
@@ -355,6 +385,11 @@ onLoad((options) => {
 
 .member-btn {
   padding: 8rpx;
+}
+
+.member-icon {
+  font-size: 28rpx;
+  color: #666;
 }
 
 .chat-body {

@@ -1,30 +1,30 @@
 <template>
   <div class="history">
     <div class="page-header">
-      <h2>考试历史</h2>
-      <p>查看已完成考试的成绩和答卷详情</p>
+      <h2>{{ userStore.t('common.history') }}</h2>
+      <p>{{ userStore.t('student.viewExamHistory') }}</p>
     </div>
 
     <!-- 大屏幕表格视图 -->
     <div class="desktop-view">
       <div class="card">
         <el-table :data="tableData" v-loading="loading" stripe>
-          <el-table-column prop="examTitle" label="考试名称" min-width="200" />
-          <el-table-column prop="score" label="得分" width="120">
+          <el-table-column prop="examTitle" :label="userStore.t('common.title')" min-width="200" />
+          <el-table-column prop="score" :label="userStore.t('common.score')" width="120">
             <template #default="{ row }">
-              <span :class="{ pass: row.score >= 60, fail: row.score < 60 }">{{ row.score }}</span>
+              <span :class="{ pass: row.score >= 60, fail: row.score < 60 }">{{ row.score }}{{ userStore.t('dashboard.scoreUnit') }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="submitTime" label="交卷时间" width="180" />
-          <el-table-column label="操作" width="120">
+          <el-table-column prop="submitTime" :label="userStore.t('student.submitTime')" width="180" />
+          <el-table-column :label="userStore.t('common.operation')" width="120">
             <template #default="{ row }">
-              <el-button type="danger" link @click="handleDetail(row)">查看详情</el-button>
+              <el-button type="danger" link @click="handleDetail(row)">{{ userStore.t('common.viewDetail') }}</el-button>
             </template>
           </el-table-column>
         </el-table>
 
         <div class="no-more" v-if="!hasMore && tableData.length > 0">
-          没有更多数据了
+          {{ userStore.t('common.noMore') }}
         </div>
 
         <!-- 大屏幕懒加载触发器 -->
@@ -39,16 +39,16 @@
           <div class="item-title">{{ row.examTitle }}</div>
           <div class="item-info">
             <div class="info-row">
-              <span class="info-label">得分</span>
-              <span class="info-value" :class="{ pass: row.score >= 60, fail: row.score < 60 }">{{ row.score }}分</span>
+              <span class="info-label">{{ userStore.t('common.score') }}</span>
+              <span class="info-value" :class="{ pass: row.score >= 60, fail: row.score < 60 }">{{ row.score }}{{ userStore.t('dashboard.scoreUnit') }}</span>
             </div>
             <div class="info-row">
-              <span class="info-label">交卷时间</span>
+              <span class="info-label">{{ userStore.t('student.submitTime') }}</span>
               <span class="info-value">{{ row.submitTime }}</span>
             </div>
           </div>
           <div class="item-action">
-            <span class="action-link" @click="handleDetail(row)">查看详情</span>
+            <span class="action-link" @click="handleDetail(row)">{{ userStore.t('common.viewDetail') }}</span>
           </div>
         </div>
 
@@ -56,10 +56,10 @@
         <div ref="loadTrigger" class="load-trigger"></div>
       </div>
 
-      <el-empty v-if="!loading && tableData.length === 0" description="暂无考试记录" />
+      <el-empty v-if="!loading && tableData.length === 0" :description="userStore.t('student.noHistory')" />
 
       <div class="mobile-no-more" v-if="!hasMore && tableData.length > 0">
-        没有更多数据了
+        {{ userStore.t('common.noMore') }}
       </div>
     </div>
   </div>
@@ -69,8 +69,10 @@
 import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { examRecordApi } from '../../utils/api'
+import { useUserStore } from '../../store'
 
 const router = useRouter()
+const userStore = useUserStore()
 const loading = ref(false)
 const tableData = ref([])
 const current = ref(1)
@@ -89,7 +91,7 @@ const getPageSize = () => {
   return 10
 }
 
-const typeText = (type) => ({ SINGLE_CHOICE: '单选题', MULTIPLE_CHOICE: '多选题', JUDGMENT: '判断题', FILL_BLANK: '填空题', ESSAY: '简答题', PROGRAMMING: '编程题' }[type] || type)
+const typeText = (type) => ({ SINGLE_CHOICE: userStore.t('common.singleChoice'), MULTIPLE_CHOICE: userStore.t('common.multipleChoice'), JUDGMENT: userStore.t('common.trueFalse'), FILL_BLANK: userStore.t('common.fillBlank'), ESSAY: userStore.t('common.shortAnswer'), PROGRAMMING: userStore.t('student.programming') }[type] || type)
 
 const loadData = async (append = false) => {
   if (loading.value || !hasMore.value) return

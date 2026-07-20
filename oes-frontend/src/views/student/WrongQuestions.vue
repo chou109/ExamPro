@@ -1,39 +1,39 @@
 <template>
   <div class="wrong-questions">
     <div class="page-header">
-      <h2>错题本</h2>
-      <p>自动收录所有答错的题目，支持反复练习</p>
+      <h2>{{ userStore.t('common.wrongQuestions') }}</h2>
+      <p>{{ userStore.t('student.wrongBookDesc') }}</p>
     </div>
 
     <div class="card">
       <div class="toolbar">
         <div class="toolbar-left">
-          <el-select v-model="params.subjectId" placeholder="选择科目" class="subject-select" clearable @change="loadData">
+          <el-select v-model="params.subjectId" :placeholder="userStore.t('common.selectSubject')" class="subject-select" clearable @change="loadData">
             <el-option v-for="s in subjects" :key="s.id" :label="s.name" :value="s.id" />
           </el-select>
-          <el-select v-model="params.mastered" placeholder="选择状态" class="status-select" clearable @change="loadData">
-            <el-option :value="0" label="未学会" />
-            <el-option :value="1" label="已学会" />
+          <el-select v-model="params.mastered" :placeholder="userStore.t('common.selectStatus')" class="status-select" clearable @change="loadData">
+            <el-option :value="0" :label="userStore.t('student.notMastered')" />
+            <el-option :value="1" :label="userStore.t('student.mastered')" />
           </el-select>
         </div>
-        <el-button type="danger" @click="loadData">搜索</el-button>
+        <el-button type="danger" @click="loadData">{{ userStore.t('common.search') }}</el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" stripe>
-        <el-table-column prop="content" label="题目内容" show-overflow-tooltip />
-        <el-table-column prop="type" label="类型" width="100">
+        <el-table-column prop="content" :label="userStore.t('student.questionContent')" show-overflow-tooltip />
+        <el-table-column prop="type" :label="userStore.t('common.type')" width="100">
           <template #default="{ row }">
-            <el-tag size="small">{{ row.correctAnswer?.includes(',') ? '多选题' : typeText(row.type) }}</el-tag>
+            <el-tag size="small">{{ row.correctAnswer?.includes(',') ? userStore.t('common.multiple') : typeText(row.type) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="mastered" label="状态" width="100">
+        <el-table-column prop="mastered" :label="userStore.t('common.status')" width="100">
           <template #default="{ row }">
             <el-tag :type="row.mastered === 1 ? 'success' : 'warning'" size="small">
-              {{ row.mastered === 1 ? '已学会' : '未学会' }}
+              {{ row.mastered === 1 ? userStore.t('student.mastered') : userStore.t('student.notMastered') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="passRate" label="通过百分比" width="120">
+        <el-table-column prop="passRate" :label="userStore.t('student.passRate')" width="120">
           <template #default="{ row }">
             <div class="progress-bar">
               <div class="progress-fill" :style="{ width: getPassRate(row) + '%' }"></div>
@@ -41,17 +41,17 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="practicedCount" label="练习次数" width="100" />
-        <el-table-column label="操作" width="280">
+        <el-table-column prop="practicedCount" :label="userStore.t('student.practiceCount')" width="100" />
+        <el-table-column :label="userStore.t('common.operation')" width="280">
           <template #default="{ row }">
-            <el-button type="primary" link @click="handleViewAnswer(row)">查看答案</el-button>
-            <el-button type="danger" link @click="handlePractice(row)">练习</el-button>
+            <el-button type="primary" link @click="handleViewAnswer(row)">{{ userStore.t('common.viewAnswer') }}</el-button>
+            <el-button type="danger" link @click="handlePractice(row)">{{ userStore.t('common.practice') }}</el-button>
             <el-button 
               :type="row.mastered === 1 ? 'warning' : 'success'" 
               link 
               @click="handleToggleMastered(row)"
             >
-              {{ row.mastered === 1 ? '标记未学会' : '标记已学会' }}
+              {{ row.mastered === 1 ? userStore.t('student.markNotMastered') : userStore.t('student.markMastered') }}
             </el-button>
           </template>
         </el-table-column>
@@ -67,30 +67,30 @@
       />
     </div>
 
-    <el-dialog v-model="answerVisible" title="查看答案" width="500px">
+    <el-dialog v-model="answerVisible" :title="userStore.t('common.viewAnswer')" width="500px">
       <div v-if="viewingAnswer" class="answer-content">
         <div class="question-type">{{ typeText(viewingAnswer.type) }}</div>
         <div class="question-text">{{ viewingAnswer.content }}</div>
         <div class="answer-item">
-          <span class="label">错误答案：</span>
-          <span class="wrong-text">{{ viewingAnswer.wrongAnswer || '未记录' }}</span>
+          <span class="label">{{ userStore.t('student.wrongAnswer') }}：</span>
+          <span class="wrong-text">{{ viewingAnswer.wrongAnswer || userStore.t('student.notRecorded') }}</span>
         </div>
         <div class="answer-item">
-          <span class="label">正确答案：</span>
+          <span class="label">{{ userStore.t('common.correctAnswer') }}：</span>
           <span class="correct-text">{{ viewingAnswer.correctAnswer }}</span>
         </div>
         <div class="analysis" v-if="viewingAnswer.analysis">
-          <strong>解析：</strong>{{ viewingAnswer.analysis }}
+          <strong>{{ userStore.t('student.analysis') }}：</strong>{{ viewingAnswer.analysis }}
         </div>
       </div>
       <template #footer>
-        <el-button @click="answerVisible = false">关闭</el-button>
+        <el-button @click="answerVisible = false">{{ userStore.t('common.close') }}</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="practiceVisible" title="错题练习" width="600px">
+    <el-dialog v-model="practiceVisible" :title="userStore.t('student.wrongPractice')" width="600px">
       <div v-if="currentQuestion" class="practice-content">
-        <div class="question-type">{{ currentQuestion.correctAnswer?.includes(',') ? '多选题' : typeText(currentQuestion.type) }}</div>
+        <div class="question-type">{{ currentQuestion.correctAnswer?.includes(',') ? userStore.t('common.multiple') : typeText(currentQuestion.type) }}</div>
         <div class="question-text">{{ currentQuestion.content }}</div>
 
         <div class="question-options" v-if="['SINGLE_CHOICE', 'MULTIPLE_CHOICE', 'JUDGMENT'].includes(currentQuestion.type)">
@@ -105,32 +105,32 @@
             </el-checkbox>
           </el-checkbox-group>
           <el-radio-group v-else-if="currentQuestion.type === 'JUDGMENT'" v-model="practiceAnswer">
-            <el-radio value="A">正确</el-radio>
-            <el-radio value="B">错误</el-radio>
+            <el-radio value="A">{{ userStore.t('common.correct') }}</el-radio>
+            <el-radio value="B">{{ userStore.t('common.wrong') }}</el-radio>
           </el-radio-group>
         </div>
 
         <div class="question-input" v-else>
-          <el-input v-model="practiceAnswer" type="textarea" :rows="4" placeholder="请输入答案" />
+          <el-input v-model="practiceAnswer" type="textarea" :rows="4" :placeholder="userStore.t('student.enterAnswer')" />
         </div>
 
         <div class="result-panel" v-if="showResult">
           <div :class="['result-badge', isCorrect ? 'correct' : 'wrong']">
-            {{ isCorrect ? '回答正确' : '回答错误' }}
+            {{ isCorrect ? userStore.t('student.answerCorrect') : userStore.t('student.answerWrong') }}
           </div>
           <div v-if="!isCorrect" class="correct-answer-display">
-            <strong>正确答案：</strong>
+            <strong>{{ userStore.t('common.correctAnswer') }}：</strong>
             <span style="color: #22c55e; font-weight: 500;">{{ currentQuestion.correctAnswer }}</span>
           </div>
           <div class="analysis" v-if="currentQuestion.analysis">
-            <strong>解析：</strong>{{ currentQuestion.analysis }}
+            <strong>{{ userStore.t('student.analysis') }}：</strong>{{ currentQuestion.analysis }}
           </div>
         </div>
       </div>
       <template #footer>
-        <el-button @click="practiceVisible = false">关闭</el-button>
-        <el-button type="danger" v-if="!showResult" @click="checkAnswer">提交答案</el-button>
-        <el-button type="success" v-else @click="nextQuestion">下一题</el-button>
+        <el-button @click="practiceVisible = false">{{ userStore.t('common.close') }}</el-button>
+        <el-button type="danger" v-if="!showResult" @click="checkAnswer">{{ userStore.t('common.submit') }}</el-button>
+        <el-button type="success" v-else @click="nextQuestion">{{ userStore.t('student.nextQuestion') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -140,7 +140,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { wrongQuestionApi, subjectApi } from '../../utils/api'
+import { useUserStore } from '../../store'
 
+const userStore = useUserStore()
 const loading = ref(false)
 const tableData = ref([])
 const subjects = ref([])
@@ -158,7 +160,14 @@ const practiceMultiAnswers = ref([])
 const showResult = ref(false)
 const isCorrect = ref(false)
 
-const typeText = (type) => ({ SINGLE_CHOICE: '单选题', MULTIPLE_CHOICE: '多选题', JUDGMENT: '判断题', FILL_BLANK: '填空题', ESSAY: '简答题', PROGRAMMING: '编程题' }[type] || type)
+const typeText = (type) => ({ 
+  SINGLE_CHOICE: userStore.t('common.single'), 
+  MULTIPLE_CHOICE: userStore.t('common.multiple'), 
+  JUDGMENT: userStore.t('common.judgment'), 
+  FILL_BLANK: userStore.t('common.fillBlank'), 
+  ESSAY: userStore.t('common.essay'), 
+  PROGRAMMING: userStore.t('common.programming') 
+}[type] || type)
 
 const parseOptions = (options) => {
   try {
@@ -248,7 +257,7 @@ const nextQuestion = () => {
   if (currentIndex < tableData.value.length - 1) {
     handlePractice(tableData.value[currentIndex + 1])
   } else {
-    ElMessage.success('已完成所有错题练习')
+    ElMessage.success(userStore.t('student.markSuccess'))
     practiceVisible.value = false
     loadData()
   }
@@ -259,7 +268,7 @@ const handleToggleMastered = async (row) => {
   const res = await wrongQuestionApi.updateMastered(row.id, newStatus)
   if (res.code === 200) {
     row.mastered = newStatus
-    ElMessage.success(`已${newStatus === 1 ? '标记为已学会' : '标记为未学会'}`)
+    ElMessage.success(newStatus === 1 ? userStore.t('student.markMastered') : userStore.t('student.markNotMastered'))
   }
 }
 

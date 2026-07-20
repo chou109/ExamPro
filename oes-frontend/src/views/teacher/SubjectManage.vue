@@ -1,30 +1,30 @@
 <template>
   <div class="subject-manage">
     <div class="page-header">
-      <h2>科目管理</h2>
-      <p>管理考试科目</p>
+      <h2>{{ userStore.t('teacher.subjectManagement') }}</h2>
+      <p>{{ userStore.t('teacher.subjectManagementDesc') }}</p>
     </div>
 
     <div class="card">
       <div class="toolbar">
         <div class="search-row">
-          <el-input v-model="params.keyword" placeholder="搜索科目" style="width: 200px" clearable @change="loadData" />
-          <el-button type="danger" @click="loadData">搜索</el-button>
+          <el-input v-model="params.keyword" :placeholder="userStore.t('teacher.searchSubject')" style="width: 200px" clearable @change="loadData" />
+          <el-button type="danger" @click="loadData">{{ userStore.t('common.search') }}</el-button>
         </div>
         <div class="action-row">
-          <el-button type="danger" @click="handleCreate">新增科目</el-button>
+          <el-button type="danger" @click="handleCreate">{{ userStore.t('teacher.createSubject') }}</el-button>
         </div>
       </div>
 
       <el-table :data="tableData" v-loading="loading" stripe>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="name" label="科目名称" />
-        <el-table-column prop="code" label="科目代码" width="150" />
-        <el-table-column prop="description" label="描述" show-overflow-tooltip />
-        <el-table-column label="操作" width="200">
+        <el-table-column prop="id" :label="userStore.t('teacher.id')" width="80" />
+        <el-table-column prop="name" :label="userStore.t('teacher.subjectName')" />
+        <el-table-column prop="code" :label="userStore.t('teacher.subjectCode')" width="150" />
+        <el-table-column prop="description" :label="userStore.t('teacher.description')" show-overflow-tooltip />
+        <el-table-column :label="userStore.t('common.operation')" width="200">
           <template #default="{ row }">
-            <el-button type="danger" link @click="handleEdit(row)">编辑</el-button>
-            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+            <el-button type="danger" link @click="handleEdit(row)">{{ userStore.t('common.edit') }}</el-button>
+            <el-button type="danger" link @click="handleDelete(row)">{{ userStore.t('common.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -41,21 +41,21 @@
       />
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑科目' : '新增科目'" width="500px">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? userStore.t('teacher.editSubject') : userStore.t('teacher.createSubject')" width="500px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="科目名称" prop="name">
-          <el-input v-model="form.name" />
+        <el-form-item :label="userStore.t('teacher.subjectName')" prop="name">
+          <el-input v-model="form.name" :placeholder="userStore.t('teacher.enterSubjectName')" />
         </el-form-item>
-        <el-form-item label="科目代码" prop="code">
-          <el-input v-model="form.code" />
+        <el-form-item :label="userStore.t('teacher.subjectCode')" prop="code">
+          <el-input v-model="form.code" :placeholder="userStore.t('teacher.enterSubjectCode')" />
         </el-form-item>
-        <el-form-item label="描述">
-          <el-input v-model="form.description" type="textarea" :rows="3" />
+        <el-form-item :label="userStore.t('teacher.description')">
+          <el-input v-model="form.description" type="textarea" :rows="3" :placeholder="userStore.t('teacher.enterDescription')" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="danger" @click="handleSubmit">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ userStore.t('common.cancel') }}</el-button>
+        <el-button type="danger" @click="handleSubmit">{{ userStore.t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -65,6 +65,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { subjectApi } from '../../utils/api'
+import { useUserStore } from '../../store'
+
+const userStore = useUserStore()
 
 const loading = ref(false)
 const tableData = ref([])
@@ -77,7 +80,7 @@ const formRef = ref()
 
 const params = reactive({ keyword: '' })
 const form = reactive({ id: null, name: '', code: '', description: '' })
-const rules = { name: [{ required: true, message: '请输入科目名称', trigger: 'blur' }] }
+const rules = { name: [{ required: true, message: userStore.t('teacher.enterSubjectName'), trigger: 'blur' }] }
 
 const loadData = async () => {
   loading.value = true
@@ -104,17 +107,17 @@ const handleSubmit = async () => {
   if (!valid) return
   try {
     const res = isEdit.value ? await subjectApi.update(form) : await subjectApi.create(form)
-    if (res.code === 200) { ElMessage.success('操作成功'); dialogVisible.value = false; loadData() }
-    else ElMessage.error(res.message)
-  } catch (e) { ElMessage.error(e.message) }
+    if (res.code === 200) { ElMessage.success(userStore.t('common.success')); dialogVisible.value = false; loadData() }
+    else ElMessage.error(res.message || userStore.t('common.failed'))
+  } catch (e) { ElMessage.error(e.message || userStore.t('common.failed')) }
 }
 
 const handleDelete = async (row) => {
-  await ElMessageBox.confirm('确定要删除该科目吗？')
+  await ElMessageBox.confirm(userStore.t('teacher.confirmDeleteSubject'))
   try {
     const res = await subjectApi.delete(row.id)
-    if (res.code === 200) { ElMessage.success('删除成功'); loadData() }
-  } catch (e) { ElMessage.error(e.message) }
+    if (res.code === 200) { ElMessage.success(userStore.t('common.success')); loadData() }
+  } catch (e) { ElMessage.error(e.message || userStore.t('common.failed')) }
 }
 
 onMounted(() => { loadData() })

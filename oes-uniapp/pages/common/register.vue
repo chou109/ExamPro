@@ -1,9 +1,11 @@
 <template>
   <view class="register-container">
+    <CustomNavBar :title="userStore.t('common.register')" :showBack="true" />
+    
     <!-- 标题 -->
     <view class="register-header">
-      <text class="title">创建账号</text>
-      <text class="subtitle">选择身份并填写注册信息</text>
+      <text class="title">{{ userStore.t('register.title') }}</text>
+      <text class="subtitle">{{ userStore.t('register.subtitle') }}</text>
     </view>
 
     <!-- 注册表单 -->
@@ -16,7 +18,7 @@
           @click="registerForm.role = 'STUDENT'"
         >
           <text class="emoji-icon">👨‍🎓</text>
-          <text class="tab-text">学生</text>
+          <text class="tab-text">{{ userStore.t('login.student') }}</text>
         </view>
         <view
           class="role-tab"
@@ -24,7 +26,7 @@
           @click="registerForm.role = 'TEACHER'"
         >
           <text class="emoji-icon">👨‍🏫</text>
-          <text class="tab-text">教师</text>
+          <text class="tab-text">{{ userStore.t('login.teacher') }}</text>
         </view>
       </view>
 
@@ -36,7 +38,7 @@
             class="input"
             type="text"
             v-model="registerForm.username"
-            placeholder="请输入用户名"
+            :placeholder="userStore.t('login.usernamePlaceholder')"
             placeholder-class="placeholder"
           />
         </view>
@@ -47,7 +49,7 @@
             class="input"
             type="password"
             v-model="registerForm.password"
-            placeholder="请输入密码"
+            :placeholder="userStore.t('login.passwordPlaceholder')"
             placeholder-class="placeholder"
           />
         </view>
@@ -58,7 +60,7 @@
             class="input"
             type="password"
             v-model="registerForm.confirmPassword"
-            placeholder="请确认密码"
+            :placeholder="userStore.t('register.confirmPasswordPlaceholder')"
             placeholder-class="placeholder"
           />
         </view>
@@ -74,7 +76,7 @@
           >
             <view class="picker-content">
               <text class="picker-text" :class="{ placeholder: !registerForm.departmentId }">
-                {{ selectedDepartmentName || '请选择学院' }}
+                {{ selectedDepartmentName || userStore.t('register.selectDepartment') }}
               </text>
               <text class="arrow-icon">▼</text>
             </view>
@@ -82,26 +84,44 @@
         </view>
 
         <button class="register-btn" :disabled="loading" @click="handleRegister">
-          <text class="btn-text">{{ loading ? '注册中...' : '注册' }}</text>
+          <text class="btn-text">{{ loading ? userStore.t('common.loading') : userStore.t('common.register') }}</text>
         </button>
       </view>
 
       <!-- 返回登录 -->
       <view class="action-buttons">
-        <text class="action-link" @click="backToLogin">已有账号？去登录</text>
+        <text class="action-link" @click="backToLogin">{{ userStore.t('register.haveAccount') }}</text>
       </view>
     </view>
   </view>
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { authApi, departmentApi } from '../../utils/api'
+import { useUserStore } from '../../store/index.js'
+import { initPageTitle } from '../../utils/title.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
 
 export default {
+  components: { CustomNavBar },
   setup() {
     const loading = ref(false)
     const departments = ref([])
+    const userStore = useUserStore()
+
+    const setPageTitle = () => {
+      uni.setNavigationBarTitle({ title: userStore.t('common.register') })
+    }
+
+    onMounted(() => {
+      setPageTitle()
+      loadDepartments()
+    })
+
+    watch(() => userStore.language, () => {
+      setPageTitle()
+    })
 
     const registerForm = reactive({
       username: '',
@@ -119,7 +139,7 @@ export default {
 
     const loadDepartments = async () => {
       try {
-        const res = await departmentApi.list()
+        const res = await departmentApi.list({ skipAuth: true })
         if (res.code === 200) {
           departments.value = res.data
         }
@@ -138,23 +158,23 @@ export default {
     const handleRegister = async () => {
       // 验证
       if (!registerForm.username) {
-        uni.showToast({ title: '请输入用户名', icon: 'none' })
+        uni.showToast({ title: userStore.t('login.usernamePlaceholder'), icon: 'none' })
         return
       }
       if (registerForm.username.length < 3 || registerForm.username.length > 20) {
-        uni.showToast({ title: '用户名长度应为3-20个字符', icon: 'none' })
+        uni.showToast({ title: userStore.t('register.usernameLength'), icon: 'none' })
         return
       }
       if (!registerForm.password) {
-        uni.showToast({ title: '请输入密码', icon: 'none' })
+        uni.showToast({ title: userStore.t('login.passwordPlaceholder'), icon: 'none' })
         return
       }
       if (registerForm.password.length < 6 || registerForm.password.length > 20) {
-        uni.showToast({ title: '密码长度应为6-20个字符', icon: 'none' })
+        uni.showToast({ title: userStore.t('register.passwordLength'), icon: 'none' })
         return
       }
       if (registerForm.password !== registerForm.confirmPassword) {
-        uni.showToast({ title: '两次输入密码不一致', icon: 'none' })
+        uni.showToast({ title: userStore.t('register.passwordMismatch'), icon: 'none' })
         return
       }
 
@@ -169,15 +189,15 @@ export default {
         })
 
         if (res.code === 200) {
-          uni.showToast({ title: '注册成功', icon: 'success' })
+          uni.showToast({ title: userStore.t('register.registerSuccess'), icon: 'success' })
           setTimeout(() => {
             backToLogin()
           }, 1500)
         } else {
-          uni.showToast({ title: res.message || '注册失败', icon: 'none' })
+          uni.showToast({ title: res.message || userStore.t('register.registerFailed'), icon: 'none' })
         }
       } catch (e) {
-        uni.showToast({ title: e.message || '注册失败', icon: 'none' })
+        uni.showToast({ title: e.message || userStore.t('register.registerFailed'), icon: 'none' })
       } finally {
         loading.value = false
       }
@@ -187,14 +207,11 @@ export default {
       uni.navigateBack()
     }
 
-    onMounted(() => {
-      loadDepartments()
-    })
-
     return {
       loading,
       departments,
       registerForm,
+      userStore,
       selectedDepartmentName,
       onDepartmentChange,
       handleRegister,
@@ -208,7 +225,9 @@ export default {
 .register-container {
   min-height: 100vh;
   background: #f5f5f5;
-  padding: 40rpx;
+  padding: 0 40rpx;
+  position: relative;
+  padding-top: 140rpx;
 }
 
 .register-header {

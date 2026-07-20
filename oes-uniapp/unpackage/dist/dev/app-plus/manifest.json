@@ -36,12 +36,24 @@
     },
     "popGesture": "close",
     "launchwebview": {
+      "render": "always",
       "id": "1",
       "kernel": "WKWebview"
     },
     "usingComponents": true,
     "nvueStyleCompiler": "uni-app",
     "compilerVersion": 3,
+    "icons": {
+      "android": {
+        "hdpi": "static/logo.png",
+        "xhdpi": "static/logo.png",
+        "xxhdpi": "static/logo.png",
+        "xxxhdpi": "static/logo.png"
+      },
+      "ios": {
+        "app": "static/logo.png"
+      }
+    },
     "distribute": {
       "google": {
         "package": "com.exampro.oes",
@@ -86,12 +98,6 @@
       "enable": false
     },
     "allowsInlineMediaPlayback": true,
-    "safearea": {
-      "background": "#ffffff",
-      "bottom": {
-        "offset": "auto"
-      }
-    },
     "uni-app": {
       "control": "uni-v3",
       "vueVersion": "3",
@@ -105,40 +111,6 @@
       "webView": {
         "minUserAgentVersion": "49.0"
       }
-    },
-    "tabBar": {
-      "position": "bottom",
-      "color": "#666666",
-      "selectedColor": "#dc2626",
-      "borderStyle": "rgba(0,0,0,0.4)",
-      "blurEffect": "none",
-      "fontSize": "10px",
-      "iconWidth": "24px",
-      "spacing": "3px",
-      "height": "50px",
-      "backgroundColor": "#ffffff",
-      "list": [
-        {
-          "pagePath": "pages/common/dashboard",
-          "text": "首页",
-          "iconPath": "/static/tabbar/home.png",
-          "selectedIconPath": "/static/tabbar/home-active.png"
-        },
-        {
-          "pagePath": "pages/common/message",
-          "text": "消息",
-          "iconPath": "/static/tabbar/message.png",
-          "selectedIconPath": "/static/tabbar/message-active.png"
-        },
-        {
-          "pagePath": "pages/common/account",
-          "text": "我的",
-          "iconPath": "/static/tabbar/user.png",
-          "selectedIconPath": "/static/tabbar/user-active.png"
-        }
-      ],
-      "selectedIndex": 0,
-      "shown": true
     }
   },
   "locale": "auto",

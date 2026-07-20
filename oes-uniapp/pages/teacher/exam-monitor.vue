@@ -1,12 +1,6 @@
 <template>
   <view class="exam-monitor">
-    <view class="page-header">
-      <view class="back-btn" @click="goBack">
-        <text class="back-icon">‹</text>
-      </view>
-      <text class="title">考试监控</text>
-      <view class="header-right"></view>
-    </view>
+    <CustomNavBar :title="userStore.t('common.examMonitor')" :showBack="true" />
 
     <!-- 考试信息 -->
     <view class="card">
@@ -19,19 +13,19 @@
       <view class="exam-info">
         <view class="info-row">
           <text class="info-icon">📚</text>
-          <text class="info-text">科目：{{ getSubjectName(examInfo.subjectId) }}</text>
+          <text class="info-text">{{ userStore.t('common.subject') }}：{{ getSubjectName(examInfo.subjectId) }}</text>
         </view>
         <view class="info-row">
           <text class="info-icon">⏱</text>
-          <text class="info-text">时长：{{ examInfo.duration }}分钟</text>
+          <text class="info-text">{{ userStore.t('common.duration') }}：{{ examInfo.duration }}{{ userStore.t('common.durationMinutes') }}</text>
         </view>
         <view class="info-row">
           <text class="info-icon">📅</text>
-          <text class="info-text">开始：{{ formatDateTime(examInfo.startTime) }}</text>
+          <text class="info-text">{{ userStore.t('common.start') }}：{{ formatDateTime(examInfo.startTime) }}</text>
         </view>
         <view class="info-row">
           <text class="info-icon">🏫</text>
-          <text class="info-text">班级：{{ examInfo.className }}</text>
+          <text class="info-text">{{ userStore.t('common.class') }}：{{ examInfo.className }}</text>
         </view>
       </view>
     </view>
@@ -39,24 +33,24 @@
     <!-- 统计数据 -->
     <view class="card">
       <view class="card-header">
-        <text class="card-title">考试统计</text>
+        <text class="card-title">{{ userStore.t('common.examStatistics') }}</text>
       </view>
       <view class="stats-grid">
         <view class="stat-item">
-          <text class="stat-value">{{ stats.total }}</text>
-          <text class="stat-label">总人数</text>
+          <text class="stat-value total">{{ stats.total }}</text>
+          <text class="stat-label">{{ userStore.t('common.totalPeople') }}</text>
         </view>
         <view class="stat-item">
-          <text class="stat-value">{{ stats.submitted }}</text>
-          <text class="stat-label">已提交</text>
+          <text class="stat-value submitted">{{ stats.submitted }}</text>
+          <text class="stat-label">{{ userStore.t('common.submitted') }}</text>
         </view>
         <view class="stat-item">
-          <text class="stat-value">{{ stats.notStarted }}</text>
-          <text class="stat-label">未开始</text>
+          <text class="stat-value not-started">{{ stats.notStarted }}</text>
+          <text class="stat-label">{{ userStore.t('common.notStarted') }}</text>
         </view>
         <view class="stat-item">
-          <text class="stat-value">{{ stats.ongoing }}</text>
-          <text class="stat-label">进行中</text>
+          <text class="stat-value ongoing">{{ stats.ongoing }}</text>
+          <text class="stat-label">{{ userStore.t('common.ongoing') }}</text>
         </view>
       </view>
     </view>
@@ -64,7 +58,7 @@
     <!-- 考生列表 -->
     <view class="card">
       <view class="card-header">
-        <text class="card-title">考生状态</text>
+        <text class="card-title">{{ userStore.t('common.examineeStatus') }}</text>
         <picker mode="selector" :range="statusOptions" range-key="label" @change="onStatusChange">
           <view class="status-picker">{{ currentStatusText }}</view>
         </picker>
@@ -73,7 +67,7 @@
         <view class="student-item" v-for="item in studentRecords" :key="item.id">
           <view class="student-info">
             <text class="student-name">{{ item.studentName }}</text>
-            <text class="student-id">学号：{{ item.studentId }}</text>
+            <text class="student-id">{{ userStore.t('common.studentId') }}：{{ item.studentId }}</text>
           </view>
           <view class="student-status">
             <view :class="['status-badge', getStatusClass(item.status)]">
@@ -81,8 +75,8 @@
             </view>
           </view>
           <view class="student-meta">
-            <text v-if="item.submitTime">提交时间：{{ formatDateTime(item.submitTime) }}</text>
-            <text v-if="item.score">得分：{{ item.score }}分</text>
+            <text v-if="item.submitTime">{{ userStore.t('common.submitTime') }}：{{ formatDateTime(item.submitTime) }}</text>
+            <text v-if="item.score">{{ userStore.t('common.score') }}：{{ item.score }}{{ userStore.t('common.scoreUnit') }}</text>
           </view>
         </view>
       </view>
@@ -91,9 +85,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { useUserStore } from '../../store/index.js'
 import { examApi, examRecordApi, subjectApi } from '../../utils/api.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
+
+const userStore = useUserStore()
 
 const examId = ref('')
 const examInfo = reactive({
@@ -116,31 +114,37 @@ const subjects = ref([])
 const studentRecords = ref([])
 const filterStatus = ref('')
 
-const statusOptions = [
-  { value: '', label: '全部' },
-  { value: 'NOT_STARTED', label: '未开始' },
-  { value: 'ONGOING', label: '进行中' },
-  { value: 'SUBMITTED', label: '已提交' },
-  { value: 'AUTO_SUBMITTED', label: '强制收卷' }
-]
+const statusOptions = computed(() => [
+  { value: '', label: userStore.t('common.all') },
+  { value: 'NOT_STARTED', label: userStore.t('common.notStarted') },
+  { value: 'ONGOING', label: userStore.t('common.ongoing') },
+  { value: 'SUBMITTED', label: userStore.t('common.submitted') },
+  { value: 'AUTO_SUBMITTED', label: userStore.t('common.autoSubmitted') }
+])
 
-const currentStatusText = ref('全部')
+const currentStatusText = ref(userStore.t('common.all'))
+
+watch(() => userStore.language, () => {
+  currentStatusText.value = statusOptions.value.find(s => s.value === filterStatus.value)?.label || userStore.t('common.all')
+})
 
 const statusText = (status) => {
-  return {
-    PENDING: '待开始',
-    ONGOING: '进行中',
-    FINISHED: '已结束'
-  }[status] || status
+  const map = {
+    PENDING: userStore.t('common.pending'),
+    ONGOING: userStore.t('common.ongoing'),
+    FINISHED: userStore.t('common.finished')
+  }
+  return map[status] || status
 }
 
 const getStatusText = (status) => {
-  return {
-    NOT_STARTED: '未开始',
-    ONGOING: '进行中',
-    SUBMITTED: '已提交',
-    AUTO_SUBMITTED: '强制收卷'
-  }[status] || status
+  const map = {
+    NOT_STARTED: userStore.t('common.notStarted'),
+    ONGOING: userStore.t('common.ongoing'),
+    SUBMITTED: userStore.t('common.submitted'),
+    AUTO_SUBMITTED: userStore.t('common.autoSubmitted')
+  }
+  return map[status] || status
 }
 
 const getStatusClass = (status) => {
@@ -154,17 +158,22 @@ const getStatusClass = (status) => {
 
 const getSubjectName = (subjectId) => {
   const subject = subjects.value.find(s => s.id === subjectId)
-  return subject ? subject.name : '未知科目'
+  return subject ? subject.name : userStore.t('common.unknownSubject')
 }
 
 const formatDateTime = (time) => {
   if (!time) return ''
   const date = new Date(time)
-  return date.toLocaleString('zh-CN')
-}
-
-const goBack = () => {
-  uni.navigateBack()
+  if (userStore.language === 'zh') {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}`
+  } else {
+    return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+  }
 }
 
 const onStatusChange = (e) => {
@@ -235,32 +244,8 @@ onLoad((options) => {
 .exam-monitor {
   min-height: 100vh;
   background-color: #f5f5f5;
+  padding-top: 140rpx;
   padding-bottom: 40rpx;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24rpx 32rpx;
-  background: #fff;
-  border-bottom: 1rpx solid #eee;
-}
-
-.back-btn {
-  padding: 8rpx;
-  
-  .back-icon {
-    font-size: 48rpx;
-    color: #333;
-    font-weight: bold;
-  }
-}
-
-.title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #333;
 }
 
 .card {
@@ -350,27 +335,42 @@ onLoad((options) => {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16rpx;
-  
-  .stat-item {
-    text-align: center;
-    padding: 20rpx 0;
-    background: #f5f5f5;
-    border-radius: 12rpx;
-    
-    .stat-value {
-      display: block;
-      font-size: 40rpx;
-      font-weight: bold;
-      color: #dc2626;
-    }
-    
-    .stat-label {
-      display: block;
-      font-size: 24rpx;
-      color: #666;
-      margin-top: 8rpx;
-    }
-  }
+}
+
+.stats-grid .stat-item {
+  text-align: center;
+  padding: 20rpx 0;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+}
+
+.stats-grid .stat-item .stat-value {
+  display: block;
+  font-size: 40rpx;
+  font-weight: bold;
+}
+
+.stats-grid .stat-item .stat-value.total {
+  color: #dc2626;
+}
+
+.stats-grid .stat-item .stat-value.submitted {
+  color: #67c23a;
+}
+
+.stats-grid .stat-item .stat-value.not-started {
+  color: #e6a23c;
+}
+
+.stats-grid .stat-item .stat-value.ongoing {
+  color: #409eff;
+}
+
+.stats-grid .stat-item .stat-label {
+  display: block;
+  font-size: 24rpx;
+  color: #666;
+  margin-top: 8rpx;
 }
 
 .student-list {

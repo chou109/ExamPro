@@ -1,20 +1,20 @@
 <template>
   <div class="classes">
     <div class="page-header">
-      <h2>班级管理</h2>
+      <h2>{{ userStore.t('common.classManage') }}</h2>
       <el-button type="danger" @click="openCreateDialog">
         <el-icon><Plus /></el-icon>
-        新建班级
+        {{ userStore.t('common.createClass') }}
       </el-button>
     </div>
 
     <el-card class="filter-card">
       <el-form :inline="true" :model="searchForm" class="search-form">
-        <el-form-item label="班级名称">
-          <el-input v-model="searchForm.className" placeholder="请输入班级名称" style="width: 200px" />
+        <el-form-item :label="userStore.t('common.className')">
+          <el-input v-model="searchForm.className" :placeholder="userStore.t('common.enterClassName')" style="width: 200px" />
         </el-form-item>
-        <el-form-item label="院系">
-          <el-select v-model="searchForm.departmentId" placeholder="请选择院系" style="width: 200px">
+        <el-form-item :label="userStore.t('common.department')">
+          <el-select v-model="searchForm.departmentId" :placeholder="userStore.t('common.selectDepartment')" style="width: 200px">
             <el-option
               v-for="dept in departments"
               :key="dept.id"
@@ -24,17 +24,17 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="danger" @click="loadClasses">查询</el-button>
-          <el-button @click="resetSearch">重置</el-button>
+          <el-button type="danger" @click="loadClasses">{{ userStore.t('common.search') }}</el-button>
+          <el-button @click="resetSearch">{{ userStore.t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
     <el-card class="table-card">
       <el-table :data="classes" stripe style="width: 100%">
-        <el-table-column prop="id" label="班级ID" width="80" />
-        <el-table-column prop="className" label="班级名称" />
-        <el-table-column prop="departmentId" label="所属院系">
+        <el-table-column prop="id" :label="userStore.t('common.classId')" width="80" />
+        <el-table-column prop="className" :label="userStore.t('common.className')" />
+        <el-table-column prop="departmentId" :label="userStore.t('common.department')">
           <template #default="{ row }">
             <span v-if="row.departmentId">
               {{ getDepartmentName(row.departmentId) }}
@@ -42,19 +42,19 @@
             <span v-else class="text-gray">-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="inviteCode" label="群号" width="120">
+        <el-table-column prop="inviteCode" :label="userStore.t('common.inviteCode')" width="120">
           <template #default="{ row }">
             <span v-if="row.inviteCode">{{ row.inviteCode }}</span>
             <span v-else class="text-gray">-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="studentCount" label="学生人数" width="100" />
-        <el-table-column prop="createTime" label="创建时间" width="180" />
-        <el-table-column label="操作" width="200">
+        <el-table-column prop="studentCount" :label="userStore.t('common.studentCount')" width="100" />
+        <el-table-column prop="createTime" :label="userStore.t('common.createTime')" width="180" />
+        <el-table-column :label="userStore.t('common.operation')" width="200">
           <template #default="{ row }">
-            <el-button type="danger" link @click="openEditDialog(row)">编辑</el-button>
-            <el-button type="danger" link @click="deleteClass(row.id)">删除</el-button>
-            <el-button type="danger" link @click="manageStudents(row.id)">管理学生</el-button>
+            <el-button type="danger" link @click="openEditDialog(row)">{{ userStore.t('common.edit') }}</el-button>
+            <el-button type="danger" link @click="deleteClass(row.id)">{{ userStore.t('common.delete') }}</el-button>
+            <el-button type="danger" link @click="manageStudents(row.id)">{{ userStore.t('common.manageStudents') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -75,15 +75,15 @@
     <!-- 新建/编辑班级对话框 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogType === 'create' ? '新建班级' : '编辑班级'"
+      :title="dialogType === 'create' ? userStore.t('common.createClass') : userStore.t('common.editClass')"
       width="500px"
     >
       <el-form :model="form" label-width="100px">
-        <el-form-item label="班级名称" prop="className">
-          <el-input v-model="form.className" placeholder="请输入班级名称" />
+        <el-form-item :label="userStore.t('common.className')" prop="className">
+          <el-input v-model="form.className" :placeholder="userStore.t('common.enterClassName')" />
         </el-form-item>
-        <el-form-item label="所属院系" prop="departmentId">
-          <el-select v-model="form.departmentId" placeholder="请选择院系">
+        <el-form-item :label="userStore.t('common.department')" prop="departmentId">
+          <el-select v-model="form.departmentId" :placeholder="userStore.t('common.selectDepartment')">
             <el-option
               v-for="dept in departments"
               :key="dept.id"
@@ -95,8 +95,8 @@
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="danger" @click="saveClass">保存</el-button>
+          <el-button @click="dialogVisible = false">{{ userStore.t('common.cancel') }}</el-button>
+          <el-button type="danger" @click="saveClass">{{ userStore.t('common.save') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -104,18 +104,18 @@
     <!-- 管理学生对话框 -->
     <el-dialog
       v-model="studentDialogVisible"
-      title="管理班级学生"
+      :title="userStore.t('common.manageStudents')"
       width="800px"
     >
       <div class="student-management">
         <div class="left-panel">
-          <h3>未加入班级的学生</h3>
-          <el-input v-model="studentSearch" placeholder="搜索学生" class="mb-4" />
+          <h3>{{ userStore.t('common.notInClass') }}</h3>
+          <el-input v-model="studentSearch" :placeholder="userStore.t('common.searchStudent')" class="mb-4" />
           <el-table :data="filteredStudents" stripe style="width: 100%">
-            <el-table-column prop="id" label="学号" width="120" />
-            <el-table-column prop="username" label="用户名" />
-            <el-table-column prop="realName" label="姓名" />
-            <el-table-column label="操作" width="80">
+            <el-table-column prop="id" :label="userStore.t('common.studentId')" width="120" />
+            <el-table-column prop="username" :label="userStore.t('common.username')" />
+            <el-table-column prop="realName" :label="userStore.t('common.realName')" />
+            <el-table-column :label="userStore.t('common.operation')" width="80">
               <template #default="{ row }">
                 <el-button type="danger" link @click="addStudent(row.id)">
                   <el-icon><Plus /></el-icon>
@@ -125,12 +125,12 @@
           </el-table>
         </div>
         <div class="right-panel">
-          <h3>班级内学生 ({{ classStudents.length }})</h3>
+          <h3>{{ userStore.t('common.inClass') }} ({{ classStudents.length }})</h3>
           <el-table :data="classStudents" stripe style="width: 100%">
-            <el-table-column prop="id" label="学号" width="120" />
-            <el-table-column prop="username" label="用户名" />
-            <el-table-column prop="realName" label="姓名" />
-            <el-table-column label="操作" width="80">
+            <el-table-column prop="id" :label="userStore.t('common.studentId')" width="120" />
+            <el-table-column prop="username" :label="userStore.t('common.username')" />
+            <el-table-column prop="realName" :label="userStore.t('common.realName')" />
+            <el-table-column :label="userStore.t('common.operation')" width="80">
               <template #default="{ row }">
                 <el-button type="danger" link @click="removeStudent(row.id)">
                   <el-icon><Delete /></el-icon>
@@ -142,7 +142,7 @@
       </div>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="studentDialogVisible = false">关闭</el-button>
+          <el-button @click="studentDialogVisible = false">{{ userStore.t('common.close') }}</el-button>
         </span>
       </template>
     </el-dialog>
@@ -192,7 +192,7 @@ const loadClasses = async () => {
     }
   } catch (e) {
     console.error(e)
-    ElMessage.error('加载班级列表失败')
+    ElMessage.error(userStore.t('common.loadClassFailed'))
   }
 }
 
@@ -259,28 +259,28 @@ const saveClass = async () => {
       res = await classApi.update(form.value)
     }
     if (res.code === 200) {
-      ElMessage.success(dialogType.value === 'create' ? '创建班级成功' : '更新班级成功')
+      ElMessage.success(dialogType.value === 'create' ? userStore.t('common.createClassSuccess') : userStore.t('common.updateClassSuccess'))
       dialogVisible.value = false
       loadClasses()
     }
   } catch (e) {
     console.error(e)
-    ElMessage.error('操作失败')
+    ElMessage.error(userStore.t('common.operationFailed'))
   }
 }
 
 const deleteClass = async (id) => {
   try {
-    await ElMessageBox.confirm('确定要删除这个班级吗？', '提示')
+    await ElMessageBox.confirm(userStore.t('common.confirmDeleteClass'), userStore.t('common.tip'))
     const res = await classApi.delete(id)
     if (res.code === 200) {
-      ElMessage.success('删除班级成功')
+      ElMessage.success(userStore.t('common.deleteClassSuccess'))
       loadClasses()
     }
   } catch (e) {
     if (e !== 'cancel') {
       console.error(e)
-      ElMessage.error('删除失败')
+      ElMessage.error(userStore.t('common.deleteFailed'))
     }
   }
 }
@@ -294,25 +294,21 @@ const manageStudents = (classId) => {
 
 const addStudent = async (studentId) => {
   try {
-    // 这里需要调用添加学生到班级的API
-    // 假设API为 classApi.addStudent(classId, studentId)
-    ElMessage.success('添加学生成功')
+    ElMessage.success(userStore.t('common.addStudentSuccess'))
     loadClassStudents(currentClassId.value)
   } catch (e) {
     console.error(e)
-    ElMessage.error('添加失败')
+    ElMessage.error(userStore.t('common.addFailed'))
   }
 }
 
 const removeStudent = async (studentId) => {
   try {
-    // 这里需要调用从班级移除学生的API
-    // 假设API为 classApi.removeStudent(classId, studentId)
-    ElMessage.success('移除学生成功')
+    ElMessage.success(userStore.t('common.removeStudentSuccess'))
     loadClassStudents(currentClassId.value)
   } catch (e) {
     console.error(e)
-    ElMessage.error('移除失败')
+    ElMessage.error(userStore.t('common.removeFailed'))
   }
 }
 

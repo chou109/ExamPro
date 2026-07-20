@@ -1,14 +1,8 @@
 <template>
   <view class="exam-detail">
-    <view class="page-header">
-      <view class="back-btn" @click="goBack">
-        <text class="back-icon">‹</text>
-      </view>
-      <text class="title">答卷详情</text>
-      <view class="header-right"></view>
-    </view>
+    <CustomNavBar :title="userStore.t('common.examRecordDetail')" :showBack="true" />
 
-    <scroll-view class="detail-body" scroll-y>
+    <scroll-view class="content" scroll-y>
       <view class="exam-info-card">
         <text class="exam-title">{{ examInfo.title }}</text>
         <view class="exam-meta">
@@ -18,11 +12,11 @@
           </view>
           <view class="meta-item">
             <text class="meta-icon">⏱</text>
-            <text>{{ examInfo.duration }}分钟</text>
+            <text>{{ examInfo.duration }}{{ userStore.t('common.minutes') }}</text>
           </view>
           <view class="meta-item">
             <text class="meta-icon">🏆</text>
-            <text>{{ examInfo.totalScore }}分</text>
+            <text>{{ examInfo.totalScore }}{{ userStore.t('common.score') }}</text>
           </view>
         </view>
       </view>
@@ -31,34 +25,34 @@
         <view class="student-header">
           <text class="student-name">{{ recordInfo.studentName }}</text>
           <view :class="['score-badge', recordInfo.score >= 60 ? 'pass' : 'fail']">
-            <text>{{ recordInfo.score || 0 }}分</text>
+            <text>{{ recordInfo.score || 0 }}{{ userStore.t('common.score') }}</text>
           </view>
         </view>
         <view class="student-meta">
           <view class="meta-item">
             <text class="meta-icon">📅</text>
-            <text>提交时间：{{ formatDateTime(recordInfo.submitTime) }}</text>
+            <text>{{ userStore.t('common.submitTime') }}：{{ formatDateTime(recordInfo.submitTime) }}</text>
           </view>
           <view class="meta-item">
             <text class="meta-icon">⏱</text>
-            <text>用时：{{ recordInfo.duration || 0 }}分钟</text>
+            <text>{{ userStore.t('common.duration') }}：{{ recordInfo.duration || 0 }}{{ userStore.t('common.minutes') }}</text>
           </view>
           <view v-if="recordInfo.status === 'AUTO_SUBMITTED'" class="meta-item warning">
             <text class="meta-icon">⚠️</text>
-            <text>强制收卷</text>
+            <text>{{ userStore.t('common.autoSubmitted') }}</text>
           </view>
         </view>
       </view>
 
       <view class="question-section" v-if="singleQuestions.length > 0">
         <view class="section-header">
-          <text class="section-title">一、单选题</text>
-          <text class="section-score">（共{{ singleQuestions.length }}题）</text>
+          <text class="section-title">{{ userStore.language === 'zh' ? '一' : '1' }}、{{ userStore.t('common.singleChoice') }}</text>
+          <text class="section-score">（{{ userStore.t('common.total') }}{{ singleQuestions.length }}{{ userStore.t('common.questions') }}）</text>
         </view>
         <view class="question-item" v-for="(q, index) in singleQuestions" :key="q.id">
           <view class="question-header">
             <text class="question-number">{{ getQuestionNumber(q) }}.</text>
-            <text class="question-score">（{{ q.score }}分）</text>
+            <text class="question-score">（{{ q.score }}{{ userStore.t('common.score') }}）</text>
           </view>
           <text class="question-content">{{ q.content }}</text>
           <view class="options-list" v-if="parseOptions(q.options).length > 0">
@@ -70,11 +64,11 @@
             </view>
           </view>
           <view class="answer-row">
-            <text class="answer-label">学生答案：</text>
+            <text class="answer-label">{{ userStore.t('common.studentAnswer') }}：</text>
             <text :class="['answer-text', isCorrectAnswer(q) ? 'correct' : 'wrong']">
-              {{ getStudentAnswer(q) || '未作答' }}
+              {{ getStudentAnswer(q) || userStore.t('common.notAnswered') }}
             </text>
-            <text class="answer-label">正确答案：</text>
+            <text class="answer-label">{{ userStore.t('common.correctAnswer') }}：</text>
             <text class="answer-text correct">{{ q.correctAnswer }}</text>
           </view>
         </view>
@@ -82,13 +76,13 @@
 
       <view class="question-section" v-if="multiQuestions.length > 0">
         <view class="section-header">
-          <text class="section-title">二、多选题</text>
-          <text class="section-score">（共{{ multiQuestions.length }}题）</text>
+          <text class="section-title">{{ userStore.language === 'zh' ? '二' : '2' }}、{{ userStore.t('common.multipleChoice') }}</text>
+          <text class="section-score">（{{ userStore.t('common.total') }}{{ multiQuestions.length }}{{ userStore.t('common.questions') }}）</text>
         </view>
         <view class="question-item" v-for="(q, index) in multiQuestions" :key="q.id">
           <view class="question-header">
             <text class="question-number">{{ getQuestionNumber(q) }}.</text>
-            <text class="question-score">（{{ q.score }}分）</text>
+            <text class="question-score">（{{ q.score }}{{ userStore.t('common.score') }}）</text>
           </view>
           <text class="question-content">{{ q.content }}</text>
           <view class="options-list" v-if="parseOptions(q.options).length > 0">
@@ -100,11 +94,11 @@
             </view>
           </view>
           <view class="answer-row">
-            <text class="answer-label">学生答案：</text>
+            <text class="answer-label">{{ userStore.t('common.studentAnswer') }}：</text>
             <text :class="['answer-text', isCorrectAnswer(q) ? 'correct' : 'wrong']">
-              {{ getStudentAnswer(q) || '未作答' }}
+              {{ getStudentAnswer(q) || userStore.t('common.notAnswered') }}
             </text>
-            <text class="answer-label">正确答案：</text>
+            <text class="answer-label">{{ userStore.t('common.correctAnswer') }}：</text>
             <text class="answer-text correct">{{ q.correctAnswer }}</text>
           </view>
         </view>
@@ -112,43 +106,43 @@
 
       <view class="question-section" v-if="judgeQuestions.length > 0">
         <view class="section-header">
-          <text class="section-title">三、判断题</text>
-          <text class="section-score">（共{{ judgeQuestions.length }}题）</text>
+          <text class="section-title">{{ userStore.language === 'zh' ? '三' : '3' }}、{{ userStore.t('common.trueFalse') }}</text>
+          <text class="section-score">（{{ userStore.t('common.total') }}{{ judgeQuestions.length }}{{ userStore.t('common.questions') }}）</text>
         </view>
         <view class="question-item" v-for="(q, index) in judgeQuestions" :key="q.id">
           <view class="question-header">
             <text class="question-number">{{ getQuestionNumber(q) }}.</text>
-            <text class="question-score">（{{ q.score }}分）</text>
+            <text class="question-score">（{{ q.score }}{{ userStore.t('common.score') }}）</text>
           </view>
           <text class="question-content">{{ q.content }}</text>
           <view class="answer-row">
-            <text class="answer-label">学生答案：</text>
+            <text class="answer-label">{{ userStore.t('common.studentAnswer') }}：</text>
             <text :class="['answer-text', isCorrectAnswer(q) ? 'correct' : 'wrong']">
-              {{ getStudentAnswer(q) || '未作答' }}
+              {{ getStudentAnswer(q) || userStore.t('common.notAnswered') }}
             </text>
-            <text class="answer-label">正确答案：</text>
-            <text class="answer-text correct">{{ q.correctAnswer === 'A' || q.correctAnswer === '正确' ? '正确' : '错误' }}</text>
+            <text class="answer-label">{{ userStore.t('common.correctAnswer') }}：</text>
+            <text class="answer-text correct">{{ q.correctAnswer === 'A' || q.correctAnswer === '正确' || q.correctAnswer === 'True' ? userStore.t('common.correct') : userStore.t('common.wrong') }}</text>
           </view>
         </view>
       </view>
 
       <view class="question-section" v-if="fillQuestions.length > 0">
         <view class="section-header">
-          <text class="section-title">四、填空题</text>
-          <text class="section-score">（共{{ fillQuestions.length }}题）</text>
+          <text class="section-title">{{ userStore.language === 'zh' ? '四' : '4' }}、{{ userStore.t('common.fillBlank') }}</text>
+          <text class="section-score">（{{ userStore.t('common.total') }}{{ fillQuestions.length }}{{ userStore.t('common.questions') }}）</text>
         </view>
         <view class="question-item" v-for="(q, index) in fillQuestions" :key="q.id">
           <view class="question-header">
             <text class="question-number">{{ getQuestionNumber(q) }}.</text>
-            <text class="question-score">（{{ q.score }}分）</text>
+            <text class="question-score">（{{ q.score }}{{ userStore.t('common.score') }}）</text>
           </view>
           <text class="question-content">{{ q.content }}</text>
           <view class="answer-row">
-            <text class="answer-label">学生答案：</text>
+            <text class="answer-label">{{ userStore.t('common.studentAnswer') }}：</text>
             <text :class="['answer-text', isCorrectAnswer(q) ? 'correct' : 'wrong']">
-              {{ getStudentAnswer(q) || '未作答' }}
+              {{ getStudentAnswer(q) || userStore.t('common.notAnswered') }}
             </text>
-            <text class="answer-label">正确答案：</text>
+            <text class="answer-label">{{ userStore.t('common.correctAnswer') }}：</text>
             <text class="answer-text correct">{{ q.correctAnswer }}</text>
           </view>
         </view>
@@ -156,21 +150,21 @@
 
       <view class="question-section" v-if="essayQuestions.length > 0">
         <view class="section-header">
-          <text class="section-title">五、简答题</text>
-          <text class="section-score">（共{{ essayQuestions.length }}题）</text>
+          <text class="section-title">{{ userStore.language === 'zh' ? '五' : '5' }}、{{ userStore.t('common.shortAnswer') }}</text>
+          <text class="section-score">（{{ userStore.t('common.total') }}{{ essayQuestions.length }}{{ userStore.t('common.questions') }}）</text>
         </view>
         <view class="question-item" v-for="(q, index) in essayQuestions" :key="q.id">
           <view class="question-header">
             <text class="question-number">{{ getQuestionNumber(q) }}.</text>
-            <text class="question-score">（{{ q.score }}分）</text>
+            <text class="question-score">（{{ q.score }}{{ userStore.t('common.score') }}）</text>
           </view>
           <text class="question-content">{{ q.content }}</text>
           <view class="answer-section">
-            <text class="answer-label">学生答案：</text>
-            <text class="answer-text">{{ getStudentAnswer(q) || '未作答' }}</text>
+            <text class="answer-label">{{ userStore.t('common.studentAnswer') }}：</text>
+            <text class="answer-text">{{ getStudentAnswer(q) || userStore.t('common.notAnswered') }}</text>
           </view>
           <view class="answer-section">
-            <text class="answer-label">参考答案：</text>
+            <text class="answer-label">{{ userStore.t('common.referenceAnswer') }}：</text>
             <text class="answer-text correct">{{ q.correctAnswer }}</text>
           </view>
         </view>
@@ -180,9 +174,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { examRecordApi, examApi, subjectApi, paperApi } from '../../utils/api.js'
+import { useUserStore } from '../../store/index.js'
+import { examRecordApi, examApi, subjectApi } from '../../utils/api.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
+
+const userStore = useUserStore()
 
 const recordId = ref('')
 const examId = ref('')
@@ -206,19 +204,24 @@ const subjects = ref([])
 const questions = ref([])
 const studentAnswers = ref({})
 
-const goBack = () => {
-  uni.navigateBack()
-}
-
 const getSubjectName = (subjectId) => {
   const subject = subjects.value.find(s => s.id === subjectId)
-  return subject ? subject.name : '未知科目'
+  return subject ? subject.name : userStore.t('common.unknownSubject')
 }
 
 const formatDateTime = (time) => {
   if (!time) return ''
   const date = new Date(time)
-  return date.toLocaleString('zh-CN')
+  if (userStore.language === 'zh') {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}`
+  } else {
+    return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+  }
 }
 
 const parseOptions = (options) => {
@@ -299,23 +302,29 @@ const essayQuestions = computed(() => questions.value.filter(q => q.type === 'ES
 
 const loadRecord = async () => {
   try {
-    uni.showLoading({ title: '加载中...' })
+    uni.showLoading({ title: userStore.t('common.loading') })
     
     const res = await examRecordApi.getById(recordId.value)
     if (res.code === 200) {
       const data = res.data
-      recordInfo.studentName = data.studentName
+      recordInfo.studentName = data.studentName || data.student?.username || data.student?.realName || '未知学生'
       recordInfo.score = data.score || 0
       recordInfo.submitTime = data.submitTime
       recordInfo.duration = data.duration
       recordInfo.status = data.status
       
-      if (data.answers) {
-        try {
-          studentAnswers.value = typeof data.answers === 'string' ? JSON.parse(data.answers) : data.answers
-        } catch (e) {
-          console.error('解析答案失败:', e)
-        }
+      if (data.studentAnswers) {
+        studentAnswers.value = data.studentAnswers
+      } else if (data.answers) {
+        const ansMap = {}
+        (Array.isArray(data.answers) ? data.answers : []).forEach(a => {
+          ansMap[a.question_id] = a.answer
+        })
+        studentAnswers.value = ansMap
+      }
+      
+      if (data.questions && Array.isArray(data.questions)) {
+        questions.value = data.questions
       }
     }
     
@@ -323,7 +332,7 @@ const loadRecord = async () => {
     if (examRes.code === 200) {
       Object.assign(examInfo, examRes.data)
       
-      if (examRes.data.paperId) {
+      if (examRes.data.paperId && questions.value.length === 0) {
         const qRes = await paperApi.getQuestions(examRes.data.paperId)
         if (qRes.code === 200) {
           questions.value = qRes.data || []
@@ -332,7 +341,7 @@ const loadRecord = async () => {
     }
   } catch (e) {
     console.error('加载失败:', e)
-    uni.showToast({ title: '加载失败', icon: 'none' })
+    uni.showToast({ title: userStore.t('common.loadFailed'), icon: 'none' })
   } finally {
     uni.hideLoading()
   }
@@ -361,34 +370,7 @@ onLoad((options) => {
 .exam-detail {
   min-height: 100vh;
   background-color: #f5f5f5;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24rpx 32rpx;
-  background: #fff;
-  border-bottom: 1rpx solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.back-btn {
-  padding: 8rpx;
-  
-  .back-icon {
-    font-size: 48rpx;
-    color: #333;
-    font-weight: bold;
-  }
-}
-
-.title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #333;
+  padding-top: 140rpx;
 }
 
 .detail-body {

@@ -1,60 +1,54 @@
 <template>
   <view class="exam-edit">
-    <view class="page-header">
-      <view class="back-btn" @click="goBack">
-        <text class="back-icon">‹</text>
-      </view>
-      <text class="title">{{ isEdit ? '编辑考试' : '创建考试' }}</text>
-      <view class="header-right"></view>
-    </view>
+    <CustomNavBar :title="isEdit ? userStore.t('common.editExam') : userStore.t('common.createExam')" :showBack="true" />
 
     <scroll-view class="form-body" scroll-y>
       <view class="card">
         <view class="card-header">
-          <text class="card-title">基本信息</text>
+          <text class="card-title">{{ userStore.t('common.basicInfo') }}</text>
         </view>
         <view class="form-item">
-          <text class="form-label">考试标题 *</text>
-          <input class="form-input" v-model="form.title" placeholder="请输入考试标题" />
+          <text class="form-label">{{ userStore.t('teacher.examTitle') }} *</text>
+          <input class="form-input" v-model="form.title" :placeholder="userStore.t('teacher.enterExamTitle')" />
         </view>
 
         <view class="form-item">
-          <text class="form-label">选择试卷 *</text>
+          <text class="form-label">{{ userStore.t('teacher.selectPaper') }} *</text>
           <picker mode="selector" :range="papers" range-key="title" @change="onPaperChange">
             <view class="form-picker">
-              <text>{{ selectedPaper?.title || '请选择试卷' }}</text>
+              <text>{{ selectedPaper?.title || userStore.t('teacher.selectPaper') }}</text>
             </view>
           </picker>
         </view>
 
         <view class="form-item">
-          <text class="form-label">选择班级 *</text>
+          <text class="form-label">{{ userStore.t('teacher.selectClass') }} *</text>
           <picker mode="selector" :range="classes" range-key="className" @change="onClassChange">
             <view class="form-picker">
-              <text>{{ selectedClass?.className || '请选择班级' }}</text>
+              <text>{{ selectedClass?.className || userStore.t('teacher.selectClass') }}</text>
             </view>
           </picker>
         </view>
 
         <view class="form-item">
-          <text class="form-label">考试时长（分钟）*</text>
-          <input class="form-input" type="number" v-model="form.duration" placeholder="请输入考试时长" />
+          <text class="form-label">{{ userStore.t('teacher.examDuration') }} *</text>
+          <input class="form-input" type="number" v-model="form.duration" :placeholder="userStore.t('teacher.enterDuration')" />
         </view>
 
         <view class="form-item">
-          <text class="form-label">开始日期 *</text>
+          <text class="form-label">{{ userStore.t('teacher.startDate') }} *</text>
           <picker mode="date" :value="form.startDate" @change="onStartDateChange">
             <view class="form-picker">
-              <text>{{ form.startDate || '请选择日期' }}</text>
+              <text>{{ form.startDate || userStore.t('teacher.selectDate') }}</text>
             </view>
           </picker>
         </view>
 
         <view class="form-item">
-          <text class="form-label">开始时间 *</text>
+          <text class="form-label">{{ userStore.t('teacher.startTime') }} *</text>
           <picker mode="time" :value="form.startTime" @change="onStartTimeChange">
             <view class="form-picker">
-              <text>{{ form.startTime || '请选择时间' }}</text>
+              <text>{{ form.startTime || userStore.t('teacher.selectTime') }}</text>
             </view>
           </picker>
         </view>
@@ -62,63 +56,67 @@
 
       <view class="card">
         <view class="card-header">
-          <text class="card-title">考试设置</text>
+          <text class="card-title">{{ userStore.t('teacher.examSettings') }}</text>
         </view>
         
         <view class="form-item">
-          <text class="form-label">及格比例 (%)</text>
-          <input class="form-input" type="number" v-model="form.passRate" placeholder="默认60" />
+          <text class="form-label">{{ userStore.t('teacher.passRate') }} (%)</text>
+          <input class="form-input" type="number" v-model="form.passRate" :placeholder="userStore.t('teacher.default60')" />
         </view>
 
         <view class="form-item">
-          <text class="form-label">题目乱序</text>
+          <text class="form-label">{{ userStore.t('teacher.shuffleQuestions') }}</text>
           <view class="form-switch-wrap">
             <switch :checked="form.shuffleQuestions" @change="onShuffleQuestionsChange" color="#dc2626" />
-            <text class="switch-desc">开启后题目顺序随机排列</text>
+            <text class="switch-desc">{{ userStore.t('teacher.shuffleQuestionsDesc') }}</text>
           </view>
         </view>
 
         <view class="form-item">
-          <text class="form-label">选项乱序</text>
+          <text class="form-label">{{ userStore.t('teacher.shuffleOptions') }}</text>
           <view class="form-switch-wrap">
             <switch :checked="form.shuffleOptions" @change="onShuffleOptionsChange" color="#dc2626" />
-            <text class="switch-desc">开启后选项顺序随机排列</text>
+            <text class="switch-desc">{{ userStore.t('teacher.shuffleOptionsDesc') }}</text>
           </view>
         </view>
 
         <view class="form-item">
-          <text class="form-label">离开检测</text>
+          <text class="form-label">{{ userStore.t('teacher.leaveDetection') }}</text>
           <view class="form-switch-wrap">
             <switch :checked="form.leaveDetection" @change="onLeaveDetectionChange" color="#dc2626" />
-            <text class="switch-desc">检测考试期间离开页面</text>
+            <text class="switch-desc">{{ userStore.t('teacher.leaveDetectionDesc') }}</text>
           </view>
         </view>
 
         <view class="form-item" v-if="form.leaveDetection">
-          <text class="form-label">离开次数上限</text>
-          <input class="form-input" type="number" v-model="form.maxLeaveCount" placeholder="超过此次数将自动收卷" />
+          <text class="form-label">{{ userStore.t('teacher.maxLeaveCount') }}</text>
+          <input class="form-input" type="number" v-model="form.maxLeaveCount" :placeholder="userStore.t('teacher.maxLeaveCountDesc')" />
         </view>
 
         <view class="form-item">
-          <text class="form-label">允许考后查看</text>
+          <text class="form-label">{{ userStore.t('teacher.allowViewAfterExam') }}</text>
           <view class="form-switch-wrap">
             <switch :checked="form.allowViewAfterExam" @change="onAllowViewAfterExamChange" color="#dc2626" />
-            <text class="switch-desc">考试结束后可查看试卷和答案</text>
+            <text class="switch-desc">{{ userStore.t('teacher.allowViewAfterExamDesc') }}</text>
           </view>
         </view>
       </view>
     </scroll-view>
 
     <view class="form-footer">
-      <button class="submit-btn" @click="submitForm">保存</button>
+      <button class="submit-btn" @click="submitForm">{{ userStore.t('common.save') }}</button>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { useUserStore } from '../../store/index.js'
 import { examApi, paperApi, classApi } from '../../utils/api.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
+
+const userStore = useUserStore()
 
 const examId = ref('')
 const isEdit = ref(false)
@@ -144,10 +142,6 @@ const form = reactive({
   maxLeaveCount: '3',
   allowViewAfterExam: false
 })
-
-const goBack = () => {
-  uni.navigateBack()
-}
 
 const onPaperChange = (e) => {
   const index = e.detail.value
@@ -191,47 +185,43 @@ const onAllowViewAfterExamChange = (e) => {
 
 const submitForm = async () => {
   if (!form.title.trim()) {
-    uni.showToast({ title: '请输入考试标题', icon: 'none' })
+    uni.showToast({ title: userStore.t('teacher.enterExamTitle'), icon: 'none' })
     return
   }
   if (!selectedPaperId.value) {
-    uni.showToast({ title: '请选择试卷', icon: 'none' })
+    uni.showToast({ title: userStore.t('teacher.selectPaper'), icon: 'none' })
     return
   }
   if (!selectedClassId.value) {
-    uni.showToast({ title: '请选择班级', icon: 'none' })
+    uni.showToast({ title: userStore.t('teacher.selectClass'), icon: 'none' })
     return
   }
   if (!form.duration) {
-    uni.showToast({ title: '请输入考试时长', icon: 'none' })
+    uni.showToast({ title: userStore.t('teacher.enterDuration'), icon: 'none' })
     return
   }
   if (!form.startDate || !form.startTime) {
-    uni.showToast({ title: '请选择开始时间', icon: 'none' })
+    uni.showToast({ title: userStore.t('teacher.selectStartTime'), icon: 'none' })
     return
   }
 
   try {
-    uni.showLoading({ title: '保存中...' })
+    uni.showLoading({ title: userStore.t('common.saving') })
 
     const startTime = `${form.startDate} ${form.startTime}:00`
-
-    const antiCheatConfig = {
-      shuffleQuestions: form.shuffleQuestions,
-      shuffleOptions: form.shuffleOptions,
-      leaveDetection: form.leaveDetection,
-      maxLeaveCount: parseInt(form.maxLeaveCount) || 3
-    }
 
     const examData = {
       id: examId.value || null,
       title: form.title,
       paperId: selectedPaperId.value,
-      classIds: selectedClassId.value,
+      classId: selectedClassId.value,
       duration: parseInt(form.duration),
       startTime: startTime,
       passScore: parseInt(form.passRate) || 60,
-      antiCheatConfig: JSON.stringify(antiCheatConfig),
+      shuffleQuestions: form.shuffleQuestions ? 1 : 0,
+      shuffleOptions: form.shuffleOptions ? 1 : 0,
+      leaveDetection: form.leaveDetection ? 1 : 0,
+      maxLeaveCount: parseInt(form.maxLeaveCount) || 3,
       allowViewAfterExam: form.allowViewAfterExam ? 1 : 0
     }
 
@@ -243,16 +233,16 @@ const submitForm = async () => {
     }
 
     if (res.code === 200) {
-      uni.showToast({ title: '保存成功', icon: 'success' })
+      uni.showToast({ title: userStore.t('common.saveSuccess'), icon: 'success' })
       setTimeout(() => {
         uni.navigateBack()
       }, 1500)
     } else {
-      uni.showToast({ title: res.message || '保存失败', icon: 'none' })
+      uni.showToast({ title: res.message || userStore.t('common.saveFailed'), icon: 'none' })
     }
   } catch (e) {
     console.error('保存失败:', e)
-    uni.showToast({ title: '保存失败', icon: 'none' })
+    uni.showToast({ title: userStore.t('common.saveFailed'), icon: 'none' })
   } finally {
     uni.hideLoading()
   }
@@ -271,10 +261,11 @@ const loadPapers = async () => {
 
 const loadClasses = async () => {
   try {
-    const userId = uni.getStorageSync('userInfo')?.userId
+    const userInfo = uni.getStorageSync('userInfo')
+    const userId = userInfo?.id || userInfo?.userId
     const res = await classApi.getMyClasses(userId)
     if (res.code === 200) {
-      classes.value = res.data.map(item => item.class) || []
+      classes.value = res.data || []
     }
   } catch (e) {
     console.error('加载班级失败:', e)
@@ -307,24 +298,17 @@ const loadExamInfo = async () => {
         form.allowViewAfterExam = data.allowViewAfterExam === 1
       }
       
-      if (data.antiCheatConfig) {
-        try {
-          const config = JSON.parse(data.antiCheatConfig)
-          if (config.shuffleQuestions !== undefined) {
-            form.shuffleQuestions = config.shuffleQuestions
-          }
-          if (config.shuffleOptions !== undefined) {
-            form.shuffleOptions = config.shuffleOptions
-          }
-          if (config.leaveDetection !== undefined) {
-            form.leaveDetection = config.leaveDetection
-          }
-          if (config.maxLeaveCount !== undefined) {
-            form.maxLeaveCount = config.maxLeaveCount.toString()
-          }
-        } catch (e) {
-          console.error('解析防作弊配置失败:', e)
-        }
+      if (data.shuffleQuestions !== undefined) {
+        form.shuffleQuestions = data.shuffleQuestions === 1
+      }
+      if (data.shuffleOptions !== undefined) {
+        form.shuffleOptions = data.shuffleOptions === 1
+      }
+      if (data.leaveDetection !== undefined) {
+        form.leaveDetection = data.leaveDetection === 1
+      }
+      if (data.maxLeaveCount !== undefined) {
+        form.maxLeaveCount = data.maxLeaveCount.toString()
       }
     }
   } catch (e) {
@@ -332,19 +316,17 @@ const loadExamInfo = async () => {
   }
 }
 
-onLoad((options) => {
+onLoad(async (options) => {
   if (options.id) {
     examId.value = options.id
     isEdit.value = true
   }
   
-  loadPapers()
-  loadClasses()
+  await loadPapers()
+  await loadClasses()
   
   if (isEdit.value) {
-    setTimeout(() => {
-      loadExamInfo()
-    }, 100)
+    loadExamInfo()
   }
 })
 </script>
@@ -355,31 +337,7 @@ onLoad((options) => {
   background-color: #f5f5f5;
   display: flex;
   flex-direction: column;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24rpx 32rpx;
-  background: #fff;
-  border-bottom: 1rpx solid #eee;
-}
-
-.back-btn {
-  padding: 8rpx;
-  
-  .back-icon {
-    font-size: 48rpx;
-    color: #333;
-    font-weight: bold;
-  }
-}
-
-.title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #333;
+  padding-top: 140rpx;
 }
 
 .form-body {

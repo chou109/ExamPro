@@ -1,10 +1,12 @@
 <template>
   <view class="login-container">
+    <CustomNavBar :title="userStore.t('common.login')" :showBack="false" />
+    
     <!-- Logo和标题 -->
     <view class="login-header">
-      <image class="logo" src="/static/logo.png" mode="aspectFit" />
       <text class="title">ExamPro</text>
-      <text class="subtitle">专业的在线考试系统</text>
+      <image class="logo" src="/static/logo.png" mode="aspectFit" />
+      <text class="subtitle">{{ userStore.t('common.systemDescription') }}</text>
     </view>
 
     <!-- 登录表单 -->
@@ -16,21 +18,21 @@
           :class="{ active: loginType === 'student' && !showAdminLogin }"
           @click="switchLoginType('student')"
         >
-          <text class="tab-text">学生</text>
+          <text class="tab-text">{{ userStore.t('login.student') }}</text>
         </view>
         <view
           class="login-tab"
           :class="{ active: loginType === 'teacher' && !showAdminLogin }"
           @click="switchLoginType('teacher')"
         >
-          <text class="tab-text">教师</text>
+          <text class="tab-text">{{ userStore.t('login.teacher') }}</text>
         </view>
         <view
           class="login-tab"
           :class="{ active: showAdminLogin }"
           @click="switchLoginType('admin')"
         >
-          <text class="tab-text">管理员</text>
+          <text class="tab-text">{{ userStore.t('login.admin') }}</text>
         </view>
       </view>
 
@@ -42,7 +44,7 @@
             class="input"
             type="text"
             v-model="form.username"
-            placeholder="请输入用户名"
+            :placeholder="userStore.t('login.usernamePlaceholder')"
             placeholder-class="placeholder"
           />
         </view>
@@ -53,40 +55,53 @@
             class="input"
             type="password"
             v-model="form.password"
-            placeholder="请输入密码"
+            :placeholder="userStore.t('login.passwordPlaceholder')"
             placeholder-class="placeholder"
           />
         </view>
 
         <button class="login-btn" :disabled="loading" @click="handleLogin">
-          <text class="btn-text">{{ loading ? '登录中...' : '登录' }}</text>
+          <text class="btn-text">{{ loading ? userStore.t('common.loading') : userStore.t('common.login') }}</text>
         </button>
       </view>
 
       <!-- 其他操作 -->
       <view class="action-buttons">
-        <text class="action-link" @click="goToRegister">注册账号</text>
+        <text class="action-link" @click="goToRegister">{{ userStore.t('common.register') }}</text>
       </view>
 
-      <!-- 演示账号提示 -->
-      <view class="demo-tip">
-        <text class="tip-text">演示账号：学生 s/stu | 教师 t/tchr | 管理员 a/admin</text>
-      </view>
     </view>
   </view>
 </template>
 
 <script>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { authApi } from '../../utils/api'
 import { useUserStore } from '../../store/index.js'
+import { initPageTitle } from '../../utils/title.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
 
 export default {
+  components: { CustomNavBar },
   setup() {
     const loginType = ref('student')
     const showAdminLogin = ref(false)
     const loading = ref(false)
     const userStore = useUserStore()
+    const showServerConfig = ref(false)
+    const serverUrl = ref(uni.getStorageSync('serverUrl') || 'http://localhost:8081/api')
+
+    const setPageTitle = () => {
+      uni.setNavigationBarTitle({ title: userStore.t('common.login') })
+    }
+
+    onMounted(() => {
+      setPageTitle()
+    })
+
+    watch(() => userStore.language, () => {
+      setPageTitle()
+    })
 
     const form = reactive({
       username: '',
@@ -105,7 +120,7 @@ export default {
     const handleLogin = async () => {
       if (!form.username || !form.password) {
         uni.showToast({
-          title: '请输入用户名和密码',
+          title: userStore.t('login.enterUsernamePassword'),
           icon: 'none'
         })
         return
@@ -121,7 +136,7 @@ export default {
 
         if (showAdminLogin.value && result.role !== 'ADMIN') {
           uni.showToast({
-            title: '不存在此管理员账号',
+            title: userStore.t('login.adminNotFound'),
             icon: 'none'
           })
           return
@@ -131,7 +146,7 @@ export default {
           const expectedRole = loginType.value === 'student' ? 'STUDENT' : 'TEACHER'
           if (result.role !== expectedRole) {
             uni.showToast({
-              title: loginType.value === 'student' ? '不存在此学生账号' : '不存在此教师账号',
+              title: loginType.value === 'student' ? userStore.t('login.studentNotFound') : userStore.t('login.teacherNotFound'),
               icon: 'none'
             })
             return
@@ -141,22 +156,22 @@ export default {
         uni.setStorageSync('userInfo', result)
 
         uni.showToast({
-          title: '登录成功',
+          title: userStore.t('common.loginSuccess'),
           icon: 'success'
         })
 
         setTimeout(() => {
-          uni.switchTab({
+          uni.reLaunch({
             url: '/pages/common/dashboard'
           })
         }, 1500)
 
       } catch (error) {
         console.error('登录失败详情:', error)
-        let errorMsg = '登录失败'
+        let errorMsg = userStore.t('common.loginFailed')
 
         if (error.errMsg && error.errMsg.includes('fail')) {
-          errorMsg = '网络连接失败，请检查服务器是否启动'
+          errorMsg = userStore.t('common.networkError')
         } else if (error.message) {
           errorMsg = error.message
         } else if (error.data && error.data.message) {
@@ -184,6 +199,7 @@ export default {
       showAdminLogin,
       loading,
       form,
+      userStore,
       switchLoginType,
       handleLogin,
       goToRegister
@@ -199,7 +215,9 @@ export default {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 60rpx 40rpx;
+  padding: 0 40rpx;
+  position: relative;
+  padding-top: 140rpx;
 }
 
 .login-header {
@@ -326,18 +344,6 @@ export default {
   .action-link {
     font-size: 28rpx;
     color: #dc2626;
-  }
-}
-
-.demo-tip {
-  margin-top: 40rpx;
-  padding-top: 24rpx;
-  border-top: 1rpx solid #e5e5e5;
-
-  .tip-text {
-    font-size: 24rpx;
-    color: #999;
-    text-align: center;
   }
 }
 </style>

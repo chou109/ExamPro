@@ -26,6 +26,7 @@ public class ExamExamRecordController {
     private final ExamWrongQuestionMapper examWrongQuestionMapper;
     private final ExamSubjectService examSubjectService;
     private final JwtUtils jwtUtils;
+    private final SysUserService sysUserService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ExamExamRecordController(ExamExamRecordService examExamRecordService,
@@ -34,7 +35,8 @@ public class ExamExamRecordController {
                                     ExamQuestionService examQuestionService,
                                     ExamWrongQuestionMapper examWrongQuestionMapper,
                                     ExamSubjectService examSubjectService,
-                                    JwtUtils jwtUtils) {
+                                    JwtUtils jwtUtils,
+                                    SysUserService sysUserService) {
         this.examExamRecordService = examExamRecordService;
         this.examPaperService = examPaperService;
         this.examExamService = examExamService;
@@ -42,21 +44,106 @@ public class ExamExamRecordController {
         this.examWrongQuestionMapper = examWrongQuestionMapper;
         this.examSubjectService = examSubjectService;
         this.jwtUtils = jwtUtils;
+        this.sysUserService = sysUserService;
     }
 
     @GetMapping("/page")
-    public R<PageResult<ExamExamRecord>> page(
+    public R<PageResult<Map<String, Object>>> page(
             @RequestParam(defaultValue = "1") Integer current,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) Long examId,
             @RequestParam(required = false) Long studentId,
             @RequestParam(required = false) String status) {
-        return R.ok(examExamRecordService.page(current, size, examId, studentId, status));
+        PageResult<ExamExamRecord> pageResult = examExamRecordService.page(current, size, examId, studentId, status);
+        
+        List<Map<String, Object>> records = pageResult.getRecords().stream().map(record -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", record.getId());
+            map.put("examId", record.getExamId());
+            map.put("studentId", record.getStudentId());
+            map.put("paperId", record.getPaperId());
+            map.put("startTime", record.getStartTime());
+            map.put("submitTime", record.getSubmitTime());
+            map.put("score", record.getScore());
+            map.put("scoreStatus", record.getScoreStatus());
+            map.put("status", record.getStatus());
+            map.put("isAutoSubmit", record.getIsAutoSubmit());
+            map.put("createTime", record.getCreateTime());
+            
+            ExamExam exam = examExamService.getById(record.getExamId());
+            if (exam != null) {
+                map.put("examTitle", exam.getTitle());
+                map.put("duration", exam.getDuration());
+            }
+            
+            SysUser student = sysUserService.getById(record.getStudentId());
+            if (student != null) {
+                map.put("studentName", student.getRealName());
+            }
+            
+            return map;
+        }).collect(Collectors.toList());
+        
+        return R.ok(new PageResult<>(pageResult.getTotal(), records, (long) current, (long) size));
     }
 
     @GetMapping("/{id}")
-    public R<ExamExamRecord> getById(@PathVariable Long id) {
-        return R.ok(examExamRecordService.getById(id));
+    public R<Map<String, Object>> getById(@PathVariable Long id) {
+        ExamExamRecord record = examExamRecordService.getById(id);
+        if (record == null) {
+            return R.error("考试记录不存在");
+        }
+        
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", record.getId());
+        result.put("examId", record.getExamId());
+        result.put("studentId", record.getStudentId());
+        result.put("paperId", record.getPaperId());
+        result.put("startTime", record.getStartTime());
+        result.put("submitTime", record.getSubmitTime());
+        result.put("score", record.getScore());
+        result.put("scoreStatus", record.getScoreStatus());
+        result.put("answerData", record.getAnswerData());
+        result.put("questionOrder", record.getQuestionOrder());
+        result.put("optionOrder", record.getOptionOrder());
+        result.put("screenSwitchCount", record.getScreenSwitchCount());
+        result.put("leaveCount", record.getLeaveCount());
+        result.put("isSuspicious", record.getIsSuspicious());
+        result.put("isAutoSubmit", record.getIsAutoSubmit());
+        result.put("status", record.getStatus());
+        result.put("createTime", record.getCreateTime());
+        result.put("updateTime", record.getUpdateTime());
+        
+        ExamExam exam = examExamService.getById(record.getExamId());
+        if (exam != null) {
+            result.put("exam", exam);
+        }
+        
+        if (record.getPaperId() != null) {
+            ExamPaper paper = examPaperService.getById(record.getPaperId());
+            if (paper != null) {
+                result.put("questions", examPaperService.getQuestions(paper));
+            }
+        }
+        
+        List<ExamAnswer> answers = examExamRecordService.getAnswersByRecordId(id);
+        if (!answers.isEmpty()) {
+            Map<String, Object> answerMap = new HashMap<>();
+            List<Map<String, Object>> studentAnswers = new ArrayList<>();
+            for (ExamAnswer answer : answers) {
+                answerMap.put(String.valueOf(answer.getQuestionId()), answer.getAnswer());
+                Map<String, Object> sa = new HashMap<>();
+                sa.put("questionId", answer.getQuestionId());
+                sa.put("answer", answer.getAnswer());
+                sa.put("isCorrect", answer.getIsCorrect());
+                sa.put("score", answer.getScore());
+                studentAnswers.add(sa);
+            }
+            result.put("answerMap", answerMap);
+            result.put("studentAnswers", studentAnswers);
+        }
+        
+        return R.ok(result);
     }
 
     @PostMapping("/start")
@@ -71,12 +158,8 @@ public class ExamExamRecordController {
         }
 
         ExamExamRecord existRecord = examExamRecordService.getByExamAndStudent(examId, studentId);
-        System.out.println("existRecord=" + existRecord + ", status=" + (existRecord != null ? existRecord.getStatus() : "null"));
         
         if (existRecord != null && "ONGOING".equals(existRecord.getStatus())) {
-            // 允许继续考试
-            System.out.println("检测到ONGOING记录，recordId=" + existRecord.getId() + ", startTime=" + existRecord.getStartTime());
-            
             Map<String, Object> result = new HashMap<>();
             result.put("recordId", existRecord.getId());
             result.put("record", existRecord);
@@ -88,13 +171,10 @@ public class ExamExamRecordController {
             result.put("examConfig", exam.getAntiCheatConfig());
             result.put("leaveCount", existRecord.getLeaveCount() != null ? existRecord.getLeaveCount() : 0);
             
-            // 将LocalDateTime转换为字符串格式，确保前端能正确解析
             String startTimeStr = existRecord.getStartTime() != null ? existRecord.getStartTime().toString() : null;
             result.put("startTime", startTimeStr);
             
-            // 返回已保存的答案（用于恢复答题进度）
             List<ExamAnswer> savedAnswers = examExamRecordService.getAnswersByRecordId(existRecord.getId());
-            System.out.println("查询到已保存的答案数量: " + savedAnswers.size());
             
             Map<Long, Map<String, Object>> answerMap = new HashMap<>();
             Map<String, String> studentAnswers = new HashMap<>();
@@ -106,8 +186,6 @@ public class ExamExamRecordController {
             }
             result.put("answerMap", answerMap);
             result.put("studentAnswers", studentAnswers);
-            
-            System.out.println("返回studentAnswers: " + studentAnswers);
             
             return R.ok(result);
         } else if (existRecord != null && ("SUBMITTED".equals(existRecord.getStatus()) || "AUTO_SUBMITTED".equals(existRecord.getStatus()))) {
@@ -155,41 +233,25 @@ public class ExamExamRecordController {
             result.put("studentAnswers", studentAnswers);
             result.put("hasSubjectiveUngraded", hasSubjectiveUngraded);
 
-            // 判断是否允许查看试卷
             boolean allowView = false;
-            
-            // 优先使用新的 allowViewAfterExam 字段
-            System.out.println("========== 调试考后查看权限 ==========");
-            System.out.println("exam.getAllowViewAfterExam(): " + exam.getAllowViewAfterExam());
-            System.out.println("exam.getAntiCheatConfig(): " + exam.getAntiCheatConfig());
             
             if (exam.getAllowViewAfterExam() != null) {
                 allowView = exam.getAllowViewAfterExam() == 1;
-                System.out.println("使用 allowViewAfterExam 字段，值为: " + exam.getAllowViewAfterExam() + ", allowView: " + allowView);
             } else if (exam.getAntiCheatConfig() != null) {
-                // 兼容旧版本：从防作弊配置中读取
                 try {
                     Map<String, Object> config = objectMapper.readValue(exam.getAntiCheatConfig(), Map.class);
                     if (config != null && config.containsKey("allowViewAfterExam")) {
                         allowView = Boolean.TRUE.equals(config.get("allowViewAfterExam"));
-                        System.out.println("使用 antiCheatConfig 配置，allowViewAfterExam: " + config.get("allowViewAfterExam") + ", allowView: " + allowView);
                     }
                 } catch (Exception e) {
                     allowView = false;
-                    System.out.println("解析 antiCheatConfig 失败: " + e.getMessage());
                 }
             } else {
-                // 默认不允许查看
                 allowView = false;
-                System.out.println("未设置允许查看权限，默认不允许");
             }
-            // 如果有主观题未评分，也不能查看详细答案
-            System.out.println("hasSubjectiveUngraded: " + hasSubjectiveUngraded);
             if (hasSubjectiveUngraded) {
                 allowView = false;
-                System.out.println("存在未评分主观题，设置 allowView 为 false");
             }
-            System.out.println("最终 allowView: " + allowView);
             result.put("canViewPaper", allowView);
             result.put("studentScore", existRecord.getScore());
 
@@ -258,8 +320,6 @@ public class ExamExamRecordController {
 
             Long recordId = Long.valueOf(params.get("recordId").toString());
             Map<String, String> answers = (Map<String, String>) params.get("answers");
-            
-            System.out.println("autoSave接收到请求: recordId=" + recordId + ", answers=" + answers);
 
             if (answers != null) {
                 for (Map.Entry<String, String> entry : answers.entrySet()) {
@@ -267,12 +327,9 @@ public class ExamExamRecordController {
                     String answer = entry.getValue();
                     examExamRecordService.saveAnswer(recordId, studentId, questionId, answer);
                 }
-                System.out.println("autoSave保存成功，共保存" + answers.size() + "个答案");
             }
             return R.ok();
         } catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("autoSave保存失败: " + e.getMessage());
             return R.error("自动保存失败: " + e.getMessage());
         }
     }
@@ -341,6 +398,7 @@ public class ExamExamRecordController {
             map.put("examId", record.getExamId());
             map.put("score", record.getScore());
             map.put("submitTime", record.getSubmitTime());
+            map.put("status", record.getStatus());
             map.put("studentStatus", record.getStatus());
 
             ExamExam exam = examExamService.getById(record.getExamId());

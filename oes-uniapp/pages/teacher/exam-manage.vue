@@ -1,9 +1,6 @@
 <template>
   <view class="exam-manage">
-    <view class="page-header">
-      <text class="title">考试管理</text>
-      <text class="subtitle">发布和管理考试，监控考生状态</text>
-    </view>
+    <CustomNavBar :title="userStore.t('common.examManage')" :showBack="true" />
 
     <!-- 工具栏 -->
     <view class="toolbar">
@@ -15,7 +12,7 @@
           <view class="picker">{{ currentStatusText }}</view>
         </picker>
       </view>
-      <button class="create-btn" @click="handleCreate">发布考试</button>
+      <button class="create-btn" @click="handleCreate">{{ userStore.t('common.publishExam') }}</button>
     </view>
 
     <!-- 考试列表 -->
@@ -31,39 +28,49 @@
         <view class="exam-info">
           <view class="info-row">
             <text class="info-icon">📚</text>
-            <text class="info-text">科目：{{ getSubjectName(item.subjectId) }}</text>
+            <text class="info-text">{{ userStore.t('common.subject') }}：{{ getSubjectName(item.subjectId) }}</text>
           </view>
           <view class="info-row">
             <text class="info-icon">⏱</text>
-            <text class="info-text">时长：{{ item.duration }}分钟</text>
+            <text class="info-text">{{ userStore.t('common.duration') }}：{{ item.duration }}{{ userStore.t('common.minutes') }}</text>
           </view>
           <view class="info-row">
             <text class="info-icon">📅</text>
-            <text class="info-text">开始：{{ formatDateTime(item.startTime) }}</text>
+            <text class="info-text">{{ userStore.t('common.startTime') }}：{{ formatDateTime(item.startTime) }}</text>
           </view>
           <view class="info-row">
             <text class="info-icon">🏆</text>
-            <text class="info-text">总分：{{ item.totalScore }}分</text>
+            <text class="info-text">{{ userStore.t('common.totalScore') }}：{{ item.totalScore }}{{ userStore.t('common.score') }}</text>
           </view>
         </view>
 
         <view class="exam-actions">
-          <button class="action-btn" @click="handleMonitor(item)">监控</button>
-          <button class="action-btn" @click="handleEdit(item)">修改</button>
-          <button v-if="item.status === 'PENDING'" class="action-btn success" @click="handleStart(item)">开始</button>
-          <button v-if="item.status === 'ONGOING'" class="action-btn warning" @click="handleFinish(item)">结束</button>
-          <button class="action-btn primary" @click="handleStats(item)">统计</button>
+          <button class="action-btn" @click="handleMonitor(item)">{{ userStore.t('common.monitor') }}</button>
+          <button class="action-btn" @click="handleEdit(item)">{{ userStore.t('common.edit') }}</button>
+          <button v-if="item.status === 'PENDING'" class="action-btn success" @click="handleStart(item)">{{ userStore.t('common.start') }}</button>
+          <button v-if="item.status === 'ONGOING'" class="action-btn warning" @click="handleFinish(item)">{{ userStore.t('common.finish') }}</button>
+          <button class="action-btn primary" @click="handleStats(item)">{{ userStore.t('common.statistics') }}</button>
         </view>
       </view>
     </view>
 
-    <uni-load-more :status="loadStatus" />
+    <view v-if="loadStatus === 'loading'" class="load-more">
+    <text class="loading-text">{{ userStore.t('common.loading') }}...</text>
+  </view>
+  <view v-if="loadStatus === 'noMore'" class="load-more">
+    <text class="loading-text">{{ userStore.t('common.noMoreData') }}</text>
+  </view>
   </view>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { examApi, subjectApi } from '../../utils/api.js'
+import { useUserStore } from '../../store/index.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
+
+const userStore = useUserStore()
 
 const tableData = ref([])
 const subjects = ref([])
@@ -77,43 +84,52 @@ const current = ref(1)
 const size = ref(10)
 
 const subjectOptions = computed(() => {
-  return [{ id: '', name: '全部科目' }, ...subjects.value]
+  return [{ id: '', name: userStore.t('common.allSubjects') }, ...subjects.value]
 })
 
-const statusOptions = [
-  { value: '', label: '全部状态' },
-  { value: 'PENDING', label: '待开始' },
-  { value: 'ONGOING', label: '进行中' },
-  { value: 'FINISHED', label: '已结束' }
-]
+const statusOptions = computed(() => [
+  { value: '', label: userStore.t('common.allStatus') },
+  { value: 'PENDING', label: userStore.t('common.pending') },
+  { value: 'ONGOING', label: userStore.t('common.ongoing') },
+  { value: 'FINISHED', label: userStore.t('common.finished') }
+])
 
 const currentSubjectText = computed(() => {
   const option = subjectOptions.value.find(s => s.id === params.value.subjectId)
-  return option ? option.name : '全部科目'
+  return option ? option.name : userStore.t('common.allSubjects')
 })
 
 const currentStatusText = computed(() => {
-  const option = statusOptions.find(s => s.value === params.value.status)
-  return option ? option.label : '全部状态'
+  const option = statusOptions.value.find(s => s.value === params.value.status)
+  return option ? option.label : userStore.t('common.allStatus')
 })
 
 const statusText = (status) => {
   return {
-    PENDING: '待开始',
-    ONGOING: '进行中',
-    FINISHED: '已结束'
+    PENDING: userStore.t('common.pending'),
+    ONGOING: userStore.t('common.ongoing'),
+    FINISHED: userStore.t('common.finished')
   }[status] || status
 }
 
 const getSubjectName = (subjectId) => {
   const subject = subjects.value.find(s => s.id === subjectId)
-  return subject ? subject.name : '未知科目'
+  return subject ? subject.name : userStore.t('common.unknownSubject')
 }
 
 const formatDateTime = (time) => {
   if (!time) return ''
   const date = new Date(time)
-  return date.toLocaleString('zh-CN')
+  if (userStore.language === 'zh') {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}`
+  } else {
+    return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+  }
 }
 
 const onSubjectChange = (e) => {
@@ -142,20 +158,20 @@ const handleEdit = (item) => {
 
 const handleStart = async (item) => {
   uni.showModal({
-    title: '提示',
-    content: '确定要开始考试吗？',
+    title: userStore.t('common.tip'),
+    content: userStore.t('common.confirmStart'),
     success: async (res) => {
       if (res.confirm) {
         try {
           const result = await examApi.start(item.id)
           if (result.code === 200) {
-            uni.showToast({ title: '考试已开始', icon: 'success' })
+            uni.showToast({ title: userStore.t('common.examStarted'), icon: 'success' })
             loadData()
           } else {
-            uni.showToast({ title: result.message || '操作失败', icon: 'none' })
+            uni.showToast({ title: result.message || userStore.t('common.operationFailed'), icon: 'none' })
           }
         } catch (e) {
-          uni.showToast({ title: '网络错误', icon: 'none' })
+          uni.showToast({ title: userStore.t('common.networkError'), icon: 'none' })
         }
       }
     }
@@ -164,20 +180,20 @@ const handleStart = async (item) => {
 
 const handleFinish = async (item) => {
   uni.showModal({
-    title: '提示',
-    content: '确定要结束考试吗？',
+    title: userStore.t('common.tip'),
+    content: userStore.t('common.confirmFinish'),
     success: async (res) => {
       if (res.confirm) {
         try {
           const result = await examApi.finish(item.id)
           if (result.code === 200) {
-            uni.showToast({ title: '考试已结束', icon: 'success' })
+            uni.showToast({ title: userStore.t('common.examFinished'), icon: 'success' })
             loadData()
           } else {
-            uni.showToast({ title: result.message || '操作失败', icon: 'none' })
+            uni.showToast({ title: result.message || userStore.t('common.operationFailed'), icon: 'none' })
           }
         } catch (e) {
-          uni.showToast({ title: '网络错误', icon: 'none' })
+          uni.showToast({ title: userStore.t('common.networkError'), icon: 'none' })
         }
       }
     }
@@ -219,12 +235,12 @@ const loadData = async () => {
       tableData.value = res.data.records
       loadStatus.value = res.data.records.length >= size.value ? 'more' : 'noMore'
     } else {
-      uni.showToast({ title: res.message || '加载失败', icon: 'none' })
+      uni.showToast({ title: res.message || userStore.t('common.loadFailed'), icon: 'none' })
       loadStatus.value = 'more'
     }
   } catch (e) {
     console.error(e)
-    uni.showToast({ title: '网络错误', icon: 'none' })
+    uni.showToast({ title: userStore.t('common.networkError'), icon: 'none' })
     loadStatus.value = 'more'
   }
 }
@@ -233,31 +249,18 @@ onMounted(() => {
   loadSubjects()
   loadData()
 })
+
+onShow(() => {
+  loadData()
+})
 </script>
 
 <style scoped>
 .exam-manage {
   min-height: 100vh;
   background-color: #f5f5f5;
-  padding: 24rpx;
-}
-
-.page-header {
-  margin-bottom: 32rpx;
-}
-
-.title {
-  display: block;
-  font-size: 48rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 12rpx;
-}
-
-.subtitle {
-  display: block;
-  font-size: 28rpx;
-  color: #666;
+  padding: 140rpx 24rpx 24rpx;
+  position: relative;
 }
 
 .toolbar {
@@ -358,18 +361,22 @@ onMounted(() => {
 
 .exam-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 12rpx;
   margin-top: 20rpx;
 }
 
 .action-btn {
-  flex: 1;
+  flex: 0 0 calc(33.33% - 8rpx);
+  min-width: 140rpx;
   height: 72rpx;
   line-height: 72rpx;
   border-radius: 12rpx;
-  font-size: 28rpx;
+  font-size: 26rpx;
   background: #f5f5f5;
   color: #666;
+  padding: 0 16rpx;
+  box-sizing: border-box;
 }
 
 .action-btn.primary {
@@ -385,5 +392,15 @@ onMounted(() => {
 .action-btn.warning {
   background: #e6a23c;
   color: #fff;
+}
+
+.load-more {
+  text-align: center;
+  padding: 24rpx;
+}
+
+.loading-text {
+  font-size: 26rpx;
+  color: #999;
 }
 </style>

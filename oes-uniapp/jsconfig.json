@@ -13,9 +13,9 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./*"]
     }
   },
-  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.vue"],
+  "include": ["pages/**/*.js", "pages/**/*.jsx", "pages/**/*.vue", "utils/**/*.js", "store/**/*.js", "App.vue", "main.js"],
   "exclude": ["node_modules", "dist", "unpackage"]
 }

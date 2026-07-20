@@ -1,130 +1,185 @@
-/**
- * UniApp状态管理
- * 使用Pinia（UniApp也支持）
- */
-import { defineStore } from 'pinia'
-import { authApi } from '../utils/api'
+import { reactive } from 'vue'
+import { zh, en } from '../utils/lang'
 
-// 用户状态Store
-export const useUserStore = defineStore('user', {
-  state: () => ({
-    userInfo: null,
-    token: uni.getStorageSync('token') || '',
-    isLoginVerified: false
-  }),
-  
-  getters: {
-    isLoggedIn: (state) => !!state.token && !!state.userInfo,
-    role: (state) => state.userInfo?.role || '',
-    userId: (state) => state.userInfo?.userId || ''
+const getLanguage = () => {
+  let lang = 'zh'
+  try {
+    lang = uni.getStorageSync('language') || lang
+  } catch (e) {
+    try {
+      lang = localStorage.getItem('language') || lang
+    } catch (e2) {
+      lang = lang
+    }
+  }
+  return lang
+}
+
+const state = reactive({
+  userInfo: null,
+  token: uni.getStorageSync('token') || '',
+  isLoginVerified: false,
+  language: getLanguage()
+})
+
+const store = {
+  get userInfo() {
+    return state.userInfo
+  },
+  set userInfo(value) {
+    state.userInfo = value
   },
   
-  actions: {
-    /**
-     * 登录
-     * @param {Object} loginData - 登录数据
-     */
-    async login(loginData) {
-      try {
-        const res = await authApi.login(loginData)
-        if (res.code === 200) {
-          this.token = res.data.token
-          this.userInfo = res.data
-          this.isLoginVerified = true
-          // 存储token到本地
-          uni.setStorageSync('token', res.data.token)
-          return res.data
-        }
-        throw new Error(res.message)
-      } catch (error) {
-        uni.showToast({
-          title: error.message || '登录失败',
-          icon: 'none'
-        })
-        throw error
+  get token() {
+    return state.token
+  },
+  set token(value) {
+    state.token = value
+  },
+  
+  get isLoginVerified() {
+    return state.isLoginVerified
+  },
+  set isLoginVerified(value) {
+    state.isLoginVerified = value
+  },
+  
+  get language() {
+    return state.language
+  },
+  
+  get isLoggedIn() {
+    return !!state.token && !!state.userInfo
+  },
+  
+  get role() {
+    return state.userInfo?.role || ''
+  },
+  
+  get userId() {
+    return state.userInfo?.id || ''
+  },
+  
+  get currentLang() {
+    return state.language
+  },
+  
+  get messages() {
+    return state.language === 'zh' ? zh : en
+  },
+  
+  async login(loginData) {
+    const { authApi } = await import('../utils/api')
+    try {
+      const res = await authApi.login(loginData)
+      if (res.code === 200) {
+        state.token = res.data.token
+        state.userInfo = res.data
+        state.isLoginVerified = true
+        uni.setStorageSync('token', res.data.token)
+        return res.data
       }
-    },
-    
-    /**
-     * 获取用户信息
-     */
-    async getUserInfo() {
-      if (!this.token) return null
-      
-      try {
-        const res = await authApi.getUserInfo()
-        if (res.code === 200) {
-          this.userInfo = res.data
-          this.isLoginVerified = true
-          return res.data
-        } else {
-          this.clearLoginState()
-          return null
-        }
-      } catch (error) {
-        console.error('获取用户信息失败:', error)
+      throw new Error(res.message)
+    } catch (error) {
+      uni.showToast({
+        title: error.message || this.t('common.loginFailed'),
+        icon: 'none'
+      })
+      throw error
+    }
+  },
+  
+  async getUserInfo() {
+    if (!state.token) return null
+    const { authApi } = await import('../utils/api')
+    try {
+      const res = await authApi.getUserInfo()
+      if (res.code === 200) {
+        state.userInfo = res.data
+        state.isLoginVerified = true
+        return res.data
+      } else {
         this.clearLoginState()
         return null
       }
-    },
-    
-    /**
-     * 验证登录状态
-     */
-    async verifyLoginState() {
-      if (!this.token) {
-        this.clearLoginState()
-        return false
-      }
-      
-      try {
-        const res = await authApi.getUserInfo()
-        if (res.code === 200) {
-          this.userInfo = res.data
-          this.isLoginVerified = true
-          return true
-        } else {
-          this.clearLoginState()
-          return false
-        }
-      } catch (error) {
-        console.error('登录状态验证失败:', error)
-        this.clearLoginState()
-        return false
-      }
-    },
-    
-    /**
-     * 清除登录状态
-     */
-    clearLoginState() {
-      this.token = ''
-      this.userInfo = null
-      this.isLoginVerified = false
-      uni.removeStorageSync('token')
-    },
-    
-    /**
-     * 登出
-     */
-    logout() {
+    } catch (error) {
+      console.error('获取用户信息失败:', error)
       this.clearLoginState()
-      uni.reLaunch({
-        url: '/pages/common/login'
-      })
-    },
-    
-    /**
-     * 初始化登录状态
-     */
-    initLoginState() {
-      const savedToken = uni.getStorageSync('token')
-      if (savedToken) {
-        this.token = savedToken
+      return null
+    }
+  },
+  
+  async verifyLoginState() {
+    if (!state.token) {
+      this.clearLoginState()
+      return false
+    }
+    const { authApi } = await import('../utils/api')
+    try {
+      const res = await authApi.getUserInfo()
+      if (res.code === 200) {
+        state.userInfo = res.data
+        state.isLoginVerified = true
+        return true
+      } else {
+        this.clearLoginState()
+        return false
+      }
+    } catch (error) {
+      console.error('登录状态验证失败:', error)
+      this.clearLoginState()
+      return false
+    }
+  },
+  
+  clearLoginState() {
+    state.token = ''
+    state.userInfo = null
+    state.isLoginVerified = false
+    uni.removeStorageSync('token')
+  },
+  
+  logout() {
+    this.clearLoginState()
+    uni.reLaunch({
+      url: '/pages/common/login'
+    })
+  },
+  
+  initLoginState() {
+    const savedToken = uni.getStorageSync('token')
+    if (savedToken) {
+      state.token = savedToken
+    }
+  },
+  
+  changeLanguage(lang) {
+    state.language = lang
+    try {
+      uni.setStorageSync('language', lang)
+    } catch (e) {
+      try {
+        localStorage.setItem('language', lang)
+      } catch (e2) {
+        console.error('Failed to save language')
       }
     }
+  },
+  
+  t(key) {
+    const keys = key.split('.')
+    let result = this.messages
+    for (const k of keys) {
+      if (result && typeof result === 'object') {
+        result = result[k]
+      } else {
+        return key
+      }
+    }
+    return result || key
   }
-})
+}
 
-// 导出默认store
+export const useUserStore = () => store
+
 export default useUserStore

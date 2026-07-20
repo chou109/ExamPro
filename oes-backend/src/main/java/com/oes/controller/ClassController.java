@@ -73,9 +73,17 @@ public class ClassController {
         List<Map<String, Object>> result = members.stream().map(member -> {
             Map<String, Object> map = new HashMap<>();
             SysUser user = sysUserService.getById(member.getUserId());
-            map.put("userId", member.getUserId());
-            map.put("username", user.getUsername());
-            map.put("realName", user.getRealName());
+            if (user == null) {
+                map.put("userId", member.getUserId());
+                map.put("username", "");
+                map.put("realName", "已注销用户");
+                map.put("avatar", "");
+            } else {
+                map.put("userId", member.getUserId());
+                map.put("username", user.getUsername());
+                map.put("realName", user.getRealName());
+                map.put("avatar", user.getAvatar());
+            }
             map.put("role", member.getRole());
             map.put("muteUntil", member.getMuteUntil());
             map.put("joinedAt", member.getJoinedAt());

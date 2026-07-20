@@ -6,12 +6,12 @@
           <el-icon><ArrowLeft /></el-icon>
         </el-button>
         <h2>{{ className }}</h2>
-        <span class="member-count">{{ memberCount }} 名成员</span>
+        <span class="member-count">{{ memberCount }} {{ userStore.t('teacher.members') }}</span>
       </div>
       <div class="header-right">
         <el-button link @click="showMembers = !showMembers">
           <el-icon><User /></el-icon>
-          成员
+          {{ userStore.t('teacher.members') }}
         </el-button>
       </div>
     </div>
@@ -38,24 +38,24 @@
               <div class="notice-header">
                 <span class="notice-icon">{{ parseExamNotice(msg.content)?.noticeType === 'START' ? '🚀' : '📢' }}</span>
                 <span class="notice-title">{{ parseExamNotice(msg.content)?.title }}</span>
-                <span class="notice-badge">{{ parseExamNotice(msg.content)?.noticeType === 'START' ? '进行中' : '待开始' }}</span>
+                <span class="notice-badge">{{ parseExamNotice(msg.content)?.noticeType === 'START' ? userStore.t('common.ongoing') : userStore.t('common.pending') }}</span>
               </div>
               <div class="notice-info">
                 <div class="info-item">
                   <span class="info-icon">📅</span>
-                  <span>开始时间：{{ parseExamNotice(msg.content)?.startTime }}</span>
+                  <span>{{ userStore.t('teacher.classChat.startTime') }}：{{ parseExamNotice(msg.content)?.startTime }}</span>
                 </div>
                 <div class="info-item">
                   <span class="info-icon">🔚</span>
-                  <span>结束时间：{{ parseExamNotice(msg.content)?.endTime }}</span>
+                  <span>{{ userStore.t('teacher.classChat.endTime') }}：{{ parseExamNotice(msg.content)?.endTime }}</span>
                 </div>
                 <div class="info-item">
                   <span class="info-icon">⏱️</span>
-                  <span>考试时长：{{ parseExamNotice(msg.content)?.duration }}分钟</span>
+                  <span>{{ userStore.t('teacher.classChat.duration') }}：{{ parseExamNotice(msg.content)?.duration }}{{ userStore.t('teacher.classChat.minutes') }}</span>
                 </div>
               </div>
               <div class="notice-action">
-                <el-button type="primary" size="small" @click="goToExamList(msg)">{{ parseExamNotice(msg.content)?.noticeType === 'START' ? '进入考试' : '查看考试' }}</el-button>
+                <el-button type="primary" size="small" @click="goToExamList(msg)">{{ parseExamNotice(msg.content)?.noticeType === 'START' ? userStore.t('teacher.enterExam') : userStore.t('teacher.viewExam') }}</el-button>
               </div>
             </div>
             <p class="message-time">{{ formatTime(msg.createTime) }}</p>
@@ -67,28 +67,28 @@
         <div class="chat-input">
           <el-input 
             v-model="inputMessage" 
-            placeholder="输入消息..." 
+            :placeholder="userStore.t('teacher.enterMessage')" 
             style="flex: 1"
             @keyup.enter="sendMessage"
           />
           <el-dropdown v-if="isTeacher" trigger="click" @command="handleDropdownCommand" style="margin-right: 8px">
             <el-button type="primary">
               <el-icon><Plus /></el-icon>
-              发布
+              {{ userStore.t('teacher.publish') }}
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item command="exam">
                   <el-icon><Document /></el-icon>
-                  发布考试
+                  {{ userStore.t('teacher.publishExam') }}
                 </el-dropdown-item>
                 <el-dropdown-item command="homework" disabled>
                   <el-icon><Notebook /></el-icon>
-                  发布作业（暂未开放）
+                  {{ userStore.t('teacher.publishHomework') }}
                 </el-dropdown-item>
                 <el-dropdown-item command="notice" disabled>
                   <el-icon><Bell /></el-icon>
-                  发布公告（暂未开放）
+                  {{ userStore.t('teacher.publishNotice') }}
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
@@ -98,7 +98,7 @@
             @click="sendMessage"
             :disabled="!inputMessage.trim()"
           >
-            发送
+            {{ userStore.t('teacher.send') }}
           </el-button>
         </div>
       </div>
@@ -106,7 +106,7 @@
 
     <div class="members-panel" v-if="showMembers">
       <div class="panel-header">
-        <h3>班级成员</h3>
+        <h3>{{ userStore.t('teacher.classMembers') }}</h3>
         <el-button link @click="showMembers = false">
           <el-icon><Close /></el-icon>
         </el-button>
@@ -121,72 +121,72 @@
             <span class="member-name">{{ member.realName }}</span>
             <span :class="'member-role ' + member.role.toLowerCase()">{{ getRoleText(member.role) }}</span>
           </div>
-          <span v-if="member.muteUntil" class="mute-status">已禁言</span>
+          <span v-if="member.muteUntil" class="mute-status">{{ userStore.t('teacher.muted') }}</span>
         </div>
       </div>
     </div>
 
-    <el-dialog v-model="examDialogVisible" title="发布考试" width="600px">
+    <el-dialog v-model="examDialogVisible" :title="userStore.t('teacher.publishExam')" width="600px">
       <el-form ref="examFormRef" :model="examForm" :rules="examRules" label-width="100px">
-        <el-form-item label="考试标题" prop="title">
-          <el-input v-model="examForm.title" />
+        <el-form-item :label="userStore.t('teacher.examTitle')" prop="title">
+          <el-input v-model="examForm.title" :placeholder="userStore.t('teacher.enterExamTitle')" />
         </el-form-item>
-        <el-form-item label="选择试卷" prop="paperId">
+        <el-form-item :label="userStore.t('teacher.selectPaper')" prop="paperId">
           <el-select v-model="examForm.paperId" style="width: 100%" @change="onPaperChange">
             <el-option v-for="p in papers" :key="p.id" :label="p.title" :value="p.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="当前班级">
+        <el-form-item :label="userStore.t('teacher.currentClass')">
           <el-tag type="primary">{{ className }}</el-tag>
         </el-form-item>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="开始时间">
-              <el-date-picker v-model="examForm.startTime" type="datetime" placeholder="选择开始时间" style="width: 100%" />
+            <el-form-item :label="userStore.t('teacher.classChat.startTime')">
+              <el-date-picker v-model="examForm.startTime" type="datetime" :placeholder="userStore.t('teacher.classChat.startTime')" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="结束时间">
-              <el-date-picker v-model="examForm.endTime" type="datetime" placeholder="选择结束时间" style="width: 100%" />
+            <el-form-item :label="userStore.t('teacher.classChat.endTime')">
+              <el-date-picker v-model="examForm.endTime" type="datetime" :placeholder="userStore.t('teacher.classChat.endTime')" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="考试时长">
+            <el-form-item :label="userStore.t('teacher.classChat.duration')">
               <el-input-number v-model="examForm.duration" :min="1" :max="300" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="及格比例">
+            <el-form-item :label="userStore.t('teacher.passRate')">
               <el-input-number v-model="examForm.passRate" :min="0" :max="100" style="width: 100%" />
               <span style="margin-left: 8px; color: #909399">%</span>
             </el-form-item>
           </el-col>
         </el-row>
-        <el-divider>防作弊设置</el-divider>
-        <el-form-item label="题目乱序">
+        <el-divider>{{ userStore.t('teacher.antiCheatSettings') }}</el-divider>
+        <el-form-item :label="userStore.t('common.shuffleQuestions')">
           <el-switch v-model="examForm.config.shuffleQuestions" />
         </el-form-item>
-        <el-form-item label="选项乱序">
+        <el-form-item :label="userStore.t('common.shuffleOptions')">
           <el-switch v-model="examForm.config.shuffleOptions" />
         </el-form-item>
-        <el-form-item label="离开检测">
+        <el-form-item :label="userStore.t('common.leaveDetection')">
           <el-switch v-model="examForm.config.leaveDetection" />
         </el-form-item>
-        <el-form-item label="离开次数上限" v-if="examForm.config.leaveDetection">
+        <el-form-item :label="userStore.t('common.maxLeaveCount')" v-if="examForm.config.leaveDetection">
           <el-input-number v-model="examForm.config.maxLeaveCount" :min="1" :max="10" style="width: 100%" />
-          <span style="margin-left: 8px; color: #909399">次，超过将自动收卷</span>
+          <span style="margin-left: 8px; color: #909399">{{ userStore.t('teacher.exceedAutoSubmit') }}</span>
         </el-form-item>
-        <el-divider>考后设置</el-divider>
-        <el-form-item label="允许考后查看试卷">
+        <el-divider>{{ userStore.t('teacher.postExamSettings') }}</el-divider>
+        <el-form-item :label="userStore.t('teacher.allowViewAfterExam')">
           <el-switch v-model="examForm.config.allowViewAfterExam" />
-          <span style="margin-left: 8px; color: #909399">开启后学生交卷即可查看试卷和得分</span>
+          <span style="margin-left: 8px; color: #909399">{{ userStore.t('teacher.viewAfterExamDesc') }}</span>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="examDialogVisible = false">取消</el-button>
-        <el-button type="danger" @click="handleExamSubmit">发布</el-button>
+        <el-button @click="examDialogVisible = false">{{ userStore.t('common.cancel') }}</el-button>
+        <el-button type="danger" @click="handleExamSubmit">{{ userStore.t('teacher.publish') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -236,17 +236,17 @@ const examForm = reactive({
 })
 
 const examRules = {
-  title: [{ required: true, message: '请输入考试标题', trigger: 'blur' }],
-  paperId: [{ required: true, message: '请选择试卷', trigger: 'change' }]
+  title: [{ required: true, message: userStore.t('teacher.enterExamTitle'), trigger: 'blur' }],
+  paperId: [{ required: true, message: userStore.t('teacher.selectPaper'), trigger: 'change' }]
 }
 
 const handleDropdownCommand = (command) => {
   if (command === 'exam') {
     examDialogVisible.value = true
   } else if (command === 'homework') {
-    ElMessage.info('作业功能暂未开放')
+    ElMessage.info(userStore.t('teacher.homeworkNotAvailable'))
   } else if (command === 'notice') {
-    ElMessage.info('公告功能暂未开放')
+    ElMessage.info(userStore.t('teacher.noticeNotAvailable'))
   }
 }
 
@@ -294,16 +294,16 @@ const handleExamSubmit = async () => {
           const publishRes = await examApi.publish(examId)
           console.log('发布考试结果:', publishRes)
           if (publishRes.code !== 200) {
-            throw new Error(publishRes.message || '发布失败')
+            throw new Error(publishRes.message || userStore.t('common.failed'))
           }
         } catch (e) {
           console.error('发布考试失败:', e)
-          ElMessage.error('发布考试失败: ' + (e.message || e))
+          ElMessage.error(userStore.t('common.failed') + ': ' + (e.message || e))
           return
         }
       }
       
-      ElMessage.success('发布成功')
+      ElMessage.success(userStore.t('teacher.publishSuccess'))
       examDialogVisible.value = false
       
       const startTime = new Date(examForm.startTime)
@@ -402,12 +402,17 @@ const loadClassInfo = async () => {
 const loadMembers = async () => {
   try {
     const res = await classApi.getClassMembers(classId.value)
-    if (res.code === 200) {
-      members.value = res.data
-      memberCount.value = res.data.length
+    if (res.code === 200 || res.success) {
+      const data = res.data || res.result || []
+      members.value = Array.isArray(data) ? data : (data.records || data.list || [])
+      memberCount.value = members.value.length
+    } else {
+      console.error('加载成员失败:', res)
+      ElMessage.error(res.message || '加载成员失败')
     }
   } catch (e) {
-    console.error(e)
+    console.error('加载成员失败:', e)
+    ElMessage.error('加载成员失败')
   }
 }
 
@@ -429,7 +434,7 @@ const sendMessage = async () => {
   try {
     const userId = userStore.userInfo?.userId || localStorage.getItem('userId')
     if (!userId) {
-      ElMessage.error('请先登录')
+      ElMessage.error(userStore.t('common.loginFirst'))
       return
     }
     const res = await classApi.sendMessage(classId.value, inputMessage.value, userId)
@@ -438,11 +443,11 @@ const sendMessage = async () => {
       inputMessage.value = ''
       scrollToBottom()
     } else {
-      ElMessage.error(res.message || '发送失败')
+      ElMessage.error(res.message || userStore.t('teacher.sendFailed'))
     }
   } catch (e) {
     console.error(e)
-    ElMessage.error('发送失败')
+    ElMessage.error(userStore.t('teacher.sendFailed'))
   }
 }
 
@@ -456,8 +461,8 @@ const scrollToBottom = () => {
 
 const getSenderName = (senderId) => {
   const member = members.value.find(m => m.userId == senderId)
-  if (!member) return '未知用户'
-  return member.realName || member.username || '未知用户'
+  if (!member) return userStore.t('common.unknownUser')
+  return member.realName || member.username || userStore.t('common.unknownUser')
 }
 
 const getSenderAvatar = (senderId) => {
@@ -468,14 +473,16 @@ const getSenderAvatar = (senderId) => {
 const formatTime = (time) => {
   if (!time) return ''
   const date = new Date(time)
-  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${hours}:${minutes}`
 }
 
 const getRoleText = (role) => {
   const roleMap = {
-    OWNER: '所有者',
-    ADMIN: '管理员',
-    MEMBER: '成员'
+    OWNER: userStore.t('teacher.classChat.owner'),
+    ADMIN: userStore.t('teacher.classChat.admin'),
+    MEMBER: userStore.t('teacher.classChat.member')
   }
   return roleMap[role] || role
 }

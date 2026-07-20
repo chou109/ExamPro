@@ -16,6 +16,7 @@
 - 💾 **实时保存**：30秒自动保存答题进度，防止意外丢失
 - 📊 **数据分析**：成绩统计、错题分析、知识点掌握度可视化
 - 👥 **多角色支持**：管理员、教师、学生三种角色，权限精细控制
+- 🌐 **多语言支持**：中英文实时切换，国际化界面
 
 ## 项目结构
 
@@ -100,30 +101,65 @@ exam_pro/
 ### 1. 数据库配置
 
 ```bash
-# 登录 MySQL
+# 登录 MySQL（默认用户名root，密码自行设置）
 mysql -u root -p
+
+# 创建数据库（如果不存在）
+CREATE DATABASE IF NOT EXISTS exam_pro DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+# 切换到数据库
+USE exam_pro;
 
 # 执行数据库脚本
 source oes-backend/src/main/resources/sql/ExamPro.sql
 ```
 
-### 2. 后端启动
+### 2. 修改数据库连接配置
+
+编辑 `oes-backend/src/main/resources/application.yml`，修改数据库连接信息：
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/exam_pro?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root          # 改为你的数据库用户名
+    password: your_password # 改为你的数据库密码
+```
+
+### 3. 一键启动（推荐）
+
+项目已提供 Windows 启动脚本，双击即可启动所有服务：
+
+```bash
+# 启动全部服务（后端 + 移动端H5 + PC端）
+start.bat
+
+# 仅启动移动端（后端 + 移动端H5）
+start-mobile.bat
+```
+
+**服务地址：**
+- 后端服务: http://localhost:8081
+- 移动端H5: http://localhost:8080
+- PC端: http://localhost:3000
+
+### 4. 手动启动（开发者模式）
+
+**后端启动**
 
 ```bash
 cd oes-backend
 
-# 修改 application.yml 中的数据库配置
-# spring.datasource.username 和 password
-
 # 启动后端
 mvn spring-boot:run
+
+# 或使用已打包的JAR
+java -jar target/exampro-backend-1.0.0.jar
 ```
 
 后端服务将在 **http://localhost:8081** 启动
 
-> ⚠️ **重要**：后端需要监听 `0.0.0.0:8081` 以支持移动设备访问
-
-### 3. PC端前端启动 (oes-frontend)
+### 5. PC端前端启动 (oes-frontend)
 
 ```bash
 cd oes-frontend
@@ -166,27 +202,36 @@ npm run dev:mp-weixin
 npm run dev:app-android
 ```
 
-#### 移动端网络配置 ⚙️
+#### 🔧 跨设备访问说明
 
-移动端访问后端需要修改IP地址：
+如果需要在手机上访问移动端H5，确保手机和电脑在同一局域网内：
+
+**步骤1：查看电脑IP地址**
+- Windows: `ipconfig | findstr "IPv4"`
+- Mac/Linux: `ifconfig | grep inet`
+
+**步骤2：修改移动端配置文件**
+
+修改 `oes-uniapp/utils/request.js` 中的 `BASE_URL`：
 
 ```javascript
 // oes-uniapp/utils/request.js
 const BASE_URL = 'http://你的电脑IP:8081/api'
-// 例如：http://192.168.34.49:8081/api
 ```
 
-查看电脑IP地址：
-- Windows: `ipconfig | findstr "IPv4"`
-- Mac/Linux: `ifconfig | grep inet`
+**步骤3：防火墙设置**
 
-## 测试账号
+确保Windows防火墙允许8081端口入站：
+```powershell
+netsh advfirewall firewall add rule name="ExamPro" dir=in action=allow protocol=TCP localport=8081
+```
 
-| 角色   | 用户名    | 密码      |
-|--------|-----------|-----------|
-| 管理员 | a    | admin     |
-| 教师   | t   | tchr   |
-| 学生   | s   | stu   |
+**步骤4：其他需要修改IP的配置文件**
+
+| 文件路径 | 说明 |
+|----------|------|
+| `oes-frontend/vite.config.js` | 开发环境代理配置 |
+| `oes-uniapp/manifest.json` | 小程序开发环境配置 |
 
 ## 功能模块
 
@@ -555,17 +600,17 @@ const saveInfo = async () => {
 
 ## 📋 开发路线图
 
-### v1.0.0 (当前版本) ✅
+### v1.0.0 (已完成) ✅
 - [x] 用户认证系统（登录/注册）
 - [x] 首页仪表盘（统计卡片、信息展示）
 - [x] 个人中心（资料编辑、密码修改）
 - [x] 多平台适配（Android/iOS/H5）
 
-### v1.1.0 (计划中)
-- [ ] 在线考试功能（移动端）
-- [ ] 考试历史查看
-- [ ] 错题本练习
-- [ ] 消息通知推送
+### v1.1.0 (当前版本) ✅
+- [x] 在线考试功能（移动端）
+- [x] 考试历史查看
+- [x] 错题本练习
+- [x] 消息通知推送
 
 ### v1.2.0 (规划中)
 - [ ] 离线考试模式

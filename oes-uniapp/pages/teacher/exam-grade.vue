@@ -1,19 +1,13 @@
 <template>
   <view class="exam-grade">
-    <view class="page-header">
-      <view class="back-btn" @click="goBack">
-        <text class="back-icon">‹</text>
-      </view>
-      <text class="title">评分</text>
-      <view class="header-right"></view>
-    </view>
+    <CustomNavBar :title="userStore.t('common.grade')" :showBack="true" />
 
     <scroll-view class="grade-body" scroll-y>
       <view class="info-card">
         <text class="exam-title">{{ examInfo.title }}</text>
         <view class="student-info">
           <text class="student-name">{{ recordInfo.studentName }}</text>
-          <text class="current-score">当前得分：{{ recordInfo.score || 0 }} / {{ examInfo.totalScore }}分</text>
+          <text class="current-score">{{ userStore.t('common.currentScore') }}：{{ recordInfo.score || 0 }} / {{ examInfo.totalScore }}{{ userStore.t('common.score') }}</text>
         </view>
       </view>
 
@@ -24,9 +18,9 @@
               <text>{{ getTypeText(q.type) }}</text>
             </view>
             <view class="question-score">
-              <text>{{ q.score }}分</text>
+              <text>{{ q.score }}{{ userStore.t('common.score') }}</text>
             </view>
-            <text class="question-number">第{{ index + 1 }}题</text>
+            <text class="question-number">{{ userStore.t('common.question') }} {{ index + 1 }}</text>
           </view>
 
           <text class="question-content">{{ q.content }}</text>
@@ -42,22 +36,22 @@
 
           <view class="answer-section">
             <view class="answer-row">
-              <text class="answer-label">学生答案：</text>
+              <text class="answer-label">{{ userStore.t('student.yourAnswer') }}：</text>
               <text :class="['answer-text', isCorrectAnswer(q) ? 'correct' : 'wrong']">
-                {{ getStudentAnswer(q) || '未作答' }}
+                {{ getStudentAnswer(q) || userStore.t('student.unanswered') }}
               </text>
             </view>
             <view class="answer-row">
-              <text class="answer-label">正确答案：</text>
+              <text class="answer-label">{{ userStore.t('common.correctAnswer') }}：</text>
               <text class="answer-text correct">{{ formatAnswer(q) }}</text>
             </view>
           </view>
 
           <view v-if="isSubjective(q.type)" class="grade-section">
-            <text class="grade-label">评分（0-{{ q.score }}分）</text>
+            <text class="grade-label">{{ userStore.t('common.grade') }}（0-{{ q.score }}{{ userStore.t('common.score') }}）</text>
             <view class="grade-input-row">
               <input class="grade-input" type="number" v-model="grades[q.id]" :max="q.score" placeholder="0" />
-              <text class="grade-unit">分</text>
+              <text class="grade-unit">{{ userStore.t('common.score') }}</text>
             </view>
           </view>
         </view>
@@ -65,15 +59,19 @@
     </scroll-view>
 
     <view class="grade-footer">
-      <button class="submit-btn" @click="submitGrade">提交评分</button>
+      <button class="submit-btn" @click="submitGrade">{{ userStore.t('common.submitGrade') }}</button>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { useUserStore } from '../../store/index.js'
 import { examRecordApi, examApi, paperApi, subjectApi } from '../../utils/api.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
+
+const userStore = useUserStore()
 
 const recordId = ref('')
 const examId = ref('')
@@ -98,17 +96,13 @@ const questions = ref([])
 const studentAnswers = ref({})
 const grades = reactive({})
 
-const goBack = () => {
-  uni.navigateBack()
-}
-
 const getTypeText = (type) => {
   return {
-    SINGLE_CHOICE: '单选题',
-    MULTIPLE_CHOICE: '多选题',
-    JUDGMENT: '判断题',
-    FILL_BLANK: '填空题',
-    ESSAY: '简答题'
+    SINGLE_CHOICE: userStore.t('common.singleChoice'),
+    MULTIPLE_CHOICE: userStore.t('common.multipleChoice'),
+    JUDGMENT: userStore.t('common.trueFalse'),
+    FILL_BLANK: userStore.t('common.fillBlank'),
+    ESSAY: userStore.t('common.shortAnswer')
   }[type] || type
 }
 
@@ -148,7 +142,7 @@ const formatAnswer = (q) => {
   const answer = q.answer || q.correctAnswer
   if (!answer) return ''
   if (q.type === 'JUDGMENT') {
-    return answer === 'A' || answer === '正确' ? '正确' : '错误'
+    return answer === 'A' || answer === '正确' ? userStore.t('common.correct') : userStore.t('common.wrong')
   }
   return answer
 }
@@ -193,7 +187,7 @@ const getOptionClass = (q, idx) => {
 
 const loadRecord = async () => {
   try {
-    uni.showLoading({ title: '加载中...' })
+    uni.showLoading({ title: userStore.t('common.loading') })
     
     const res = await examRecordApi.getById(recordId.value)
     if (res.code === 200) {
@@ -246,7 +240,7 @@ const loadRecord = async () => {
     }
   } catch (e) {
     console.error('加载失败:', e)
-    uni.showToast({ title: '加载失败', icon: 'none' })
+    uni.showToast({ title: userStore.t('common.loadFailed'), icon: 'none' })
   } finally {
     uni.hideLoading()
   }
@@ -254,7 +248,7 @@ const loadRecord = async () => {
 
 const submitGrade = async () => {
   try {
-    uni.showLoading({ title: '评分中...' })
+    uni.showLoading({ title: userStore.t('teacher.grading') })
     
     const gradeData = {}
     let hasGrade = false
@@ -270,22 +264,22 @@ const submitGrade = async () => {
     })
     
     if (!hasGrade) {
-      uni.showToast({ title: '请至少给一道题评分', icon: 'none' })
+      uni.showToast({ title: userStore.t('teacher.pleaseGradeAtLeastOne'), icon: 'none' })
       return
     }
     
     const res = await examRecordApi.grade(recordId.value, { grades: gradeData })
     if (res.code === 200) {
-      uni.showToast({ title: '评分成功', icon: 'success' })
+      uni.showToast({ title: userStore.t('teacher.gradeSuccess'), icon: 'success' })
       setTimeout(() => {
         uni.navigateBack()
       }, 1500)
     } else {
-      uni.showToast({ title: res.message || '评分失败', icon: 'none' })
+      uni.showToast({ title: res.message || userStore.t('teacher.gradeFailed'), icon: 'none' })
     }
   } catch (e) {
     console.error('评分失败:', e)
-    uni.showToast({ title: '评分失败', icon: 'none' })
+    uni.showToast({ title: userStore.t('teacher.gradeFailed'), icon: 'none' })
   } finally {
     uni.hideLoading()
   }
@@ -304,33 +298,7 @@ onLoad((options) => {
   background-color: #f5f5f5;
   display: flex;
   flex-direction: column;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24rpx 32rpx;
-  background: #fff;
-  border-bottom: 1rpx solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.back-btn {
-  padding: 8rpx;
-  .back-icon {
-    font-size: 48rpx;
-    color: #333;
-    font-weight: bold;
-  }
-}
-
-.title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #333;
+  padding-top: 140rpx;
 }
 
 .grade-body {

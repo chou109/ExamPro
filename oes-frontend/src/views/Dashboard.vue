@@ -2,7 +2,7 @@
   <div class="dashboard">
     <!-- 页面头部 -->
     <div class="page-header">
-      <h2>欢迎回来，{{ displayName }}</h2>
+      <h2>{{ userStore.t('dashboard.welcome') }}, {{ displayName }}</h2>
       <p>{{ roleText }} - {{ currentDate }}</p>
     </div>
 
@@ -16,7 +16,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ stats.totalUsers }}</p>
-            <p class="stat-label">总用户数</p>
+            <p class="stat-label">{{ userStore.t('dashboard.totalUsers') }}</p>
           </div>
         </div>
         <div class="stat-card admin-stat cursor-pointer" @click="goToUsers('STUDENT')">
@@ -25,7 +25,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ stats.studentCount }}</p>
-            <p class="stat-label">学生数</p>
+            <p class="stat-label">{{ userStore.t('common.student') }} {{ userStore.t('dashboard.count') }}</p>
           </div>
         </div>
         <div class="stat-card admin-stat cursor-pointer" @click="goToUsers('TEACHER')">
@@ -34,7 +34,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ stats.teacherCount }}</p>
-            <p class="stat-label">教师数</p>
+            <p class="stat-label">{{ userStore.t('common.teacher') }} {{ userStore.t('dashboard.count') }}</p>
           </div>
         </div>
         <div class="stat-card admin-stat cursor-pointer" @click="goToDepartments()">
@@ -43,7 +43,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ stats.departmentCount }}</p>
-            <p class="stat-label">院系数</p>
+            <p class="stat-label">{{ userStore.t('dashboard.departmentCount') }}</p>
           </div>
         </div>
       </template>
@@ -56,7 +56,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ stats.classCount }}</p>
-            <p class="stat-label">班级数</p>
+            <p class="stat-label">{{ userStore.t('dashboard.classCount') }}</p>
           </div>
           <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
         </div>
@@ -66,7 +66,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ stats.paperCount }}</p>
-            <p class="stat-label">试卷数</p>
+            <p class="stat-label">{{ userStore.t('dashboard.paperCount') }}</p>
           </div>
           <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
         </div>
@@ -76,7 +76,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ stats.questionCount }}</p>
-            <p class="stat-label">题目数</p>
+            <p class="stat-label">{{ userStore.t('dashboard.questionCount') }}</p>
           </div>
           <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
         </div>
@@ -86,7 +86,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ stats.examCount }}</p>
-            <p class="stat-label">考试数</p>
+            <p class="stat-label">{{ userStore.t('dashboard.examCount') }}</p>
           </div>
           <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
         </div>
@@ -100,7 +100,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ stats.pendingExams }}</p>
-            <p class="stat-label">待考考试</p>
+            <p class="stat-label">{{ userStore.t('dashboard.pendingExams') }}</p>
           </div>
           <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
         </div>
@@ -110,7 +110,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ stats.completedExams }}</p>
-            <p class="stat-label">已完成</p>
+            <p class="stat-label">{{ userStore.t('dashboard.completedExams') }}</p>
           </div>
           <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
         </div>
@@ -120,7 +120,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ stats.wrongCount }}</p>
-            <p class="stat-label">错题数</p>
+            <p class="stat-label">{{ userStore.t('dashboard.wrongCount') }}</p>
           </div>
           <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
         </div>
@@ -129,8 +129,8 @@
             <el-icon><Plus /></el-icon>
           </div>
           <div class="stat-info">
-            <p class="stat-value">{{ stats.averageScore }}分</p>
-            <p class="stat-label">平均分</p>
+            <p class="stat-value">{{ stats.averageScore }}{{ userStore.t('dashboard.scoreUnit') }}</p>
+            <p class="stat-label">{{ userStore.t('dashboard.averageScore') }}</p>
           </div>
           <div class="stat-arrow"><el-icon><ArrowRight /></el-icon></div>
         </div>
@@ -145,12 +145,12 @@
             <div class="card-header-icon">
               <el-icon><Message /></el-icon>
             </div>
-            <h3>班级消息</h3>
+            <h3>{{ userStore.t('common.messages') }}</h3>
             <el-button type="danger" link v-if="userInfo.role === 'TEACHER'" @click="$router.push('/classes')">
-              管理班级
+              {{ userStore.t('common.classManage') }}
             </el-button>
             <el-button type="danger" link v-else @click="$router.push('/student/classes')">
-              我的班级
+              {{ userStore.t('common.myClasses') }}
             </el-button>
           </div>
           <div class="class-message-list">
@@ -181,13 +181,13 @@
               <div class="card-header-icon">
                 <el-icon><Document /></el-icon>
               </div>
-              <h3>最近操作日志</h3>
+              <h3>{{ userStore.t('dashboard.recentLogs') }}</h3>
             </div>
             <el-table :data="recentLogs" stripe>
-              <el-table-column prop="operator" label="操作人" width="120" />
-              <el-table-column prop="action" label="操作" />
-              <el-table-column prop="target" label="目标" width="150" />
-              <el-table-column prop="createTime" label="时间" width="180" />
+              <el-table-column prop="operator" :label="userStore.t('common.user')" width="120" />
+              <el-table-column prop="action" :label="userStore.t('common.operation')" />
+              <el-table-column prop="target" :label="userStore.t('common.target')" width="150" />
+              <el-table-column prop="createTime" :label="userStore.t('common.time')" width="180" />
             </el-table>
           </div>
         </el-col>
@@ -202,23 +202,23 @@
               <div class="card-header-icon">
                 <el-icon><Calendar /></el-icon>
               </div>
-              <h3>最近考试</h3>
+              <h3>{{ userStore.t('dashboard.recentExams') }}</h3>
               <el-button type="danger" link @click="$router.push('/exams')">
-                管理考试
+                {{ userStore.t('dashboard.manageExams') }}
               </el-button>
             </div>
             <el-table :data="recentExams" stripe>
-              <el-table-column prop="title" label="考试名称" />
-              <el-table-column prop="className" label="班级" width="120" />
-              <el-table-column prop="status" label="状态" width="100">
+              <el-table-column prop="title" :label="userStore.t('common.title')" />
+              <el-table-column prop="className" :label="userStore.t('common.class')" width="120" />
+              <el-table-column prop="status" :label="userStore.t('common.status')" width="100">
                 <template #default="{ row }">
                   <el-tag :type="statusType(row.status)">{{ statusText(row.status) }}</el-tag>
                 </template>
               </el-table-column>
-              <el-table-column prop="startTime" label="开始时间" width="180" />
-              <el-table-column label="操作" width="100">
+              <el-table-column prop="startTime" :label="userStore.t('common.startTime')" width="180" />
+              <el-table-column :label="userStore.t('common.operation')" width="100">
                 <template #default="{ row }">
-                  <el-button type="danger" link @click="goToExam(row)">查看</el-button>
+                  <el-button type="danger" link @click="goToExam(row)">{{ userStore.t('common.viewDetail') }}</el-button>
                 </template>
               </el-table-column>
             </el-table>
@@ -235,9 +235,9 @@
           <div class="card-header-icon">
             <el-icon><Clock /></el-icon>
           </div>
-          <h3>待考考试</h3>
+          <h3>{{ userStore.t('dashboard.upcomingExams') }}</h3>
           <el-button type="danger" link @click="$router.push('/student/exams')">
-            全部考试
+            {{ userStore.t('dashboard.allExams') }}
           </el-button>
         </div>
         <div v-if="pendingExams.length > 0">
@@ -247,9 +247,9 @@
                 <h4>{{ exam.title }}</h4>
                 <div class="exam-meta">
                   <span class="meta-item"><el-icon><Clock /></el-icon>{{ exam.startTime }}</span>
-                  <span class="meta-item"><el-icon><Timer /></el-icon>{{ exam.duration }}分钟</span>
+                  <span class="meta-item"><el-icon><Timer /></el-icon>{{ exam.duration }}{{ userStore.t('dashboard.minutes') }}</span>
                 </div>
-                <p class="exam-desc">总分：{{ exam.totalScore }}分 | 及格线：{{ exam.passScore }}分</p>
+                <p class="exam-desc">{{ userStore.t('common.total') }}：{{ exam.totalScore }}{{ userStore.t('dashboard.scoreUnit') }} | {{ userStore.t('common.passRate') }}：{{ exam.passScore }}{{ userStore.t('dashboard.scoreUnit') }}</p>
               </div>
               <div class="exam-action">
                 <el-button 
@@ -257,7 +257,7 @@
                   type="success" 
                   @click="handleJoinExam(exam.id)"
                 >
-                  查看考试
+                  {{ userStore.t('common.viewDetail') }}
                 </el-button>
                 <el-button 
                   v-else
@@ -265,7 +265,7 @@
                   :disabled="exam.status !== 'ONGOING'"
                   @click="handleJoinExam(exam.id)"
                 >
-                  {{ exam.status === 'ONGOING' ? '进入考试' : '等待开始' }}
+                  {{ exam.status === 'ONGOING' ? userStore.t('dashboard.enterExam') : userStore.t('dashboard.waiting') }}
                 </el-button>
               </div>
             </div>
@@ -273,7 +273,7 @@
         </div>
         <div v-else class="empty-state">
           <el-icon><Calendar /></el-icon>
-          <p>暂无待考考试</p>
+          <p>{{ userStore.t('dashboard.noUpcomingExams') }}</p>
         </div>
       </div>
 
@@ -283,13 +283,13 @@
           <div class="card-header-icon">
             <el-icon><InfoIcon /></el-icon>
           </div>
-          <h3>考试须知</h3>
+          <h3>{{ userStore.t('dashboard.examTips') }}</h3>
         </div>
         <ul class="tips-list">
-          <li><span class="tip-icon">1.</span>进入考试后请保持网络畅通</li>
-          <li><span class="tip-icon">2.</span>考试过程中请勿频繁切换页面</li>
-          <li><span class="tip-icon">3.</span>答案会自动保存，但建议手动提交</li>
-          <li><span class="tip-icon">4.</span>考试结束后可查看错题分析</li>
+          <li><span class="tip-icon">1.</span>{{ userStore.t('dashboard.tip1') }}</li>
+          <li><span class="tip-icon">2.</span>{{ userStore.t('dashboard.tip2') }}</li>
+          <li><span class="tip-icon">3.</span>{{ userStore.t('dashboard.tip3') }}</li>
+          <li><span class="tip-icon">4.</span>{{ userStore.t('dashboard.tip4') }}</li>
         </ul>
       </div>
     </div>
@@ -319,12 +319,13 @@ const displayName = computed(() => {
 
 const currentDate = computed(() => {
   const now = new Date()
-  return now.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })
+  const lang = userStore.language === 'zh' ? 'zh-CN' : 'en-US'
+  return now.toLocaleDateString(lang, { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' })
 })
 
 const roleText = computed(() => {
-  const map = { ADMIN: '管理员', TEACHER: '教师', STUDENT: '学生' }
-  return map[userInfo.value.role] || '用户'
+  const map = { ADMIN: userStore.t('common.admin'), TEACHER: userStore.t('common.teacher'), STUDENT: userStore.t('common.student') }
+  return map[userInfo.value.role] || userStore.t('common.user')
 })
 
 const recentExams = ref([])
@@ -354,7 +355,7 @@ const statusType = (status) => {
 }
 
 const statusText = (status) => {
-  const map = { PENDING: '待开始', ONGOING: '进行中', FINISHED: '已结束' }
+  const map = { PENDING: userStore.t('common.pending'), ONGOING: userStore.t('common.ongoing'), FINISHED: userStore.t('common.finished') }
   return map[status] || status
 }
 
@@ -489,7 +490,7 @@ const goToClassChat = (classId) => {
 }
 
 const getLastMessage = (cls) => {
-  if (!cls.lastMessage) return '暂无消息'
+  if (!cls.lastMessage) return userStore.t('common.noMessage')
   if (cls.lastMessage.startsWith('EXAM_NOTICE|')) {
     return parseExamNotice(cls.lastMessage)
   }
@@ -502,11 +503,11 @@ const parseExamNotice = (content) => {
   const noticeType = parts[1] || ''
   const title = parts[2] || ''
   if (noticeType === 'START') {
-    return '🚀 ' + title + ' 开始考试'
+    return '🚀 ' + title + ' ' + userStore.t('common.examStarted')
   } else if (noticeType === 'PUBLISH') {
-    return '📢 ' + title + ' 发布通知'
+    return '📢 ' + title + ' ' + userStore.t('common.examPublished')
   } else if (noticeType === 'END') {
-    return '🔚 ' + title + ' 考试结束'
+    return '🔚 ' + title + ' ' + userStore.t('common.examEnded')
   }
   return '📝 ' + title
 }
@@ -516,10 +517,17 @@ const formatMessageTime = (time) => {
   const date = new Date(time)
   const now = new Date()
   const diff = now - date
-  if (diff < 60000) return '刚刚'
-  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前'
-  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前'
-  return date.toLocaleDateString('zh-CN')
+  if (diff < 60000) return userStore.t('common.justNow')
+  if (diff < 3600000) return Math.floor(diff / 60000) + userStore.t('common.minutesAgo')
+  if (diff < 86400000) return Math.floor(diff / 3600000) + userStore.t('common.hoursAgo')
+  if (userStore.language === 'zh') {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
 }
 
 const loadStats = async () => {
@@ -580,14 +588,17 @@ const loadLogs = async () => {
 const formatDateTime = (dateTime) => {
   if (!dateTime) return '-'
   const date = new Date(dateTime)
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  })
+  if (userStore.language === 'zh') {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  } else {
+    return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+  }
 }
 
 onMounted(() => {

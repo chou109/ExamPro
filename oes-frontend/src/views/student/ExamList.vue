@@ -1,8 +1,8 @@
 <template>
   <div class="exam-list">
     <div class="page-header">
-      <h2>考试列表</h2>
-      <p>查看并参加待进行的考试</p>
+      <h2>{{ userStore.t('common.examList') }}</h2>
+      <p>{{ userStore.t('student.viewAndJoin') }}</p>
     </div>
 
     <!-- 搜索和筛选区域 -->
@@ -10,7 +10,7 @@
       <div class="search-left">
         <el-input
           v-model="searchForm.keyword"
-          placeholder="搜索考试名称"
+          :placeholder="userStore.t('student.searchExam')"
           class="search-input"
           @keyup.enter.native="handleSearch"
         >
@@ -20,17 +20,17 @@
         </el-input>
         <el-select
           v-model="searchForm.status"
-          placeholder="筛选状态"
+          :placeholder="userStore.t('common.selectStatus')"
           class="status-select"
           @change="handleSearch"
         >
-          <el-option label="全部" value="" />
-          <el-option label="待开始" value="PENDING" />
-          <el-option label="进行中" value="ONGOING" />
-          <el-option label="已结束" value="FINISHED" />
+          <el-option :label="userStore.t('common.all')" value="" />
+          <el-option :label="userStore.t('common.pending')" value="PENDING" />
+          <el-option :label="userStore.t('common.ongoing')" value="ONGOING" />
+          <el-option :label="userStore.t('common.finished')" value="FINISHED" />
         </el-select>
       </div>
-      <el-button type="danger" @click="handleSearch">搜索</el-button>
+      <el-button type="danger" @click="handleSearch">{{ userStore.t('common.search') }}</el-button>
     </div>
 
     <div class="exam-grid">
@@ -44,11 +44,11 @@
         <div class="exam-info">
           <div class="info-item">
             <el-icon><Clock /></el-icon>
-            <span>考试时长：{{ item.exam.duration }} 分钟</span>
+            <span>{{ userStore.t('common.duration') }}：{{ item.exam.duration }} {{ userStore.t('common.minutes') }}</span>
           </div>
           <div class="info-item">
             <el-icon><Timer /></el-icon>
-            <span>总分：{{ item.exam.totalScore }}</span>
+            <span>{{ userStore.t('common.total') }}：{{ item.exam.totalScore }}{{ userStore.t('dashboard.scoreUnit') }}</span>
           </div>
           <div class="info-item">
             <el-icon><Calendar /></el-icon>
@@ -67,7 +67,7 @@
       </div>
     </div>
 
-    <el-empty v-if="tableData.length === 0" description="暂无考试" />
+    <el-empty v-if="tableData.length === 0" :description="userStore.t('student.noExams')" />
   </div>
 </template>
 
@@ -77,8 +77,10 @@ import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import { examApi } from '../../utils/api'
+import { useUserStore } from '../../store'
 
 const router = useRouter()
+const userStore = useUserStore()
 const tableData = ref([])
 const searchForm = ref({
   keyword: '',
@@ -87,7 +89,17 @@ const searchForm = ref({
 
 const formatTime = (time) => {
   if (!time) return ''
-  return new Date(time).toLocaleString('zh-CN')
+  const date = new Date(time)
+  if (userStore.language === 'zh') {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    return `${year}-${month}-${day} ${hours}:${minutes}`
+  } else {
+    return date.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })
+  }
 }
 
 const getExamStatusType = (item) => {
@@ -103,13 +115,13 @@ const getExamStatusType = (item) => {
 
 const getExamStatusText = (item) => {
   if (item.studentStatus === 'AUTO_SUBMITTED') {
-    return '强制收卷'
+    return userStore.t('student.autoSubmitted')
   }
   if (item.studentStatus === 'SUBMITTED') {
-    return '已完成'
+    return userStore.t('common.finished')
   }
-  if (item.exam.status === 'ONGOING') return '进行中'
-  return '即将开始'
+  if (item.exam.status === 'ONGOING') return userStore.t('common.ongoing')
+  return userStore.t('common.pending')
 }
 
 const canJoin = (item) => {
@@ -121,9 +133,9 @@ const canView = (item) => {
 }
 
 const getButtonText = (item) => {
-  if (item.studentStatus === 'SUBMITTED' || item.studentStatus === 'AUTO_SUBMITTED') return '查看详情'
-  if (item.exam.status === 'ONGOING') return '进入考试'
-  return '等待开始'
+  if (item.studentStatus === 'SUBMITTED' || item.studentStatus === 'AUTO_SUBMITTED') return userStore.t('common.viewDetail')
+  if (item.exam.status === 'ONGOING') return userStore.t('student.enterExam')
+  return userStore.t('dashboard.waiting')
 }
 
 const handleJoin = (exam) => {

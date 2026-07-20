@@ -1,29 +1,36 @@
 <template>
   <div class="my-classes">
     <div class="page-header">
-      <h2>我的班级</h2>
-      <p>查看和管理您创建的班级</p>
+      <h2>{{ userStore.t('common.messages') }}</h2>
+      <p>{{ userStore.t('teacher.viewLatest') }}</p>
     </div>
 
-    <div class="class-list">
-      <el-card 
+    <div class="class-message-list" v-if="classList.length > 0">
+      <div 
         v-for="item in classList" 
         :key="item.class.id" 
-        class="class-card"
+        class="class-message-card"
         @click="enterClass(item.class.id)"
       >
-        <div class="class-info">
-          <h3>{{ item.class.className }}</h3>
-          <p class="class-code">群号：{{ item.class.inviteCode }}</p>
-          <p class="class-role">角色：{{ getRoleText(item.role) }}</p>
+        <div class="class-message-icon">
+          <el-icon :size="36"><OfficeBuilding /></el-icon>
         </div>
-        <div class="class-actions">
-          <el-button type="primary" size="small">进入班级</el-button>
+        <div class="class-message-info">
+          <div class="class-message-header">
+            <span class="class-message-name">{{ item.class.className }}</span>
+            <span class="class-message-time">{{ getTimeText(item.class.lastMessageTime) }}</span>
+          </div>
+          <p class="class-message-content">{{ getMessageText(item.class) }}</p>
+          <div class="class-message-meta">
+            <span>{{ userStore.t('common.inviteCode') }}：{{ item.class.inviteCode }}</span>
+            <span>{{ userStore.t('common.role') }}：{{ getRoleText(item.role) }}</span>
+          </div>
         </div>
-      </el-card>
+        <el-icon class="class-message-arrow"><ArrowRight /></el-icon>
+      </div>
     </div>
 
-    <el-empty v-if="classList.length === 0" description="暂无班级，去创建一个班级吧" />
+    <el-empty v-if="classList.length === 0" :description="userStore.t('teacher.noClasses')" />
   </div>
 </template>
 
@@ -31,6 +38,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { OfficeBuilding, ArrowRight } from '@element-plus/icons-vue'
 import { useUserStore } from '../../store'
 import { classApi } from '../../utils/api'
 
@@ -42,7 +50,7 @@ const loadClasses = async () => {
   try {
     const userId = userStore.userInfo?.userId || localStorage.getItem('userId')
     if (!userId) {
-      ElMessage.error('请先登录')
+      ElMessage.error(userStore.t('common.loginFirst'))
       return
     }
     const res = await classApi.getMyClasses(userId)
@@ -51,7 +59,7 @@ const loadClasses = async () => {
     }
   } catch (e) {
     console.error(e)
-    ElMessage.error('加载班级列表失败')
+    ElMessage.error(userStore.t('teacher.loadClassesFailed'))
   }
 }
 
@@ -61,11 +69,55 @@ const enterClass = (classId) => {
 
 const getRoleText = (role) => {
   const roleMap = {
-    OWNER: '班级所有者',
-    ADMIN: '管理员',
-    MEMBER: '普通成员'
+    OWNER: userStore.t('teacher.classOwner'),
+    ADMIN: userStore.t('teacher.admin'),
+    MEMBER: userStore.t('teacher.member'),
+    CREATOR: userStore.t('teacher.classOwner'),
+    TEACHER: userStore.t('teacher.teacher'),
+    STUDENT: userStore.t('teacher.student')
   }
   return roleMap[role] || role
+}
+
+const getMessageText = (cls) => {
+  if (!cls || !cls.lastMessage) return userStore.t('common.noData')
+  if (cls.lastMessage.startsWith('EXAM_NOTICE|')) {
+    return parseExamNotice(cls.lastMessage)
+  }
+  return cls.lastMessage
+}
+
+const parseExamNotice = (content) => {
+  if (!content || !content.startsWith('EXAM_NOTICE|')) return ''
+  const parts = content.split('|')
+  const noticeType = parts[1] || ''
+  const title = parts[2] || ''
+  if (noticeType === 'START') {
+    return '🚀 ' + title + ' ' + userStore.t('teacher.examStarted')
+  } else if (noticeType === 'PUBLISH') {
+    return '📢 ' + title + ' ' + userStore.t('teacher.examPublished')
+  } else if (noticeType === 'END') {
+    return '🔚 ' + title + ' ' + userStore.t('common.finished')
+  }
+  return '📝 ' + title
+}
+
+const getTimeText = (time) => {
+  if (!time) return ''
+  const date = new Date(time)
+  const now = new Date()
+  const diff = now - date
+  if (diff < 60000) return userStore.t('teacher.justNow')
+  if (diff < 3600000) return Math.floor(diff / 60000) + (userStore.language === 'zh' ? userStore.t('common.minutes') + userStore.t('teacher.ago') : userStore.t('teacher.minutesAgo'))
+  if (diff < 86400000) return Math.floor(diff / 3600000) + (userStore.language === 'zh' ? userStore.t('common.hours') + userStore.t('teacher.ago') : userStore.t('teacher.hoursAgo'))
+  if (userStore.language === 'zh') {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  } else {
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
 }
 
 onMounted(() => {
@@ -101,112 +153,106 @@ onMounted(() => {
   }
 }
 
-.class-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.class-card {
-  cursor: pointer;
-  transition: all 0.3s;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  
-  :deep(.el-card__body) {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-}
-
-.class-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-}
-
-.class-info {
-  flex: 1;
-}
-
-.class-info h3 {
-  margin: 0 0 8px 0;
-  font-size: 18px;
-}
-
-.class-code, .class-role {
-  margin: 4px 0;
-  font-size: 14px;
-  color: #666;
-}
-
-.class-actions {
+.class-message-list {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: 16px;
 }
 
-/* 响应式布局 */
-@media screen and (max-width: 768px) {
-  .my-classes {
-    padding: 0 4px;
+.class-message-card {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+}
+
+.class-message-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border-radius: 14px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.class-message-info {
+  flex: 1;
+  margin-left: 20px;
+  min-width: 0;
+}
+
+.class-message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.class-message-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.class-message-time {
+  font-size: 12px;
+  color: #94a3b8;
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.class-message-content {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 8px;
+}
+
+.class-message-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.class-message-arrow {
+  color: #cbd5e1;
+  margin-left: 16px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .class-message-card {
+    padding: 16px;
   }
   
-  .page-header {
-    padding: 0 4px;
+  .class-message-icon {
+    width: 52px;
+    height: 52px;
   }
   
-  .class-list {
-    grid-template-columns: 1fr;
-    gap: 14px;
+  .class-message-info {
+    margin-left: 16px;
   }
   
-  .class-card :deep(.el-card__body) {
+  .class-message-meta {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-  }
-  
-  .class-info h3 {
-    font-size: 16px;
-  }
-  
-  .class-code,
-  .class-role {
-    font-size: 13px;
-  }
-  
-  .class-actions {
-    width: 100%;
-  }
-  
-  .class-actions .el-button {
-    width: 100%;
-  }
-}
-
-@media screen and (max-width: 576px) {
-  .class-card :deep(.el-card__body) {
-    padding: 14px;
-  }
-  
-  .class-info h3 {
-    font-size: 15px;
-  }
-}
-
-@media screen and (max-width: 360px) {
-  .class-card :deep(.el-card__body) {
-    padding: 12px;
-  }
-  
-  .class-info h3 {
-    font-size: 14px;
-  }
-  
-  .class-code,
-  .class-role {
-    font-size: 12px;
+    gap: 4px;
   }
 }
 </style>

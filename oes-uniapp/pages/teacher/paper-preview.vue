@@ -1,12 +1,6 @@
 <template>
   <view class="paper-preview">
-    <view class="page-header">
-      <view class="back-btn" @click="goBack">
-        <text class="back-icon">‹</text>
-      </view>
-      <text class="title">试卷预览</text>
-      <view class="header-right"></view>
-    </view>
+    <CustomNavBar :title="userStore.t('common.paperPreview')" :showBack="true" />
 
     <view class="exam-header">
       <text class="exam-title">{{ paper.title }}</text>
@@ -17,15 +11,15 @@
         </view>
         <view class="meta-item">
           <text class="meta-icon">⏱</text>
-          <text>{{ paper.duration }}分钟</text>
+          <text>{{ paper.duration }}{{ userStore.t('common.durationMinutes') }}</text>
         </view>
         <view class="meta-item">
           <text class="meta-icon">📝</text>
-          <text>{{ questions.length }}道题</text>
+          <text>{{ questions.length }}{{ userStore.t('common.questions') }}</text>
         </view>
         <view class="meta-item">
           <text class="meta-icon">🏆</text>
-          <text>{{ paper.totalScore }}分</text>
+          <text>{{ paper.totalScore }}{{ userStore.t('common.score') }}</text>
         </view>
       </view>
     </view>
@@ -54,7 +48,7 @@
         </view>
 
         <view class="answer-section">
-          <text class="answer-label">正确答案：</text>
+          <text class="answer-label">{{ userStore.t('common.correctAnswer') }}：</text>
           <text class="answer-text correct">{{ formatAnswer(currentQuestion) }}</text>
         </view>
       </view>
@@ -62,7 +56,7 @@
 
     <view class="nav-footer">
       <button :class="['nav-btn', currentIndex === 0 ? 'disabled' : '']" @click="prevQuestion" :disabled="currentIndex === 0">
-        <text>上一题</text>
+        <text>{{ userStore.t('common.prevQuestion') }}</text>
       </button>
       
       <view class="question-indicator">
@@ -70,19 +64,19 @@
       </view>
       
       <button :class="['nav-btn', currentIndex === questions.length - 1 ? 'disabled' : '']" @click="nextQuestion" :disabled="currentIndex === questions.length - 1">
-        <text>下一题</text>
+        <text>{{ userStore.t('common.nextQuestion') }}</text>
       </button>
     </view>
 
     <view class="answer-card-btn" @click="showAnswerCard = !showAnswerCard">
       <text class="answer-card-icon">📋</text>
-      <text class="answer-card-text">答题卡</text>
+      <text class="answer-card-text">{{ userStore.t('common.questionNav') }}</text>
     </view>
 
     <view class="answer-card-modal" v-if="showAnswerCard" @click="showAnswerCard = false">
     <view class="answer-card-content" @click.stop>
       <view class="card-header">
-        <text class="card-title">答题卡</text>
+        <text class="card-title">{{ userStore.t('common.questionNav') }}</text>
         <view class="close-btn" @click="showAnswerCard = false">
           <text class="close-icon">×</text>
         </view>
@@ -90,7 +84,7 @@
       
       <scroll-view class="card-body" scroll-y>
         <view class="question-section" v-if="singleQuestions.length > 0">
-          <view class="section-title">单选题 ({{ singleQuestions.length }}题)</view>
+          <view class="section-title">{{ userStore.t('common.singleChoice') }} ({{ singleQuestions.length }}{{ userStore.t('common.questions') }})</view>
           <view class="question-grid">
             <view 
               :class="['question-item', getQuestionIndex(q) === currentIndex ? 'current' : '']" 
@@ -104,7 +98,7 @@
         </view>
 
         <view class="question-section" v-if="multiQuestions.length > 0">
-          <view class="section-title">多选题 ({{ multiQuestions.length }}题)</view>
+          <view class="section-title">{{ userStore.t('common.multipleChoice') }} ({{ multiQuestions.length }}{{ userStore.t('common.questions') }})</view>
           <view class="question-grid">
             <view 
               :class="['question-item', getQuestionIndex(q) === currentIndex ? 'current' : '']" 
@@ -118,7 +112,7 @@
         </view>
 
         <view class="question-section" v-if="judgeQuestions.length > 0">
-          <view class="section-title">判断题 ({{ judgeQuestions.length }}题)</view>
+          <view class="section-title">{{ userStore.t('common.judgment') }} ({{ judgeQuestions.length }}{{ userStore.t('common.questions') }})</view>
           <view class="question-grid">
             <view 
               :class="['question-item', getQuestionIndex(q) === currentIndex ? 'current' : '']" 
@@ -132,7 +126,7 @@
         </view>
 
         <view class="question-section" v-if="fillQuestions.length > 0">
-          <view class="section-title">填空题 ({{ fillQuestions.length }}题)</view>
+          <view class="section-title">{{ userStore.t('common.fillBlank') }} ({{ fillQuestions.length }}{{ userStore.t('common.questions') }})</view>
           <view class="question-grid">
             <view 
               :class="['question-item', getQuestionIndex(q) === currentIndex ? 'current' : '']" 
@@ -146,7 +140,7 @@
         </view>
 
         <view class="question-section" v-if="essayQuestions.length > 0">
-          <view class="section-title">简答题 ({{ essayQuestions.length }}题)</view>
+          <view class="section-title">{{ userStore.t('common.essay') }} ({{ essayQuestions.length }}{{ userStore.t('common.questions') }})</view>
           <view class="question-grid">
             <view 
               :class="['question-item', getQuestionIndex(q) === currentIndex ? 'current' : '']" 
@@ -164,11 +158,11 @@
         <view class="legend-row">
           <view class="legend-item">
             <view class="dot current"></view>
-            <text>当前</text>
+            <text>{{ userStore.t('common.current') }}</text>
           </view>
           <view class="legend-item">
             <view class="dot unanswered"></view>
-            <text>未答</text>
+            <text>{{ userStore.t('common.unanswered') }}</text>
           </view>
         </view>
       </view>
@@ -178,9 +172,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
+import { useUserStore } from '../../store/index.js'
 import { paperApi, subjectApi } from '../../utils/api.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
+
+const userStore = useUserStore()
 
 const paperId = ref('')
 const paper = reactive({
@@ -196,10 +194,6 @@ const questions = ref([])
 const currentIndex = ref(0)
 const showAnswerCard = ref(false)
 
-const goBack = () => {
-  uni.navigateBack()
-}
-
 const getSubjectName = (subjectId) => {
   const subject = subjects.value.find(s => s.id === subjectId)
   return subject ? subject.name : '未知科目'
@@ -207,11 +201,11 @@ const getSubjectName = (subjectId) => {
 
 const getTypeText = (type) => {
   return {
-    SINGLE_CHOICE: '单选题',
-    MULTIPLE_CHOICE: '多选题',
-    JUDGMENT: '判断题',
-    FILL_BLANK: '填空题',
-    ESSAY: '简答题'
+    SINGLE_CHOICE: userStore.t('common.singleChoice'),
+    MULTIPLE_CHOICE: userStore.t('common.multipleChoice'),
+    JUDGMENT: userStore.t('common.judgment'),
+    FILL_BLANK: userStore.t('common.fillBlank'),
+    ESSAY: userStore.t('common.essay')
   }[type] || type
 }
 
@@ -328,33 +322,7 @@ onLoad((options) => {
   background-color: #f5f5f5;
   display: flex;
   flex-direction: column;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24rpx 32rpx;
-  background: #fff;
-  border-bottom: 1rpx solid #eee;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.back-btn {
-  padding: 8rpx;
-  .back-icon {
-    font-size: 48rpx;
-    color: #333;
-    font-weight: bold;
-  }
-}
-
-.title {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #333;
+  padding-top: 140rpx;
 }
 
 .exam-header {

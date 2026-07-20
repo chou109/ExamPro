@@ -1,14 +1,17 @@
 import { defineStore } from 'pinia'
 import { authApi } from '../utils/api'
+import { zh, en } from '../utils/lang'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     userInfo: null,
     token: localStorage.getItem('token') || '',
-    isLoginVerified: false
+    isLoginVerified: false,
+    language: localStorage.getItem('language') || 'zh'
   }),
   getters: {
-    isLoggedIn: (state) => !!state.token && !!state.userInfo
+    isLoggedIn: (state) => !!state.token && !!state.userInfo,
+    messages: (state) => state.language === 'zh' ? zh : en
   },
   actions: {
     async login(userInfo) {
@@ -75,6 +78,22 @@ export const useUserStore = defineStore('user', {
       if (savedToken) {
         this.token = savedToken
       }
+    },
+    changeLanguage(lang) {
+      this.language = lang
+      localStorage.setItem('language', lang)
+    },
+    t(key) {
+      const keys = key.split('.')
+      let result = this.messages
+      for (const k of keys) {
+        if (result && typeof result === 'object') {
+          result = result[k]
+        } else {
+          return key
+        }
+      }
+      return result || key
     }
   }
 })

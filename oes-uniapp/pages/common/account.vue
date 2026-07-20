@@ -1,5 +1,7 @@
 <template>
   <view class="account-page">
+    <CustomNavBar :title="userStore.t('common.account')" :showBack="true" />
+
     <!-- 用户信息头部 -->
     <view class="user-header">
       <view class="avatar-box" @click="showAvatarMenu">
@@ -9,7 +11,7 @@
         </view>
       </view>
       <view class="user-info">
-        <text class="username">{{ userInfo.realName || userInfo.username || '用户' }}</text>
+        <text class="username">{{ userInfo.realName || userInfo.username || userStore.t('common.user') }}</text>
         <text class="role">{{ roleText }}</text>
       </view>
     </view>
@@ -22,7 +24,7 @@
           <view class="menu-icon">
             <text class="emoji-icon">👤</text>
           </view>
-          <text class="menu-text">基本资料</text>
+          <text class="menu-text">{{ userStore.t('account.basicInfo') }}</text>
           <view class="menu-arrow">
             <text class="arrow-icon">›</text>
           </view>
@@ -32,7 +34,7 @@
           <view class="menu-icon">
             <text class="emoji-icon">🔒</text>
           </view>
-          <text class="menu-text">修改密码</text>
+          <text class="menu-text">{{ userStore.t('common.changePassword') }}</text>
           <view class="menu-arrow">
             <text class="arrow-icon">›</text>
           </view>
@@ -45,7 +47,7 @@
           <view class="menu-icon">
             <text class="emoji-icon">📊</text>
           </view>
-          <text class="menu-text">成绩分析</text>
+          <text class="menu-text">{{ userStore.t('common.scoreAnalysis') }}</text>
           <view class="menu-arrow">
             <text class="arrow-icon">›</text>
           </view>
@@ -55,7 +57,7 @@
           <view class="menu-icon">
             <text class="emoji-icon">❌</text>
           </view>
-          <text class="menu-text">错题本</text>
+          <text class="menu-text">{{ userStore.t('common.wrongQuestions') }}</text>
           <view class="menu-arrow">
             <text class="arrow-icon">›</text>
           </view>
@@ -68,7 +70,7 @@
           <view class="menu-icon">
             <text class="emoji-icon">📝</text>
           </view>
-          <text class="menu-text">考试记录</text>
+          <text class="menu-text">{{ userStore.t('common.examRecord') }}</text>
           <view class="menu-arrow">
             <text class="arrow-icon">›</text>
           </view>
@@ -81,7 +83,7 @@
           <view class="menu-icon">
             <text class="emoji-icon">ℹ️</text>
           </view>
-          <text class="menu-text">关于系统</text>
+          <text class="menu-text">{{ userStore.t('common.about') }}</text>
           <view class="menu-arrow">
             <text class="arrow-icon">›</text>
           </view>
@@ -91,7 +93,7 @@
           <view class="menu-icon">
             <text class="emoji-icon">🗑️</text>
           </view>
-          <text class="menu-text">清除缓存</text>
+          <text class="menu-text">{{ userStore.t('common.clearCache') }}</text>
           <view class="menu-arrow">
             <text class="arrow-icon">›</text>
           </view>
@@ -100,7 +102,7 @@
 
       <!-- 退出登录 -->
       <view class="logout-btn" @click="handleLogout">
-        <text class="logout-text">退出登录</text>
+        <text class="logout-text">{{ userStore.t('common.logout') }}</text>
       </view>
     </view>
 
@@ -109,32 +111,32 @@
     <view class="popup-bottom" v-if="showEditPopup">
       <view class="popup-content">
         <view class="popup-header">
-          <text class="popup-title">编辑基本资料</text>
-          <text class="popup-close" @click="closeEditPopup">关闭</text>
+          <text class="popup-title">{{ userStore.t('account.editInfo') }}</text>
+          <text class="popup-close" @click="closeEditPopup">{{ userStore.t('common.close') }}</text>
         </view>
 
         <view class="form-content">
           <view class="form-item">
-            <text class="label">用户名</text>
+            <text class="label">{{ userStore.t('account.username') }}</text>
             <input class="input" type="text" v-model="editForm.username" disabled />
           </view>
 
           <view class="form-item">
-            <text class="label">真实姓名</text>
-            <input class="input" type="text" v-model="editForm.realName" placeholder="请输入真实姓名" />
+            <text class="label">{{ userStore.t('account.realName') }}</text>
+            <input class="input" type="text" v-model="editForm.realName" :placeholder="userStore.t('account.enterRealName')" />
           </view>
 
           <view class="form-item">
-            <text class="label">邮箱</text>
-            <input class="input" type="text" v-model="editForm.email" placeholder="请输入邮箱" />
+            <text class="label">{{ userStore.t('account.email') }}</text>
+            <input class="input" type="text" v-model="editForm.email" :placeholder="userStore.t('account.enterEmail')" />
           </view>
 
           <view class="form-item">
-            <text class="label">手机号</text>
-            <input class="input" type="text" v-model="editForm.phone" placeholder="请输入手机号" />
+            <text class="label">{{ userStore.t('account.phone') }}</text>
+            <input class="input" type="text" v-model="editForm.phone" :placeholder="userStore.t('account.enterPhone')" />
           </view>
 
-          <button class="save-btn" @click="saveEditInfo">保存修改</button>
+          <button class="save-btn" @click="saveEditInfo">{{ userStore.t('common.save') }}</button>
         </view>
       </view>
     </view>
@@ -144,27 +146,27 @@
     <view class="popup-bottom" v-if="showPasswordPopup">
       <view class="popup-content">
         <view class="popup-header">
-          <text class="popup-title">修改密码</text>
-          <text class="popup-close" @click="closePasswordPopup">关闭</text>
+          <text class="popup-title">{{ userStore.t('common.changePassword') }}</text>
+          <text class="popup-close" @click="closePasswordPopup">{{ userStore.t('common.close') }}</text>
         </view>
 
         <view class="form-content">
           <view class="form-item">
-            <text class="label">当前密码</text>
-            <input class="input" type="password" v-model="passwordForm.oldPassword" placeholder="请输入当前密码" />
+            <text class="label">{{ userStore.t('account.currentPassword') }}</text>
+            <input class="input" type="password" v-model="passwordForm.oldPassword" :placeholder="userStore.t('account.enterCurrentPassword')" />
           </view>
 
           <view class="form-item">
-            <text class="label">新密码</text>
-            <input class="input" type="password" v-model="passwordForm.newPassword" placeholder="请输入新密码" />
+            <text class="label">{{ userStore.t('account.newPassword') }}</text>
+            <input class="input" type="password" v-model="passwordForm.newPassword" :placeholder="userStore.t('account.enterNewPassword')" />
           </view>
 
           <view class="form-item">
-            <text class="label">确认新密码</text>
-            <input class="input" type="password" v-model="passwordForm.confirmPassword" placeholder="请确认新密码" />
+            <text class="label">{{ userStore.t('account.confirmPassword') }}</text>
+            <input class="input" type="password" v-model="passwordForm.confirmPassword" :placeholder="userStore.t('account.enterConfirmPassword')" />
           </view>
 
-          <button class="save-btn" @click="savePassword">保存修改</button>
+          <button class="save-btn" @click="savePassword">{{ userStore.t('common.save') }}</button>
         </view>
       </view>
     </view>
@@ -175,10 +177,10 @@
       <view class="about-content">
         <image class="about-logo" src="/static/logo.png" mode="aspectFit" />
         <text class="about-title">ExamPro</text>
-        <text class="about-version">版本 1.0.0</text>
-        <text class="about-desc">专业的在线考试系统，让学习更高效</text>
+        <text class="about-version">{{ userStore.t('common.version') }} 1.0.0</text>
+        <text class="about-desc">{{ userStore.t('common.aboutDesc') }}</text>
         <text class="about-copy">© 2024 ExamPro Team</text>
-        <button class="about-close-btn" @click="closeAboutPopup">确定</button>
+        <button class="about-close-btn" @click="closeAboutPopup">{{ userStore.t('common.confirm') }}</button>
       </view>
     </view>
 
@@ -188,14 +190,14 @@
       <view class="avatar-menu-content">
         <view class="avatar-menu-item" @click="handleViewAvatar">
           <text class="menu-item-icon">👁️</text>
-          <text class="menu-item-text">查看头像</text>
+          <text class="menu-item-text">{{ userStore.t('account.viewAvatar') }}</text>
         </view>
         <view class="avatar-menu-item" @click="handleChangeAvatar">
           <text class="menu-item-icon">📷</text>
-          <text class="menu-item-text">更换头像</text>
+          <text class="menu-item-text">{{ userStore.t('account.changeAvatar') }}</text>
         </view>
         <view class="avatar-menu-cancel" @click="closeAvatarMenu">
-          <text class="menu-cancel-text">取消</text>
+          <text class="menu-cancel-text">{{ userStore.t('common.cancel') }}</text>
         </view>
       </view>
     </view>
@@ -206,33 +208,59 @@
       <image class="view-avatar-img" :src="getAvatarUrl(userInfo.avatar)" mode="aspectFit" @click.stop />
       <text class="view-avatar-close" @click="closeViewAvatar">✕</text>
     </view>
+
+    <CustomTabBar />
   </view>
 </template>
 
 <script>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { authApi, userApi } from '../../utils/api'
 import { upload } from '../../utils/request'
+import { useUserStore } from '../../store/index.js'
+import CustomTabBar from '../../components/CustomTabBar.vue'
+import CustomNavBar from '../../components/CustomNavBar.vue'
 
 export default {
+  components: { CustomTabBar, CustomNavBar },
   setup() {
     const userInfo = ref(uni.getStorageSync('userInfo') || {})
+    const userStore = useUserStore()
+
+    const setPageTitle = () => {
+      uni.setNavigationBarTitle({ title: userStore.t('common.account') })
+    }
+
+    onMounted(() => {
+      if (userInfo.value.role === 'ADMIN') {
+        uni.hideTabBar()
+      }
+      setPageTitle()
+    })
+
+    watch(() => userStore.language, () => {
+      setPageTitle()
+    })
 
     const roleText = computed(() => {
-      const map = { ADMIN: '管理员', TEACHER: '教师', STUDENT: '学生' }
-      return map[userInfo.value.role] || '用户'
+      const map = { 
+        ADMIN: userStore.t('login.admin'), 
+        TEACHER: userStore.t('login.teacher'), 
+        STUDENT: userStore.t('login.student') 
+      }
+      return map[userInfo.value.role] || userStore.t('common.user')
     })
 
     const getAvatarUrl = (avatar) => {
       if (!avatar) {
-        const name = userInfo.value.realName || userInfo.value.username || '用户'
+        const name = userInfo.value.realName || userInfo.value.username || userStore.t('common.user')
         const firstChar = name.charAt(0)
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstChar)}&background=dc2626&color=fff&size=100`
       }
       if (avatar.startsWith('http')) {
         return avatar
       }
-      return 'http://192.168.34.49:8081' + avatar
+      return 'http://192.168.1.92:8081' + avatar
     }
 
     const showEditPopup = ref(false)
@@ -314,13 +342,13 @@ export default {
           uploadAvatar(tempFilePath)
         },
         fail: () => {
-          uni.showToast({ title: '选择图片失败', icon: 'none' })
+          uni.showToast({ title: userStore.t('common.selectImageFailed'), icon: 'none' })
         }
       })
     }
 
     const uploadAvatar = async (filePath) => {
-      uni.showLoading({ title: '上传中...' })
+      uni.showLoading({ title: userStore.t('common.uploading') })
       try {
         const result = await upload('/upload/avatar', filePath)
         
@@ -335,13 +363,14 @@ export default {
 
           userInfo.value.avatar = avatarUrl
           uni.setStorageSync('userInfo', userInfo.value)
-          uni.showToast({ title: '上传成功', icon: 'success' })
+          userStore.userInfo = { ...userStore.userInfo, avatar: avatarUrl }
+          uni.showToast({ title: userStore.t('common.uploadSuccess'), icon: 'success' })
         } else {
-          uni.showToast({ title: result.message || '上传失败', icon: 'none' })
+          uni.showToast({ title: result.message || userStore.t('common.uploadFailed'), icon: 'none' })
         }
       } catch (e) {
         console.error(e)
-        uni.showToast({ title: '上传失败', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.uploadFailed'), icon: 'none' })
       } finally {
         uni.hideLoading()
       }
@@ -353,13 +382,13 @@ export default {
 
     const saveEditInfo = async () => {
       if (!editForm.realName) {
-        uni.showToast({ title: '请输入真实姓名', icon: 'none' })
+        uni.showToast({ title: userStore.t('account.enterRealName'), icon: 'none' })
         return
       }
 
       const userId = userInfo.value.userId || userInfo.value.id
       if (!userId) {
-        uni.showToast({ title: '用户信息异常', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.userInfoError'), icon: 'none' })
         return
       }
 
@@ -373,7 +402,7 @@ export default {
         })
 
         if (res.code === 200) {
-          uni.showToast({ title: '保存成功', icon: 'success' })
+          uni.showToast({ title: userStore.t('common.saveSuccess'), icon: 'success' })
 
           const updatedUserInfo = {
             ...userInfo.value,
@@ -386,24 +415,24 @@ export default {
 
           closeEditPopup()
         } else {
-          uni.showToast({ title: res.message || '保存失败', icon: 'none' })
+          uni.showToast({ title: res.message || userStore.t('common.saveFailed'), icon: 'none' })
         }
       } catch (e) {
-        uni.showToast({ title: e.message || '保存失败', icon: 'none' })
+        uni.showToast({ title: e.message || userStore.t('common.saveFailed'), icon: 'none' })
       }
     }
 
     const savePassword = async () => {
       if (!passwordForm.oldPassword) {
-        uni.showToast({ title: '请输入当前密码', icon: 'none' })
+        uni.showToast({ title: userStore.t('account.enterCurrentPassword'), icon: 'none' })
         return
       }
       if (!passwordForm.newPassword) {
-        uni.showToast({ title: '请输入新密码', icon: 'none' })
+        uni.showToast({ title: userStore.t('account.enterNewPassword'), icon: 'none' })
         return
       }
       if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-        uni.showToast({ title: '两次密码不一致', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.passwordMismatch'), icon: 'none' })
         return
       }
 
@@ -414,24 +443,24 @@ export default {
         })
 
         if (res.code === 200) {
-          uni.showToast({ title: '密码修改成功', icon: 'success' })
+          uni.showToast({ title: userStore.t('common.passwordChanged'), icon: 'success' })
           closePasswordPopup()
         } else {
-          uni.showToast({ title: res.message || '修改失败', icon: 'none' })
+          uni.showToast({ title: res.message || userStore.t('common.updateFailed'), icon: 'none' })
         }
       } catch (e) {
-        uni.showToast({ title: e.message || '修改失败', icon: 'none' })
+        uni.showToast({ title: e.message || userStore.t('common.updateFailed'), icon: 'none' })
       }
     }
 
     const clearCache = () => {
       uni.showModal({
-        title: '提示',
-        content: '确定要清除缓存吗？',
+        title: userStore.t('common.tip'),
+        content: userStore.t('common.confirmClearCache'),
         success: (res) => {
           if (res.confirm) {
             uni.clearStorage()
-            uni.showToast({ title: '缓存已清除', icon: 'success' })
+            uni.showToast({ title: userStore.t('common.cacheCleared'), icon: 'success' })
           }
         }
       })
@@ -439,8 +468,8 @@ export default {
 
     const handleLogout = () => {
       uni.showModal({
-        title: '提示',
-        content: '确定要退出登录吗？',
+        title: userStore.t('common.tip'),
+        content: userStore.t('common.confirmLogout'),
         success: (res) => {
           if (res.confirm) {
             uni.removeStorageSync('token')
@@ -456,6 +485,7 @@ export default {
 
     return {
       userInfo,
+      userStore,
       roleText,
       getAvatarUrl,
       showEditPopup,
@@ -490,6 +520,9 @@ export default {
 .account-page {
   min-height: 100vh;
   background: #f5f5f5;
+  position: relative;
+  padding-top: 140rpx;
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
 .user-header {
@@ -609,6 +642,7 @@ export default {
   right: 0;
   bottom: 0;
   z-index: 999;
+  padding-bottom: calc(100rpx + env(safe-area-inset-bottom));
 
   .popup-content {
     background: #fff;

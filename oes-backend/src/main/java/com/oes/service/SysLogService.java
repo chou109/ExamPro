@@ -32,9 +32,6 @@ public class SysLogService extends ServiceImpl<SysLogMapper, SysLog> {
     }
 
     public void saveLog(String username, String operation, String method, String params, String ip) {
-        logger.info("========== SysLogService.saveLog called ==========");
-        logger.info("username: {}, operation: {}, method: {}, ip: {}", username, operation, method, ip);
-        
         SysLog log = new SysLog();
         log.setUsername(username);
         log.setOperation(operation);
@@ -43,8 +40,7 @@ public class SysLogService extends ServiceImpl<SysLogMapper, SysLog> {
         log.setIp(ip);
         
         try {
-            boolean saved = save(log);
-            logger.info("Log saved successfully: {}", saved);
+            save(log);
         } catch (Exception e) {
             logger.error("Error saving log: ", e);
         }

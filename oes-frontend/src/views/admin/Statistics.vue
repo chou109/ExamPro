@@ -1,7 +1,7 @@
 <template>
   <div class="statistics">
     <div class="page-header">
-      <h2>数据统计</h2>
+      <h2>{{ userStore.t('admin.systemStatistics') }}</h2>
     </div>
 
     <!-- 统计卡片 -->
@@ -13,7 +13,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ statistics.totalUsers }}</p>
-            <p class="stat-label">总用户数</p>
+            <p class="stat-label">{{ userStore.t('admin.totalUsers') }}</p>
           </div>
         </div>
       </el-col>
@@ -24,7 +24,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ statistics.studentCount }}</p>
-            <p class="stat-label">学生数</p>
+            <p class="stat-label">{{ userStore.t('admin.totalStudents') }}</p>
           </div>
         </div>
       </el-col>
@@ -35,7 +35,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ statistics.teacherCount }}</p>
-            <p class="stat-label">教师数</p>
+            <p class="stat-label">{{ userStore.t('admin.totalTeachers') }}</p>
           </div>
         </div>
       </el-col>
@@ -46,7 +46,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ statistics.departmentCount }}</p>
-            <p class="stat-label">院系数</p>
+            <p class="stat-label">{{ userStore.t('admin.departmentCount') }}</p>
           </div>
         </div>
       </el-col>
@@ -60,7 +60,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ statistics.participationCount || 0 }}</p>
-            <p class="stat-label">参与人次</p>
+            <p class="stat-label">{{ userStore.t('admin.participationCount') }}</p>
           </div>
         </div>
       </el-col>
@@ -71,7 +71,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ statistics.classCount }}</p>
-            <p class="stat-label">班级数</p>
+            <p class="stat-label">{{ userStore.t('admin.classCount') }}</p>
           </div>
         </div>
       </el-col>
@@ -82,7 +82,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ statistics.paperCount }}</p>
-            <p class="stat-label">试卷数</p>
+            <p class="stat-label">{{ userStore.t('admin.totalPapers') }}</p>
           </div>
         </div>
       </el-col>
@@ -93,7 +93,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ statistics.questionCount }}</p>
-            <p class="stat-label">题目数</p>
+            <p class="stat-label">{{ userStore.t('admin.totalQuestions') }}</p>
           </div>
         </div>
       </el-col>
@@ -104,7 +104,7 @@
           </div>
           <div class="stat-info">
             <p class="stat-value">{{ statistics.examCount }}</p>
-            <p class="stat-label">考试数</p>
+            <p class="stat-label">{{ userStore.t('admin.totalExams') }}</p>
           </div>
         </div>
       </el-col>
@@ -114,30 +114,30 @@
       <el-col :span="12">
         <div class="card">
           <div class="card-header">
-            <h3>用户类型分布</h3>
+            <h3>{{ userStore.t('admin.userTypeDistribution') }}</h3>
           </div>
           <div class="chart-container">
             <div class="pie-chart">
               <div class="pie" :style="{ background: pieGradient }"></div>
               <div class="pie-center">
                 <span>{{ statistics.totalUsers }}</span>
-                <span>总用户</span>
+                <span>{{ userStore.t('admin.totalUsers') }}</span>
               </div>
             </div>
             <div class="legend">
               <div class="legend-item">
                 <span class="legend-color" style="background: #991b1b;"></span>
-                <span>管理员</span>
+                <span>{{ userStore.t('common.admin') }}</span>
                 <span class="legend-value">{{ statistics.adminCount }}</span>
               </div>
               <div class="legend-item">
                 <span class="legend-color" style="background: #dc2626;"></span>
-                <span>教师</span>
+                <span>{{ userStore.t('common.teacher') }}</span>
                 <span class="legend-value">{{ statistics.teacherCount }}</span>
               </div>
               <div class="legend-item">
                 <span class="legend-color" style="background: #f87171;"></span>
-                <span>学生</span>
+                <span>{{ userStore.t('common.student') }}</span>
                 <span class="legend-value">{{ statistics.studentCount }}</span>
               </div>
             </div>
@@ -147,25 +147,25 @@
       <el-col :span="12">
         <div class="card">
           <div class="card-header">
-            <h3>考试状态分布</h3>
+            <h3>{{ userStore.t('admin.examStatusDistribution') }}</h3>
           </div>
           <div class="bar-chart">
             <div class="bar-item">
-              <span class="bar-label">待开始</span>
+              <span class="bar-label">{{ userStore.t('common.pending') }}</span>
               <div class="bar-track">
                 <div class="bar-fill warning" :style="{ width: pendingPercent + '%' }"></div>
               </div>
               <span class="bar-value">{{ statistics.pendingExams }}</span>
             </div>
             <div class="bar-item">
-              <span class="bar-label">进行中</span>
+              <span class="bar-label">{{ userStore.t('common.ongoing') }}</span>
               <div class="bar-track">
                 <div class="bar-fill success" :style="{ width: ongoingPercent + '%' }"></div>
               </div>
               <span class="bar-value">{{ statistics.ongoingExams }}</span>
             </div>
             <div class="bar-item">
-              <span class="bar-label">已结束</span>
+              <span class="bar-label">{{ userStore.t('common.finished') }}</span>
               <div class="bar-track">
                 <div class="bar-fill info" :style="{ width: finishedPercent + '%' }"></div>
               </div>
@@ -180,7 +180,7 @@
       <el-col :span="24">
         <div class="card">
           <div class="card-header">
-            <h3>月度考试统计</h3>
+            <h3>{{ userStore.t('admin.monthlyExamStatistics') }}</h3>
           </div>
           <div class="line-chart">
             <div class="chart-grid">
@@ -204,8 +204,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { UserFilled, School, User, Folder, Files, EditPen, Calendar, Document } from '@element-plus/icons-vue'
 import { statisticsApi } from '../../utils/api'
+import { useUserStore } from '../../store'
 
 const router = useRouter()
+const userStore = useUserStore()
 
 const statistics = ref({
   totalUsers: 0,
@@ -223,20 +225,28 @@ const statistics = ref({
   participationCount: 0
 })
 
-const monthlyData = ref([
-  { name: '1月', value: 120 },
-  { name: '2月', value: 85 },
-  { name: '3月', value: 150 },
-  { name: '4月', value: 180 },
-  { name: '5月', value: 200 },
-  { name: '6月', value: 165 },
-  { name: '7月', value: 90 },
-  { name: '8月', value: 80 },
-  { name: '9月', value: 220 },
-  { name: '10月', value: 190 },
-  { name: '11月', value: 210 },
-  { name: '12月', value: 250 }
-])
+const monthNames = {
+  zh: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+  en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+}
+
+const monthlyData = computed(() => {
+  const names = monthNames[userStore.language] || monthNames.zh
+  return [
+    { name: names[0], value: 120 },
+    { name: names[1], value: 85 },
+    { name: names[2], value: 150 },
+    { name: names[3], value: 180 },
+    { name: names[4], value: 200 },
+    { name: names[5], value: 165 },
+    { name: names[6], value: 90 },
+    { name: names[7], value: 80 },
+    { name: names[8], value: 220 },
+    { name: names[9], value: 190 },
+    { name: names[10], value: 210 },
+    { name: names[11], value: 250 }
+  ]
+})
 
 const maxMonthlyValue = computed(() => Math.max(...monthlyData.value.map(m => m.value)))
 

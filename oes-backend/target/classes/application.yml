@@ -28,13 +28,22 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
   global-config:
     db-config:
       id-type: auto
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
+
+logging:
+  level:
+    root: WARN
+    com.oes: INFO
+    org.springframework: WARN
+    org.springframework.security: WARN
+    org.apache.ibatis: WARN
+    com.baomidou.mybatisplus: WARN
+    com.baomidou.mybatisplus.core.toolkit.support: ERROR
 
 jwt:
   secret: exam-pro-secret-key-2024-very-long-secret-key-for-jwt-token-generation

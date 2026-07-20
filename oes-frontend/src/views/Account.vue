@@ -1,46 +1,46 @@
 <template>
   <div class="account-container">
     <div class="account-header">
-      <h2>账号管理</h2>
+      <h2>{{ userStore.t('common.account') }}</h2>
     </div>
     <el-card shadow="hover" class="account-card">
       <el-tabs v-model="activeTab" type="border-card" class="account-tabs">
-        <el-tab-pane label="基本资料" name="basic">
+        <el-tab-pane :label="userStore.t('account.basicInfo')" name="basic">
           <div class="tab-content">
             <el-form :model="formData" label-width="100px" class="account-form">
               <el-row :gutter="20">
                 <el-col :span="12">
-                  <el-form-item label="姓名"> 
-                    <el-input v-model="formData.realName" placeholder="请输入姓名" />
+                  <el-form-item :label="userStore.t('account.realName')"> 
+                    <el-input v-model="formData.realName" :placeholder="userStore.t('account.enterRealName')" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item label="学号/工号">
+                  <el-form-item :label="userStore.t('account.username')">
                     <el-input v-model="formData.username" disabled />
                   </el-form-item>
                 </el-col>
               </el-row>
               <el-row :gutter="20">
                 <el-col :span="12">
-                  <el-form-item label="手机号">
-                    <el-input v-model="formData.phone" placeholder="请输入手机号" />
+                  <el-form-item :label="userStore.t('account.phone')">
+                    <el-input v-model="formData.phone" :placeholder="userStore.t('account.enterPhone')" />
                   </el-form-item>
                 </el-col>
                 <el-col :span="12">
-                  <el-form-item label="邮箱">
-                    <el-input v-model="formData.email" type="email" placeholder="请输入邮箱" />
+                  <el-form-item :label="userStore.t('account.email')">
+                    <el-input v-model="formData.email" type="email" :placeholder="userStore.t('account.enterEmail')" />
                   </el-form-item>
                 </el-col>
               </el-row>
               <el-form-item>
-                <el-button type="danger" @click="saveBasicInfo">保存修改</el-button>
-                <el-button @click="resetForm">重置</el-button>
+                <el-button type="danger" @click="saveBasicInfo">{{ userStore.t('account.save') }}</el-button>
+                <el-button @click="resetForm">{{ userStore.t('account.reset') }}</el-button>
               </el-form-item>
             </el-form>
           </div>
         </el-tab-pane>
         
-        <el-tab-pane label="我的头像" name="avatar">
+        <el-tab-pane :label="userStore.t('account.avatar')" name="avatar">
           <div class="tab-content avatar-tab">
             <div class="avatar-preview">
               <img v-if="formData.avatar" :src="formData.avatar" class="big-avatar-img">
@@ -57,54 +57,54 @@
                 :before-upload="beforeAvatarUpload"
                 :headers="{ Authorization: `Bearer ${userStore.token}` }"
               >
-                <el-button type="danger">上传新头像</el-button>
+                <el-button type="danger">{{ userStore.t('account.uploadAvatar') }}</el-button>
               </el-upload>
-              <p class="avatar-tip">支持 JPG、PNG 格式，大小不超过 2MB</p>
+              <p class="avatar-tip">{{ userStore.t('account.avatarTip') }}</p>
             </div>
           </div>
         </el-tab-pane>
         
-        <el-tab-pane label="密码管理" name="password">
+        <el-tab-pane :label="userStore.t('account.password')" name="password">
           <div class="tab-content">
             <div class="password-section">
-              <h4>修改密码</h4>
+              <h4>{{ userStore.t('account.changePassword') }}</h4>
               <el-form :model="passwordForm" label-width="100px" class="account-form">
-                <el-form-item label="旧密码">
-                  <el-input v-model="passwordForm.oldPassword" type="password" placeholder="请输入旧密码" show-password />
+                <el-form-item :label="userStore.t('account.oldPassword')">
+                  <el-input v-model="passwordForm.oldPassword" type="password" :placeholder="userStore.t('account.enterOldPassword')" show-password />
                 </el-form-item>
-                <el-form-item label="新密码">
-                  <el-input v-model="passwordForm.newPassword" type="password" placeholder="请输入新密码" show-password />
+                <el-form-item :label="userStore.t('account.newPassword')">
+                  <el-input v-model="passwordForm.newPassword" type="password" :placeholder="userStore.t('account.enterNewPassword')" show-password />
                 </el-form-item>
-                <el-form-item label="确认新密码">
-                  <el-input v-model="passwordForm.confirmPassword" type="password" placeholder="请确认新密码" show-password />
+                <el-form-item :label="userStore.t('account.confirmPassword')">
+                  <el-input v-model="passwordForm.confirmPassword" type="password" :placeholder="userStore.t('account.confirmNewPassword')" show-password />
                 </el-form-item>
                 <el-form-item>
-                  <el-button type="danger" @click="changePassword">修改密码</el-button>
-                  <el-button @click="resetPasswordForm">重置</el-button>
+                  <el-button type="danger" @click="changePassword">{{ userStore.t('account.changePassword') }}</el-button>
+                  <el-button @click="resetPasswordForm">{{ userStore.t('account.reset') }}</el-button>
                 </el-form-item>
               </el-form>
             </div>
             
             <el-divider>
-              <span class="divider-text">或者</span>
+              <span class="divider-text">{{ userStore.t('account.or') }}</span>
             </el-divider>
             
             <div class="forgot-password-section">
-              <h4>忘记旧密码？通过手机验证重置</h4>
+              <h4>{{ userStore.t('account.forgotPassword') }}</h4>
               <el-form :model="verificationForm" label-width="100px" class="account-form">
-                <el-form-item label="手机号">
+                <el-form-item :label="userStore.t('account.phone')">
                   <div class="verification-input">
-                    <el-input v-model="verificationForm.phone" placeholder="请输入手机号后六位" />
+                    <el-input v-model="verificationForm.phone" :placeholder="userStore.t('account.enterPhoneLastSix')" />
                     <el-button type="danger" @click="sendVerificationCode" :disabled="countdown > 0">
-                      {{ countdown > 0 ? `${countdown}秒后重发` : '发送验证码' }}
+                      {{ countdown > 0 ? `${countdown}${userStore.t('account.secondsResend')}` : userStore.t('account.sendCode') }}
                     </el-button>
                   </div>
                 </el-form-item>
-                <el-form-item label="验证码">
-                  <el-input v-model="verificationForm.code" placeholder="请输入验证码" />
+                <el-form-item :label="userStore.t('account.verificationCode')">
+                  <el-input v-model="verificationForm.code" :placeholder="userStore.t('account.enterVerificationCode')" />
                 </el-form-item>
                 <el-form-item>
-                  <el-button type="danger" @click="verifyAndResetPassword">验证并重置密码</el-button>
+                  <el-button type="danger" @click="verifyAndResetPassword">{{ userStore.t('account.verifyAndReset') }}</el-button>
                 </el-form-item>
               </el-form>
             </div>
@@ -159,7 +159,7 @@ const saveBasicInfo = async () => {
   try {
     const userId = userStore.userInfo?.userId || userStore.userInfo?.id
     if (!userId) {
-      ElMessage.error('用户信息异常')
+      ElMessage.error(userStore.t('common.userNotFound'))
       return
     }
     
@@ -172,7 +172,7 @@ const saveBasicInfo = async () => {
     })
     
     if (res.code === 200) {
-      ElMessage.success('基本资料保存成功')
+      ElMessage.success(userStore.t('common.profileUpdated'))
       
       if (userStore.userInfo) {
         userStore.userInfo.realName = formData.realName
@@ -181,10 +181,10 @@ const saveBasicInfo = async () => {
         userStore.userInfo.avatar = formData.avatar
       }
     } else {
-      ElMessage.error(res.message || '保存失败')
+      ElMessage.error(res.message || userStore.t('common.saveFailed'))
     }
   } catch (error) {
-    ElMessage.error('保存失败：' + (error.message || '网络错误'))
+    ElMessage.error(userStore.t('common.saveFailed') + '：' + (error.message || userStore.t('common.networkError')))
   }
 }
 
@@ -203,12 +203,12 @@ const handleAvatarSuccess = async (response, file) => {
     try {
       const updateData = { id: userStore.userInfo?.userId, avatar: response.data }
       await userApi.update(updateData)
-      ElMessage.success('头像上传成功')
+      ElMessage.success(userStore.t('common.avatarUpdatedSuccess'))
     } catch (error) {
-      ElMessage.error('头像保存失败：' + error.message)
+      ElMessage.error(userStore.t('common.saveFailed') + '：' + error.message)
     }
   } else {
-    ElMessage.error('头像上传失败：' + response.message)
+    ElMessage.error(userStore.t('common.uploadFailed') + '：' + response.message)
   }
 }
 
@@ -217,17 +217,17 @@ const beforeAvatarUpload = (file) => {
   const isLt2M = file.size / 1024 / 1024 < 2
 
   if (!isJPG) {
-    ElMessage.error('只能上传 JPG/PNG 格式的图片')
+    ElMessage.error(userStore.t('common.formatNotSupported'))
   }
   if (!isLt2M) {
-    ElMessage.error('图片大小不能超过 2MB')
+    ElMessage.error(userStore.t('common.fileTooLarge'))
   }
   return isJPG && isLt2M
 }
 
 const changePassword = async () => {
   if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-    ElMessage.error('两次输入的密码不一致')
+    ElMessage.error(userStore.t('common.passwordNotMatch'))
     return
   }
   
@@ -238,13 +238,13 @@ const changePassword = async () => {
     })
     
     if (res.code === 200) {
-      ElMessage.success('密码修改成功')
+      ElMessage.success(userStore.t('common.passwordChanged'))
       resetPasswordForm()
     } else {
-      ElMessage.error(res.message || '密码修改失败')
+      ElMessage.error(res.message || userStore.t('common.saveFailed'))
     }
   } catch (error) {
-    ElMessage.error('密码修改失败：' + (error.message || '网络错误'))
+    ElMessage.error(userStore.t('common.saveFailed') + '：' + (error.message || userStore.t('common.networkError')))
   }
 }
 
@@ -256,11 +256,11 @@ const resetPasswordForm = () => {
 
 const sendVerificationCode = () => {
   if (!verificationForm.phone) {
-    ElMessage.error('请输入手机号后六位')
+    ElMessage.error(userStore.t('common.checkInput'))
     return
   }
   // 模拟发送验证码
-  ElMessage.success('验证码发送成功')
+  ElMessage.success(userStore.t('common.success'))
   
   // 开始倒计时
   countdown.value = 60
@@ -274,11 +274,10 @@ const sendVerificationCode = () => {
 
 const verifyAndResetPassword = () => {
   if (!verificationForm.phone || !verificationForm.code) {
-    ElMessage.error('请填写完整信息')
+    ElMessage.error(userStore.t('common.fillAll'))
     return
   }
-  // 模拟验证操作
-  ElMessage.success('验证成功，密码已重置为初始密码')
+  ElMessage.success(userStore.t('common.verifySuccess'))
   verificationForm.phone = ''
   verificationForm.code = ''
 }

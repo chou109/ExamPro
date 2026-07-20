@@ -3,20 +3,20 @@
     <header class="exam-header">
       <div class="header-left">
         <h2>{{ examInfo.title }}</h2>
-        <el-tag type="success">考试中</el-tag>
+        <el-tag type="success">{{ userStore.t('student.examInProgress') }}</el-tag>
       </div>
       <div class="header-right">
         <div class="timer">
           <el-icon><Timer /></el-icon>
           <span :class="{ warning: remainingTime < 300 }">{{ formatTime(remainingTime) }}</span>
         </div>
-        <el-button type="danger" @click="handleSubmit" :loading="submitting">交卷</el-button>
+        <el-button type="danger" @click="handleSubmit" :loading="submitting">{{ userStore.t('student.submitExam') }}</el-button>
       </div>
     </header>
 
     <div class="exam-body">
       <aside class="question-nav">
-        <div class="nav-title">题目导航</div>
+        <div class="nav-title">{{ userStore.t('student.questionNav') }}</div>
         <div class="question-grid">
           <div
             v-for="(q, index) in questions"
@@ -28,16 +28,16 @@
           </div>
         </div>
         <div class="nav-legend">
-          <div class="legend-item"><span class="dot current"></span>当前</div>
-          <div class="legend-item"><span class="dot answered"></span>已答</div>
-          <div class="legend-item"><span class="dot unanswered"></span>未答</div>
+          <div class="legend-item"><span class="dot current"></span>{{ userStore.t('student.current') }}</div>
+          <div class="legend-item"><span class="dot answered"></span>{{ userStore.t('student.answered') }}</div>
+          <div class="legend-item"><span class="dot unanswered"></span>{{ userStore.t('student.unanswered') }}</div>
         </div>
       </aside>
 
       <main class="question-content">
         <div class="question-header">
           <span class="question-type">{{ typeText(questions[currentIndex]?.type) }}</span>
-          <span class="question-score">{{ questions[currentIndex]?.score }}分</span>
+          <span class="question-score">{{ questions[currentIndex]?.score }}{{ userStore.t('dashboard.scoreUnit') }}</span>
         </div>
         <div class="question-text">{{ questions[currentIndex]?.content }}</div>
 
@@ -55,8 +55,8 @@
           </el-checkbox-group>
 
           <el-radio-group v-else-if="questions[currentIndex]?.type === 'JUDGMENT'" v-model="answers[questions[currentIndex].id]" @change="saveAnswer">
-            <el-radio value="A">正确</el-radio>
-            <el-radio value="B">错误</el-radio>
+            <el-radio value="A">{{ userStore.t('common.correct') }}</el-radio>
+            <el-radio value="B">{{ userStore.t('common.wrong') }}</el-radio>
           </el-radio-group>
         </div>
 
@@ -65,14 +65,14 @@
             v-model="answers[questions[currentIndex]?.id]"
             type="textarea"
             :rows="6"
-            placeholder="请输入答案"
+            :placeholder="userStore.t('student.enterAnswer')"
             @blur="saveAnswer"
           />
         </div>
 
         <div class="question-actions">
-          <el-button :disabled="currentIndex === 0" @click="currentIndex--">上一题</el-button>
-          <el-button :disabled="currentIndex === questions.length - 1" @click="currentIndex++">下一题</el-button>
+          <el-button :disabled="currentIndex === 0" @click="currentIndex--">{{ userStore.t('student.prevQuestion') }}</el-button>
+          <el-button :disabled="currentIndex === questions.length - 1" @click="currentIndex++">{{ userStore.t('student.nextQuestion') }}</el-button>
         </div>
       </main>
     </div>
@@ -84,9 +84,11 @@ import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { examApi, examRecordApi } from '../../utils/api'
+import { useUserStore } from '../../store'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
 
 const examInfo = ref(null)
 const questions = ref([])
@@ -105,7 +107,14 @@ const formatTime = (seconds) => {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
-const typeText = (type) => ({ SINGLE_CHOICE: '单选题', MULTIPLE_CHOICE: '多选题', JUDGMENT: '判断题', FILL_BLANK: '填空题', ESSAY: '简答题', PROGRAMMING: '编程题' }[type] || type)
+const typeText = (type) => ({ 
+  SINGLE_CHOICE: userStore.t('common.single'), 
+  MULTIPLE_CHOICE: userStore.t('common.multiple'), 
+  JUDGMENT: userStore.t('common.judgment'), 
+  FILL_BLANK: userStore.t('common.fillBlank'), 
+  ESSAY: userStore.t('common.essay'), 
+  PROGRAMMING: userStore.t('common.programming') 
+}[type] || type)
 
 const parseOptions = (options) => {
   try {
@@ -143,11 +152,11 @@ const saveAnswer = async () => {
 }
 
 const handleSubmit = async () => {
-  await ElMessageBox.confirm('确定要交卷吗？交卷后无法修改答案', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+  await ElMessageBox.confirm(userStore.t('common.confirmSubmit'), userStore.t('common.tip'), { confirmButtonText: userStore.t('common.confirm'), cancelButtonText: userStore.t('common.cancel'), type: 'warning' })
   submitting.value = true
   try {
     await examRecordApi.submit(recordId.value)
-    ElMessage.success('交卷成功')
+    ElMessage.success(userStore.t('common.submitSuccess'))
     router.push('/student/history')
   } catch (e) {
     ElMessage.error(e.message)
@@ -161,10 +170,10 @@ const handleScreenSwitch = async () => {
   try {
     const res = await examRecordApi.screenSwitch({ recordId: recordId.value })
     if (res.code !== 200) {
-      ElMessage.warning('检测到切屏，请专注考试')
+      ElMessage.warning(userStore.t('common.screenSwitchWarning'))
     }
     if (res.message?.includes('自动交卷')) {
-      ElMessage.error('切屏次数过多，已自动交卷')
+      ElMessage.error(userStore.t('common.autoSubmit'))
       router.push('/student/history')
     }
   } catch (e) { console.error(e) }
@@ -175,7 +184,7 @@ const loadExam = async () => {
   try {
     const startRes = await examRecordApi.start({ examId })
     if (startRes.code !== 200) {
-      ElMessage.error(startRes.message || '无法开始考试')
+      ElMessage.error(startRes.message || userStore.t('common.cannotStartExam'))
       router.push('/student/exams')
       return
     }
@@ -190,7 +199,7 @@ const loadExam = async () => {
       if (document.hidden) handleScreenSwitch()
     })
   } catch (e) {
-    ElMessage.error('加载考试失败')
+    ElMessage.error(userStore.t('common.loadExamFailed'))
     router.push('/student/exams')
   }
 }
@@ -201,7 +210,7 @@ onMounted(() => {
     if (remainingTime.value > 0) {
       remainingTime.value--
       if (remainingTime.value === 0) {
-        ElMessage.warning('考试时间到，已自动交卷')
+        ElMessage.warning(userStore.t('common.examTimeUp'))
         handleSubmit()
       }
     }

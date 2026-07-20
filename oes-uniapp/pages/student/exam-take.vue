@@ -1,18 +1,20 @@
 <template>
   <view class="exam-container" v-if="examInfo">
+    <CustomNavBar :title="userStore.t('common.examTake')" :showBack="true" />
+    
     <view class="exam-header">
-      <view class="header-top">
-        <text class="exam-title">{{ examInfo.title }}</text>
-        <view class="exam-status" :class="examStatusClass">
-          <text>{{ examStatusText }}</text>
-        </view>
+    <view class="header-top">
+      <text class="exam-title">{{ examInfo.title }}</text>
+      <view class="exam-status" :class="examStatusClass">
+        <text>{{ examStatusText }}</text>
       </view>
+    </view>
 
       <view class="header-bottom">
         <view v-if="isViewMode" class="view-mode-info">
-          <text class="score-text">得分：{{ studentScore }} / {{ examInfo.totalScore }}</text>
+          <text class="score-text">{{ userStore.t('common.score') }}：{{ studentScore }} / {{ examInfo.totalScore }}</text>
           <view class="tag" :class="canViewPaper ? 'tag-success' : 'tag-warning'">
-            <text>{{ canViewPaper ? '已出分' : '待评分' }}</text>
+            <text>{{ canViewPaper ? userStore.t('common.scored') : userStore.t('common.pendingGrade') }}</text>
           </view>
         </view>
         <view v-else class="timer-row">
@@ -20,8 +22,8 @@
             <text>⏱</text>
             <text>{{ formatTime(remainingTime) }}</text>
           </view>
-          <button class="save-btn" @click="handleManualSave" :loading="saving">保存</button>
-          <button class="submit-btn" @click="handleSubmit" :loading="submitting">交卷</button>
+          <button class="save-btn" @click="handleManualSave" :loading="saving">{{ userStore.t('common.save') }}</button>
+          <button class="submit-btn" @click="handleSubmit" :loading="submitting">{{ userStore.t('common.submitExam') }}</button>
         </view>
       </view>
     </view>
@@ -29,7 +31,7 @@
     <view class="exam-body" v-if="!(isViewMode && !canViewPaper)">
       <view class="nav-toggle" @click="showNav = true">
         <text>📋</text>
-        <text>答题卡</text>
+        <text>{{ userStore.t('student.questionNav') }}</text>
       </view>
 
       <view v-if="currentQuestion" class="question-card">
@@ -38,9 +40,9 @@
             <view class="tag tag-info">
               <text>{{ currentTypeName }}</text>
             </view>
-            <text class="question-score">{{ currentQuestion.score }}分</text>
+            <text class="question-score">{{ currentQuestion.score }}{{ userStore.t('common.score') }}</text>
           </view>
-          <text class="question-number">第 {{ currentQuestionNumber }} / {{ totalQuestions }} 题</text>
+          <text class="question-number">{{ userStore.t('common.question') }} {{ currentQuestionNumber }} / {{ totalQuestions }}</text>
         </view>
 
         <view class="question-content-text">{{ currentQuestion.content }}</view>
@@ -82,7 +84,7 @@
         <view v-else class="question-input">
           <textarea
             v-model="answers[currentQuestion.id]"
-            :placeholder="currentQuestion.type === 'FILL_BLANK' ? '请输入答案' : '请输入答案内容'"
+            :placeholder="userStore.t('student.enterAnswer')"
             :maxlength="currentQuestion.type === 'FILL_BLANK' ? 500 : 2000"
             :disabled="isViewMode"
             @blur="saveAnswer"
@@ -90,36 +92,36 @@
 
           <view v-if="isViewMode && canViewPaper" class="answer-comparison">
             <view class="answer-row">
-              <text class="label">你的答案：</text>
-              <text class="value">{{ answers[currentQuestion.id] || '未答' }}</text>
+              <text class="label">{{ userStore.t('student.yourAnswer') }}：</text>
+              <text class="value">{{ answers[currentQuestion.id] || userStore.t('student.unanswered') }}</text>
             </view>
             <view v-if="currentQuestion.type === 'FILL_BLANK'" class="answer-row">
-              <text class="label">正确答案：</text>
+              <text class="label">{{ userStore.t('common.correctAnswer') }}：</text>
               <text class="value correct">{{ currentQuestion.correctAnswer }}</text>
             </view>
           </view>
         </view>
 
         <view class="question-actions">
-          <button class="action-btn" @click="prevQuestion" :disabled="isFirstQuestion">上一题</button>
-          <button class="action-btn" @click="nextQuestion" :disabled="isLastQuestion">下一题</button>
+          <button class="action-btn" @click="prevQuestion" :disabled="isFirstQuestion">{{ userStore.t('student.prevQuestion') }}</button>
+          <button class="action-btn" @click="nextQuestion" :disabled="isLastQuestion">{{ userStore.t('student.nextQuestion') }}</button>
         </view>
       </view>
 
       <view v-else class="no-question">
-        <text>加载中...</text>
+        <text>{{ userStore.t('common.loading') }}</text>
       </view>
     </view>
 
     <view v-else class="paper-locked">
       <text>🔒</text>
-      <text class="locked-text">教师已关闭考后查看试卷权限，无法查看试卷内容</text>
+      <text class="locked-text">{{ userStore.t('student.paperLocked') }}</text>
     </view>
 
     <view v-if="showNav" class="nav-drawer" @click="showNav = false">
       <view class="nav-content" @click.stop>
         <view class="nav-header">
-          <text class="nav-title">答题卡</text>
+          <text class="nav-title">{{ userStore.t('student.questionNav') }}</text>
           <view class="nav-close" @click="showNav = false">
             <text>×</text>
           </view>
@@ -127,7 +129,7 @@
 
         <scroll-view class="nav-body" scroll-y>
           <view v-for="section in questionSections" :key="section.type" class="nav-section">
-            <view class="section-title">{{ section.typeName }} ({{ section.questions.length }}题)</view>
+            <view class="section-title">{{ section.typeName }} ({{ section.questions.length }} {{ userStore.t('common.questions') }})</view>
             <view class="question-grid">
               <view
                 v-for="(q, qIndex) in section.questions"
@@ -149,14 +151,14 @@
 
         <view class="nav-legend">
           <view v-if="isViewMode" class="legend-row">
-            <view class="legend-item"><view class="dot correct"></view><text>正确</text></view>
-            <view class="legend-item"><view class="dot wrong"></view><text>错误</text></view>
-            <view class="legend-item"><view class="dot unanswered"></view><text>未答</text></view>
+            <view class="legend-item"><view class="dot correct"></view><text>{{ userStore.t('common.correct') }}</text></view>
+            <view class="legend-item"><view class="dot wrong"></view><text>{{ userStore.t('common.wrong') }}</text></view>
+            <view class="legend-item"><view class="dot unanswered"></view><text>{{ userStore.t('student.unanswered') }}</text></view>
           </view>
           <view v-else class="legend-row">
-            <view class="legend-item"><view class="dot current"></view><text>当前</text></view>
-            <view class="legend-item"><view class="dot answered"></view><text>已答</text></view>
-            <view class="legend-item"><view class="dot unanswered"></view><text>未答</text></view>
+            <view class="legend-item"><view class="dot current"></view><text>{{ userStore.t('student.current') }}</text></view>
+            <view class="legend-item"><view class="dot answered"></view><text>{{ userStore.t('student.answered') }}</text></view>
+            <view class="legend-item"><view class="dot unanswered"></view><text>{{ userStore.t('student.unanswered') }}</text></view>
           </view>
         </view>
       </view>
@@ -164,14 +166,30 @@
   </view>
 
   <view v-else class="loading-container">
-    <text>加载考试信息...</text>
+    <text>{{ userStore.t('student.loadingExam') }}</text>
   </view>
+
+  <LeaveWarningModal
+    :visible="showLeaveWarning"
+    :title="userStore.t('student.warning')"
+    :leaveText="userStore.t('student.leftExam')"
+    :leaveCount="leaveCount.value"
+    :chancesText="userStore.t('student.chancesLeft')"
+    :confirmText="userStore.t('common.ok')"
+    :maxLeaveCount="maxLeaveCount.value"
+    @confirm="handleLeaveConfirm"
+  />
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { onLoad, onShow, onHide, onUnload } from '@dcloudio/uni-app'
 import { examRecordApi, examApi } from '../../utils/api.js'
+import { useUserStore } from '../../store/index.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
+import LeaveWarningModal from '../../components/LeaveWarningModal.vue'
+
+const userStore = useUserStore()
 
 const examInfo = ref(null)
 const questions = ref([])
@@ -185,24 +203,40 @@ const remainingTime = ref(0)
 const leaveCount = ref(0)
 const maxLeaveCount = ref(3)
 const isViewMode = ref(false)
-const needShowLeaveWarning = ref(false)
-const answerMap = ref({})
-const canViewPaper = ref(false)
-const studentScore = ref(0)
 const showNav = ref(false)
-const examStartTime = ref(0)
+const showLeaveWarning = ref(false)
+const studentScore = ref(0)
+const timer = ref(null)
+const autoSaveTimer = ref(null)
+const examStartTime = ref(null)
 const examDuration = ref(0)
+const canViewPaper = ref(true)
 
-let timer = null
-let autoSaveTimer = null
+const answerMap = ref({})
+const needShowLeaveWarning = ref(false)
 
-const typeMap = {
-  SINGLE_CHOICE: { name: '单选题', start: '一' },
-  MULTIPLE_CHOICE: { name: '多选题', start: '二' },
-  JUDGMENT: { name: '判断题', start: '三' },
-  FILL_BLANK: { name: '填空题', start: '四' },
-  ESSAY: { name: '简答题', start: '五' },
-  PROGRAMMING: { name: '编程题', start: '六' }
+const getTypeName = (type) => {
+  const map = {
+    SINGLE_CHOICE: userStore.t('common.singleChoice'),
+    MULTIPLE_CHOICE: userStore.t('common.multipleChoice'),
+    JUDGMENT: userStore.t('common.trueFalse'),
+    FILL_BLANK: userStore.t('common.fillBlank'),
+    ESSAY: userStore.t('common.shortAnswer'),
+    PROGRAMMING: userStore.t('common.programming')
+  }
+  return map[type] || type
+}
+
+const getTypeStart = (type) => {
+  const map = {
+    SINGLE_CHOICE: userStore.language === 'zh' ? '一' : '1',
+    MULTIPLE_CHOICE: userStore.language === 'zh' ? '二' : '2',
+    JUDGMENT: userStore.language === 'zh' ? '三' : '3',
+    FILL_BLANK: userStore.language === 'zh' ? '四' : '4',
+    ESSAY: userStore.language === 'zh' ? '五' : '5',
+    PROGRAMMING: userStore.language === 'zh' ? '六' : '6'
+  }
+  return map[type] || ''
 }
 
 const shuffledOptionsMap = reactive({})
@@ -217,8 +251,8 @@ const questionSections = computed(() => {
     if (typeQuestions.length > 0) {
       sections.push({
         type,
-        typeName: typeMap[type]?.name || type,
-        startName: typeMap[type]?.start || '',
+        typeName: getTypeName(type),
+        startName: getTypeStart(type),
         questions: typeQuestions,
         startIndex: globalIndex
       })
@@ -241,15 +275,16 @@ const currentQuestionNumber = computed(() => {
 
 const currentTypeName = computed(() => {
   if (!currentQuestion.value) return ''
-  return typeMap[currentQuestion.value.type]?.name || currentQuestion.value.type
+  return getTypeName(currentQuestion.value.type)
 })
 
 const getExamConfig = () => {
-  try {
-    const configStr = examInfo.value?.antiCheatConfig || examInfo.value?.config || '{}'
-    return typeof configStr === 'string' ? JSON.parse(configStr) : configStr
-  } catch (e) {
-    return {}
+  return {
+    shuffleQuestions: examInfo.value?.shuffleQuestions || examInfo.value?.shuffle_questions || 0,
+    shuffleOptions: examInfo.value?.shuffleOptions || examInfo.value?.shuffle_options || 0,
+    leaveDetection: examInfo.value?.leaveDetection || examInfo.value?.leave_detection || 0,
+    maxLeaveCount: examInfo.value?.maxLeaveCount || examInfo.value?.max_leave_count || 5,
+    allowViewAfterExam: examInfo.value?.allowViewAfterExam || examInfo.value?.allow_view_after_exam || 0
   }
 }
 
@@ -270,9 +305,9 @@ const currentShuffledOptions = computed(() => {
 
 const examStatusText = computed(() => {
   return {
-    PENDING: '待开始',
-    ONGOING: '进行中',
-    FINISHED: '已结束'
+    PENDING: userStore.t('common.pending'),
+    ONGOING: userStore.t('common.ongoing'),
+    FINISHED: userStore.t('common.finished')
   }[examInfo.value?.status] || ''
 })
 
@@ -478,9 +513,9 @@ const handleManualSave = async () => {
   saving.value = true
   try {
     await saveAnswer()
-    uni.showToast({ title: '保存成功', icon: 'success' })
+    uni.showToast({ title: userStore.t('common.saveSuccess'), icon: 'success' })
   } catch (e) {
-    uni.showToast({ title: '保存失败', icon: 'none' })
+    uni.showToast({ title: userStore.t('common.saveFailed'), icon: 'none' })
   } finally {
     saving.value = false
   }
@@ -489,24 +524,50 @@ const handleManualSave = async () => {
 const handleSubmit = async () => {
   if (isViewMode.value) return
   uni.showModal({
-    title: '提示',
-    content: '确定要交卷吗？交卷后无法修改答案',
+    title: userStore.t('common.tip'),
+    content: userStore.t('common.confirmSubmit'),
     success: async (res) => {
       if (res.confirm) {
         submitting.value = true
         try {
-          const result = await examRecordApi.submit(recordId.value)
+          const submitAnswers = []
+          let totalScore = 0
+          let earnedScore = 0
+          
+          questions.value.forEach(q => {
+            const userAnswer = answers[q.id] || ''
+            const correctAnswer = q.correctAnswer || ''
+            const isCorrect = userAnswer.toUpperCase() === correctAnswer.toUpperCase()
+            const score = isCorrect ? (q.score || 0) : 0
+            
+            submitAnswers.push({
+              questionId: q.id,
+              answer: userAnswer,
+              isCorrect: isCorrect,
+              score: score
+            })
+            
+            totalScore += q.score || 0
+            earnedScore += score
+          })
+          
+          const result = await examRecordApi.submit(recordId.value, {
+            answers: submitAnswers,
+            score: earnedScore,
+            totalScore: totalScore
+          })
+          
           if (result.code === 200) {
-            uni.showToast({ title: '交卷成功', icon: 'success' })
+            uni.showToast({ title: userStore.t('common.examSubmittedSuccess'), icon: 'success' })
             isViewMode.value = true
             setTimeout(() => {
               uni.redirectTo({ url: '/pages/student/history' })
             }, 1500)
           } else {
-            uni.showToast({ title: result.message || '交卷失败', icon: 'none' })
+            uni.showToast({ title: result.message || userStore.t('common.submitFailed'), icon: 'none' })
           }
         } catch (e) {
-          uni.showToast({ title: e.message || '交卷失败', icon: 'none' })
+          uni.showToast({ title: e.message || userStore.t('common.submitFailed'), icon: 'none' })
         } finally {
           submitting.value = false
         }
@@ -517,7 +578,7 @@ const handleSubmit = async () => {
 
 const handleTimeUp = async () => {
   if (isViewMode.value) return
-  uni.showToast({ title: '考试时间到，已自动交卷', icon: 'none', duration: 2000 })
+  uni.showToast({ title: userStore.t('common.examFinished') + ' ' + userStore.t('common.examSubmitted'), icon: 'none', duration: 2000 })
   try {
     await examRecordApi.autoSubmit(recordId.value)
   } catch (e) {
@@ -574,10 +635,10 @@ const handleLeaveDetection = async () => {
 
   if (leaveCount.value >= maxLeaveCount.value) {
     uni.showModal({
-      title: '警告',
-      content: `您已离开考试页面${leaveCount.value}次，已达到上限！\n系统将自动交卷。`,
+      title: userStore.t('student.warning'),
+      content: userStore.t('student.reachedLimit'),
       showCancel: false,
-      confirmText: '确定',
+      confirmText: userStore.t('common.confirm'),
       success: async () => {
         try {
           await examRecordApi.autoSubmit(recordId.value)
@@ -590,12 +651,7 @@ const handleLeaveDetection = async () => {
     return
   }
 
-  uni.showModal({
-    title: '警告',
-    content: `您已离开考试页面${leaveCount.value}次！\n再离开${maxLeaveCount.value - leaveCount.value}次将被强制收卷。`,
-    showCancel: false,
-    confirmText: '知道了'
-  })
+  showLeaveWarning.value = true
 
   try {
     await examRecordApi.reportLeave({
@@ -605,6 +661,10 @@ const handleLeaveDetection = async () => {
   } catch (e) {
     console.error('上报离开失败:', e)
   }
+}
+
+const handleLeaveConfirm = () => {
+  showLeaveWarning.value = false
 }
 
 const loadExamData = async (examId, reviewRecordId, isReview) => {
@@ -634,14 +694,14 @@ const loadExamData = async (examId, reviewRecordId, isReview) => {
           currentQuestionId.value = questions.value[0].id
         }
       } else {
-        uni.showToast({ title: res.message || '加载失败', icon: 'none' })
+        uni.showToast({ title: res.message || userStore.t('common.loadFailed'), icon: 'none' })
       }
     } else {
       const examRes = await examApi.getById(examId)
       if (examRes.code === 200) {
         examInfo.value = examRes.data
         
-        const isExamFinished = examInfo.value.status === 'FINISHED'
+        const isExamFinished = examInfo.value.status === 'FINISHED' || examInfo.value.status === 'ENDED'
         if (isExamFinished) {
           isViewMode.value = true
           
@@ -672,7 +732,10 @@ const loadExamData = async (examId, reviewRecordId, isReview) => {
           }
         }
         
-        const startRes = await examRecordApi.start({ examId: Number(examId) })
+        const startRes = await examRecordApi.start({ 
+        examId: Number(examId), 
+        studentId: userStore.userId 
+      })
         console.log('start接口返回:', JSON.stringify(startRes))
         if (startRes.code === 200) {
           console.log('questions原始数据长度:', (startRes.data.questions || []).length)
@@ -742,12 +805,12 @@ const loadExamData = async (examId, reviewRecordId, isReview) => {
           }
         }
       } else {
-        uni.showToast({ title: examRes.message || '加载失败', icon: 'none' })
+        uni.showToast({ title: examRes.message || userStore.t('common.loadFailed'), icon: 'none' })
       }
     }
   } catch (e) {
     console.error('加载失败:', e)
-    uni.showToast({ title: '网络错误', icon: 'none' })
+    uni.showToast({ title: userStore.t('common.networkError'), icon: 'none' })
   }
 }
 
@@ -771,10 +834,10 @@ onShow(() => {
     console.log('显示离开警告弹窗')
     uni.removeStorageSync(`leaveWarning_${recordId.value}`)
     uni.showModal({
-      title: '警告',
-      content: `您已离开考试页面！\n离开次数：${warningData.leaveCount} / ${warningData.maxLeaveCount}\n剩余 ${warningData.maxLeaveCount - warningData.leaveCount} 次机会，超出将自动交卷`,
+      title: userStore.t('student.warning'),
+      content: `${userStore.t('student.leftExam')}\n${userStore.t('student.leaveCount')}：${warningData.leaveCount} / ${warningData.maxLeaveCount}\n${userStore.t('student.remainingChances')}${warningData.maxLeaveCount - warningData.leaveCount}${userStore.t('student.chancesLeft')}`,
       showCancel: false,
-      confirmText: '继续作答'
+      confirmText: userStore.t('student.continueExam')
     })
   }
 })
@@ -799,18 +862,28 @@ onMounted(() => {
 
 onUnload(() => {
   console.log('onUnload触发')
-  handleLeaveDetection()
+  try {
+    if (!isViewMode.value) {
+      handleLeaveDetection()
+    }
+  } catch (e) {
+    console.error('onUnload error:', e)
+  }
 })
 
 onUnmounted(() => {
-  if (timer) {
-    clearInterval(timer)
+  try {
+    if (timer.value) {
+      clearInterval(timer.value)
+      timer.value = null
+    }
+    if (autoSaveTimer.value) {
+      clearInterval(autoSaveTimer.value)
+      autoSaveTimer.value = null
+    }
+  } catch (e) {
+    console.error('清理定时器错误:', e)
   }
-  if (autoSaveTimer) {
-    clearInterval(autoSaveTimer)
-  }
-  uni.offAppHide()
-  uni.offAppShow()
 })
 </script>
 
@@ -818,6 +891,8 @@ onUnmounted(() => {
 .exam-container {
   min-height: 100vh;
   background-color: #f5f5f5;
+  padding-top: 140rpx;
+  overflow: hidden;
 }
 
 .exam-header {
@@ -1203,6 +1278,7 @@ onUnmounted(() => {
   flex: 1;
   padding: 32rpx;
   overflow-y: auto;
+  touch-action: none;
 }
 
 .nav-section {

@@ -3,27 +3,27 @@
     <header class="exam-header">
       <div class="header-left">
         <h2>{{ examInfo.title }}</h2>
-        <el-tag :type="examStatusType">考试{{ examStatusText }}</el-tag>
+        <el-tag :type="examStatusType">{{ userStore.t('student.exam') }}{{ examStatusText }}</el-tag>
       </div>
       <div class="header-right">
         <div class="view-mode-info" v-if="isViewMode">
-          <span class="score-display">得分：{{ studentScore }} / {{ examInfo.totalScore }}</span>
-          <el-tag v-if="canViewPaper" type="success">已出分</el-tag>
-          <el-tag v-else type="warning">待评分</el-tag>
+          <span class="score-display">{{ userStore.t('student.score') }}：{{ studentScore }} / {{ examInfo.totalScore }}</span>
+          <el-tag v-if="canViewPaper" type="success">{{ userStore.t('student.scored') }}</el-tag>
+          <el-tag v-else type="warning">{{ userStore.t('student.pendingGrade') }}</el-tag>
         </div>
         <div class="timer" v-if="!isViewMode">
           <el-icon><Timer /></el-icon>
           <span :class="{ warning: remainingTime < 300 }">{{ formatTime(remainingTime) }}</span>
         </div>
-        <el-button type="primary" @click="handleManualSave" :loading="saving" v-if="!isViewMode" style="margin-right: 10px;">保存</el-button>
-        <el-button type="danger" @click="handleSubmit" :loading="submitting" v-if="!isViewMode">交卷</el-button>
+        <el-button type="primary" @click="handleManualSave" :loading="saving" v-if="!isViewMode" style="margin-right: 10px;">{{ userStore.t('student.save') }}</el-button>
+        <el-button type="danger" @click="handleSubmit" :loading="submitting" v-if="!isViewMode">{{ userStore.t('student.submitExam') }}</el-button>
       </div>
     </header>
 
     <div class="exam-body">
       <aside class="question-nav" v-if="!(isViewMode && (!canViewPaper || hasSubjectiveUngraded))">
         <div class="nav-section" v-for="section in questionSections" :key="section.type">
-          <div class="section-title">{{ section.typeName }} ({{ section.questions.length }}题)</div>
+          <div class="section-title">{{ section.typeName }} ({{ section.questions.length }}{{ userStore.t('student.questionUnit') }})</div>
           <div class="question-grid">
             <div
               v-for="(q, qIndex) in section.questions"
@@ -41,20 +41,20 @@
           </div>
         </div>
         <div class="nav-legend" v-if="isViewMode">
-          <div class="legend-item"><span class="dot correct"></span>正确</div>
-          <div class="legend-item"><span class="dot wrong"></span>错误</div>
+          <div class="legend-item"><span class="dot correct"></span>{{ userStore.t('common.correct') }}</div>
+          <div class="legend-item"><span class="dot wrong"></span>{{ userStore.t('common.wrong') }}</div>
         </div>
         <div class="nav-legend" v-else>
-          <div class="legend-item"><span class="dot current"></span>当前</div>
-          <div class="legend-item"><span class="dot answered"></span>已答</div>
-          <div class="legend-item"><span class="dot unanswered"></span>未答</div>
+          <div class="legend-item"><span class="dot current"></span>{{ userStore.t('student.current') }}</div>
+          <div class="legend-item"><span class="dot answered"></span>{{ userStore.t('student.answered') }}</div>
+          <div class="legend-item"><span class="dot unanswered"></span>{{ userStore.t('student.unanswered') }}</div>
         </div>
       </aside>
 
       <main class="question-content">
         <!-- 不允许查看试卷或有主观题未评分时，显示锁定提示 -->
         <div v-if="isViewMode && (!canViewPaper || hasSubjectiveUngraded)" class="paper-locked">
-          <el-empty description="教师已关闭考后查看试卷权限，无法查看试卷内容">
+          <el-empty :description="userStore.t('student.paperLocked')">
             <template #image>
               <el-icon size="120"><Lock /></el-icon>
             </template>
@@ -66,14 +66,14 @@
           <div class="question-header">
             <div class="question-info">
               <el-tag type="info">{{ currentTypeName }}</el-tag>
-              <span class="question-score">{{ currentQuestion.score }}分</span>
-              <el-tag v-if="isViewMode && !canViewPaper" type="warning">待评分</el-tag>
+              <span class="question-score">{{ currentQuestion.score }}{{ userStore.t('dashboard.scoreUnit') }}</span>
+              <el-tag v-if="isViewMode && !canViewPaper" type="warning">{{ userStore.t('student.pendingGrade') }}</el-tag>
               <el-tag v-else-if="isViewMode && canViewPaper" :type="getQuestionResult(currentQuestion.id) ? 'success' : 'danger'">
-                {{ getQuestionResult(currentQuestion.id) ? '正确' : '错误' }}
+                {{ getQuestionResult(currentQuestion.id) ? userStore.t('common.correct') : userStore.t('common.wrong') }}
               </el-tag>
-              <span v-if="isViewMode && canViewPaper" class="question-score">得分：{{ getQuestionScore(currentQuestion.id) }}</span>
+              <span v-if="isViewMode && canViewPaper" class="question-score">{{ userStore.t('student.score') }}：{{ getQuestionScore(currentQuestion.id) }}</span>
             </div>
-            <div class="question-number">第 {{ currentQuestionNumber }} 题</div>
+            <div class="question-number">{{ userStore.t('student.question') }} {{ currentQuestionNumber }}</div>
           </div>
 
           <div class="question-text">{{ currentQuestion.content }}</div>
@@ -99,11 +99,11 @@
 
             <div v-if="isViewMode && canViewPaper && !getQuestionResult(currentQuestion.id)" class="answer-comparison">
               <div class="your-answer">
-                <span class="label">你的答案：</span>
-                <span class="value wrong">{{ answers[currentQuestion.id] || multiAnswers[currentQuestion.id]?.join(',') || '未答' }}</span>
+                <span class="label">{{ userStore.t('student.yourAnswer') }}：</span>
+                <span class="value wrong">{{ answers[currentQuestion.id] || multiAnswers[currentQuestion.id]?.join(',') || userStore.t('student.unanswered') }}</span>
               </div>
               <div class="correct-answer">
-                <span class="label">正确答案：</span>
+                <span class="label">{{ userStore.t('common.correctAnswer') }}：</span>
                 <span class="value correct">{{ getQuestionCorrectAnswer(currentQuestion.id) }}</span>
               </div>
             </div>
@@ -114,17 +114,17 @@
               v-model="answers[currentQuestion.id]"
               type="textarea"
               :rows="4"
-              placeholder="请输入答案"
+              :placeholder="userStore.t('student.enterAnswer')"
               :disabled="isViewMode"
               @blur="saveAnswer"
             />
             <div v-if="isViewMode && canViewPaper" class="answer-comparison">
               <div class="your-answer">
-                <span class="label">你的答案：</span>
-                <span class="value">{{ answers[currentQuestion.id] || '未答' }}</span>
+                <span class="label">{{ userStore.t('student.yourAnswer') }}：</span>
+                <span class="value">{{ answers[currentQuestion.id] || userStore.t('student.unanswered') }}</span>
               </div>
               <div class="correct-answer">
-                <span class="label">正确答案：</span>
+                <span class="label">{{ userStore.t('common.correctAnswer') }}：</span>
                 <span class="value">{{ currentQuestion.answer }}</span>
               </div>
             </div>
@@ -135,47 +135,47 @@
               v-model="answers[currentQuestion.id]"
               type="textarea"
               :rows="8"
-              placeholder="请输入答案"
+              :placeholder="userStore.t('student.enterAnswer')"
               :disabled="isViewMode"
               @blur="saveAnswer"
             />
             <div v-if="isViewMode && canViewPaper" class="answer-comparison">
               <div class="your-answer">
-                <span class="label">你的答案：</span>
-                <span class="value">{{ answers[currentQuestion.id] || '未答' }}</span>
+                <span class="label">{{ userStore.t('student.yourAnswer') }}：</span>
+                <span class="value">{{ answers[currentQuestion.id] || userStore.t('student.unanswered') }}</span>
               </div>
             </div>
           </div>
 
           <div class="question-actions">
-            <el-button @click="prevQuestion" :disabled="isFirstQuestion">上一题</el-button>
+            <el-button @click="prevQuestion" :disabled="isFirstQuestion">{{ userStore.t('student.prevQuestion') }}</el-button>
             <span class="progress-text">{{ currentQuestionNumber }} / {{ totalQuestions }}</span>
-            <el-button @click="nextQuestion" :disabled="isLastQuestion">下一题</el-button>
+            <el-button @click="nextQuestion" :disabled="isLastQuestion">{{ userStore.t('student.nextQuestion') }}</el-button>
           </div>
         </div>
 
         <div v-else class="no-question">
-          <el-empty description="加载中..." />
+          <el-empty :description="userStore.t('student.loading')" />
         </div>
       </main>
     </div>
 
-    <el-dialog v-model="leaveWarningVisible" title="警告" width="400px" :close-on-click-modal="false" :show-close="false">
+    <el-dialog v-model="leaveWarningVisible" :title="userStore.t('student.warning')" width="400px" :close-on-click-modal="false" :show-close="false">
       <div class="leave-warning">
         <el-icon class="warning-icon" color="#ef4444" size="48"><WarningFilled /></el-icon>
-        <p>您已离开考试页面！</p>
-        <p class="leave-count">离开次数：<span class="red">{{ leaveCount }}</span> / {{ maxLeaveCount }}</p>
-        <p v-if="maxLeaveCount - leaveCount > 0" class="remaining">剩余 <span class="red">{{ maxLeaveCount - leaveCount }}</span> 次机会，超出将自动交卷</p>
-        <p v-else class="remaining red">已达到上限，即将自动交卷</p>
+        <p>{{ userStore.t('student.leftExam') }}</p>
+        <p class="leave-count">{{ userStore.t('student.leaveCount') }}：<span class="red">{{ leaveCount }}</span> / {{ maxLeaveCount }}</p>
+        <p v-if="maxLeaveCount - leaveCount > 0" class="remaining">{{ userStore.t('student.remainingChances') }} <span class="red">{{ maxLeaveCount - leaveCount }}</span> {{ userStore.t('student.chancesLeft') }}</p>
+        <p v-else class="remaining red">{{ userStore.t('student.reachedLimit') }}</p>
       </div>
       <template #footer>
-        <el-button type="danger" @click="continueExam">继续作答</el-button>
+        <el-button type="danger" @click="continueExam">{{ userStore.t('student.continueExam') }}</el-button>
       </template>
     </el-dialog>
   </div>
   <div v-else class="loading-container">
     <el-icon class="is-loading"><Loading /></el-icon>
-    <p>加载考试信息...</p>
+    <p>{{ userStore.t('student.loadingExam') }}</p>
   </div>
 </template>
 
@@ -185,9 +185,11 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Timer, Loading, WarningFilled } from '@element-plus/icons-vue'
 import { examApi, examRecordApi } from '../../utils/api'
+import { useUserStore } from '../../store'
 
 const router = useRouter()
 const route = useRoute()
+const userStore = useUserStore()
 
 const examInfo = ref(null)
 const questions = ref([])
@@ -211,12 +213,12 @@ let timer = null
 let autoSaveTimer = null
 
 const typeMap = {
-  SINGLE_CHOICE: { name: '单选题', start: '一' },
-  MULTIPLE_CHOICE: { name: '多选题', start: '二' },
-  JUDGMENT: { name: '判断题', start: '三' },
-  FILL_BLANK: { name: '填空题', start: '四' },
-  ESSAY: { name: '简答题', start: '五' },
-  PROGRAMMING: { name: '编程题', start: '六' }
+  SINGLE_CHOICE: { name: userStore.t('common.single'), start: userStore.language === 'zh' ? '一' : '1' },
+  MULTIPLE_CHOICE: { name: userStore.t('common.multiple'), start: userStore.language === 'zh' ? '二' : '2' },
+  JUDGMENT: { name: userStore.t('common.judgment'), start: userStore.language === 'zh' ? '三' : '3' },
+  FILL_BLANK: { name: userStore.t('common.fillBlank'), start: userStore.language === 'zh' ? '四' : '4' },
+  ESSAY: { name: userStore.t('common.essay'), start: userStore.language === 'zh' ? '五' : '5' },
+  PROGRAMMING: { name: userStore.t('common.programming'), start: userStore.language === 'zh' ? '六' : '6' }
 }
 
 const shuffledOptionsMap = reactive({})
@@ -284,9 +286,9 @@ const examStatusType = computed(() => ({
 }[examInfo.value?.status]))
 
 const examStatusText = computed(() => ({
-  PENDING: '待开始',
-  ONGOING: '进行中',
-  FINISHED: '已结束'
+  PENDING: userStore.t('common.pending'),
+  ONGOING: userStore.t('common.ongoing'),
+  FINISHED: userStore.t('common.finished')
 }[examInfo.value?.status]))
 
 const isFirstQuestion = computed(() => currentQuestionNumber.value === 1)
@@ -402,16 +404,16 @@ const handleManualSave = async () => {
   saving.value = true
   try {
     await saveAnswer()
-    ElMessage.success('保存成功')
+    ElMessage.success(userStore.t('common.saveSuccess'))
   } catch (e) {
-    ElMessage.error('保存失败: ' + e.message)
+    ElMessage.error(userStore.t('common.saveFailed') + ': ' + e.message)
   } finally {
     saving.value = false
   }
 }
 
 const handleSubmit = async () => {
-  await ElMessageBox.confirm('确定要交卷吗？交卷后无法修改答案', '提示', { confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning' })
+  await ElMessageBox.confirm(userStore.t('common.confirmSubmit'), userStore.t('common.tip'), { confirmButtonText: userStore.t('common.confirm'), cancelButtonText: userStore.t('common.cancel'), type: 'warning' })
   submitting.value = true
   try {
     const res = await examRecordApi.submit(recordId.value)
@@ -419,7 +421,7 @@ const handleSubmit = async () => {
       // 清理 localStorage 中的计时器
       const examId = route.params.id
       localStorage.removeItem(`exam_end_time_${examId}`)
-      ElMessage.success('交卷成功')
+      ElMessage.success(userStore.t('common.examSubmittedSuccess'))
       // 设置为查看模式，防止再次交卷
       isViewMode.value = true
       leaveDetectionEnabled.value = false
@@ -428,10 +430,10 @@ const handleSubmit = async () => {
         router.push('/student/history')
       }, 1000)
     } else {
-      ElMessage.error(res.message || '交卷失败')
+      ElMessage.error(res.message || userStore.t('common.failed'))
     }
   } catch (e) {
-    ElMessage.error(e.message || '交卷失败')
+    ElMessage.error(e.message || userStore.t('common.failed'))
   } finally {
     submitting.value = false
   }
@@ -445,7 +447,7 @@ const continueExam = () => {
 }
 
 const autoSubmit = async () => {
-  ElMessage.error('离开次数过多，已自动交卷')
+  ElMessage.error(userStore.t('common.exceedLeaveCount'))
   try {
     await examRecordApi.autoSubmit(recordId.value)
     router.push('/student/history')
@@ -505,7 +507,7 @@ const loadExam = async () => {
   try {
     const startRes = await examRecordApi.start({ examId })
     if (startRes.code !== 200) {
-      ElMessage.error(startRes.message || '无法开始考试')
+      ElMessage.error(startRes.message || userStore.t('common.failed'))
       router.push('/student/exams')
       return
     }
@@ -519,7 +521,7 @@ const loadExam = async () => {
 
     // 如果离开次数已经达到上限，直接跳转到历史页面
     if (leaveDetectionEnabled.value && leaveCount.value >= maxLeaveCount.value) {
-      ElMessage.error('离开次数过多，已自动交卷')
+      ElMessage.error(userStore.t('common.exceedLeaveCount'))
       router.push('/student/history')
       return
     }
@@ -595,7 +597,7 @@ const loadExam = async () => {
             remainingTime.value = Math.max(0, Math.floor((examEndTime - now) / 1000))
             localStorage.setItem(`exam_end_time_${examId}`, examEndTime.toString())
           } else {
-            ElMessage.warning('考试时间已到')
+            ElMessage.warning(userStore.t('common.examFinished'))
             router.push('/student/exams')
             return
           }
@@ -627,7 +629,7 @@ const loadExam = async () => {
       currentQuestionId.value = questions.value[0].id
     }
   } catch (e) {
-    ElMessage.error('加载考试失败')
+    ElMessage.error(userStore.t('common.loadFailed'))
     router.push('/student/exams')
   }
 }
@@ -647,7 +649,7 @@ onMounted(() => {
     if (remainingTime.value > 0) {
       remainingTime.value--
       if (remainingTime.value === 0) {
-        ElMessage.warning('考试时间到，已自动交卷')
+        ElMessage.warning(userStore.t('common.examFinished'))
         if (timer) {
           clearInterval(timer)
           timer = null

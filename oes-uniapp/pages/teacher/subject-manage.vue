@@ -1,13 +1,11 @@
 <template>
   <view class="manage-page">
-    <view class="page-header">
-      <text class="title">科目管理</text>
-    </view>
+    <CustomNavBar :title="userStore.t('common.subjectManage')" :showBack="true" />
     
     <!-- 搜索栏 -->
     <view class="search-bar">
-      <input class="search-input" v-model="keyword" placeholder="搜索科目名称" />
-      <button class="search-btn" @click="loadData">搜索</button>
+      <input class="search-input" v-model="keyword" :placeholder="userStore.t('common.searchPlaceholder')" @input="onSearchInput" />
+      <button class="search-btn" @click="loadData">{{ userStore.t('common.search') }}</button>
     </view>
     
     <!-- 科目列表 -->
@@ -18,44 +16,44 @@
           <text class="item-meta">{{ item.code || '-' }}</text>
         </view>
         <view class="item-actions">
-          <text class="action-btn" @click="editSubject(item)">编辑</text>
-          <text class="action-btn danger" @click="deleteSubject(item)">删除</text>
+          <text class="action-btn" @click="editSubject(item)">{{ userStore.t('common.edit') }}</text>
+          <text class="action-btn danger" @click="deleteSubject(item)">{{ userStore.t('common.delete') }}</text>
         </view>
       </view>
       
       <view class="empty" v-if="subjectList.length === 0">
-        <text class="empty-text">暂无科目数据</text>
+        <text class="empty-text">{{ userStore.t('common.noData') }}</text>
       </view>
     </view>
     
     <!-- 新增按钮 -->
     <view class="add-btn" @click="showSubjectForm = true">
       <text class="add-icon">➕</text>
-      <text class="add-text">新增科目</text>
+      <text class="add-text">{{ userStore.t('common.add') }}{{ userStore.t('common.subject') }}</text>
     </view>
 
     <!-- 科目编辑弹窗 -->
     <view v-if="showSubjectForm" class="modal" @click="showSubjectForm = false">
       <view class="subject-modal" @click.stop>
         <view class="modal-header">
-          <text class="modal-title">{{ editingSubject ? '编辑科目' : '新增科目' }}</text>
+          <text class="modal-title">{{ editingSubject ? userStore.t('common.edit') + userStore.t('common.subject') : userStore.t('common.add') + userStore.t('common.subject') }}</text>
           <view class="modal-close" @click="showSubjectForm = false">
             <text class="close-icon">✕</text>
           </view>
         </view>
         <view class="modal-body">
           <view class="form-item">
-            <text class="form-label">科目名称 *</text>
-            <input class="form-input" v-model="form.name" placeholder="请输入科目名称" />
+            <text class="form-label">{{ userStore.t('common.subject') }}{{ userStore.t('common.name') }} *</text>
+            <input class="form-input" v-model="form.name" :placeholder="userStore.t('common.pleaseEnter') + userStore.t('common.subject') + userStore.t('common.name')" />
           </view>
           <view class="form-item">
-            <text class="form-label">科目代码</text>
-            <input class="form-input" v-model="form.code" placeholder="请输入科目代码" />
+            <text class="form-label">{{ userStore.t('common.subject') }}{{ userStore.t('common.code') }}</text>
+            <input class="form-input" v-model="form.code" :placeholder="userStore.t('common.pleaseEnter') + userStore.t('common.subject') + userStore.t('common.code')" />
           </view>
         </view>
         <view class="modal-footer">
-          <button class="modal-btn cancel" @click="showSubjectForm = false">取消</button>
-          <button class="modal-btn confirm" @click="submitSubject">{{ editingSubject ? '保存' : '创建' }}</button>
+          <button class="modal-btn cancel" @click="showSubjectForm = false">{{ userStore.t('common.cancel') }}</button>
+          <button class="modal-btn confirm" @click="submitSubject">{{ editingSubject ? userStore.t('common.save') : userStore.t('common.create') }}</button>
         </view>
       </view>
     </view>
@@ -63,11 +61,18 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { subjectApi } from '../../utils/api'
+import { useUserStore } from '../../store/index.js'
+import CustomNavBar from '../../components/CustomNavBar.vue'
 
 export default {
+  components: {
+    CustomNavBar
+  },
   setup() {
+    const userStore = useUserStore()
+    
     const keyword = ref('')
     const subjectList = ref([])
     
@@ -79,15 +84,23 @@ export default {
       code: ''
     })
     
+    let searchTimer = null
+    const onSearchInput = () => {
+      if (searchTimer) clearTimeout(searchTimer)
+      searchTimer = setTimeout(() => {
+        loadData()
+      }, 300)
+    }
+    
     const loadData = async () => {
       try {
-        uni.showLoading({ title: '加载中...' })
+        uni.showLoading({ title: userStore.t('common.loading') })
         const res = await subjectApi.page({ current: 1, size: 20, keyword: keyword.value })
         if (res.code === 200) {
           subjectList.value = res.data.records
         }
       } catch (e) {
-        uni.showToast({ title: '加载失败', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.loadFailed'), icon: 'none' })
       } finally {
         uni.hideLoading()
       }
@@ -109,12 +122,12 @@ export default {
     
     const submitSubject = async () => {
       if (!form.name.trim()) {
-        uni.showToast({ title: '请输入科目名称', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.pleaseEnter') + userStore.t('common.subject') + userStore.t('common.name'), icon: 'none' })
         return
       }
       
       try {
-        uni.showLoading({ title: '保存中...' })
+        uni.showLoading({ title: userStore.t('common.saving') })
         
         const subjectData = {
           id: editingSubject.value?.id || null,
@@ -130,16 +143,16 @@ export default {
         }
         
         if (res.code === 200) {
-          uni.showToast({ title: editingSubject.value ? '修改成功' : '创建成功', icon: 'success' })
+          uni.showToast({ title: editingSubject.value ? userStore.t('common.updateSuccess') : userStore.t('common.createSuccess'), icon: 'success' })
           showSubjectForm.value = false
           loadData()
           resetForm()
         } else {
-          uni.showToast({ title: res.message || '保存失败', icon: 'none' })
+          uni.showToast({ title: res.message || userStore.t('common.saveFailed'), icon: 'none' })
         }
       } catch (e) {
         console.error(e)
-        uni.showToast({ title: '保存失败', icon: 'none' })
+        uni.showToast({ title: userStore.t('common.saveFailed'), icon: 'none' })
       } finally {
         uni.hideLoading()
       }
@@ -153,20 +166,22 @@ export default {
     
     const deleteSubject = async (item) => {
       uni.showModal({
-        title: '提示',
-        content: `确定要删除科目 ${item.name} 吗？`,
+        title: userStore.t('common.tip'),
+        content: userStore.t('common.confirmDeleteSubject').replace('{name}', item.name),
+        cancelText: userStore.t('common.cancel'),
+        confirmText: userStore.t('common.confirm'),
         success: async (res) => {
           if (res.confirm) {
             try {
               const result = await subjectApi.delete(item.id)
               if (result.code === 200) {
-                uni.showToast({ title: '删除成功', icon: 'success' })
+                uni.showToast({ title: userStore.t('common.deleteSuccess'), icon: 'success' })
                 loadData()
               } else {
-                uni.showToast({ title: result.message || '删除失败', icon: 'none' })
+                uni.showToast({ title: userStore.t('common.deleteFailed'), icon: 'none' })
               }
             } catch (e) {
-              uni.showToast({ title: '删除失败', icon: 'none' })
+              uni.showToast({ title: userStore.t('common.deleteFailed'), icon: 'none' })
             }
           }
         }
@@ -186,7 +201,8 @@ export default {
       addSubject,
       editSubject,
       submitSubject,
-      deleteSubject
+      deleteSubject,
+      userStore
     }
   }
 }
@@ -198,20 +214,10 @@ export default {
 .manage-page {
   min-height: 100vh;
   background-color: #f5f5f5;
+  padding: 0;
+  padding-top: 140rpx;
   padding-bottom: 120rpx;
-}
-
-.page-header {
-  padding: 32rpx;
-  background: #fff;
-  margin-bottom: 24rpx;
-  
-  .title {
-    font-size: 40rpx;
-    font-weight: bold;
-    color: #333;
-    display: block;
-  }
+  position: relative;
 }
 
 .search-bar {

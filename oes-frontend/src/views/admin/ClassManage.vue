@@ -1,44 +1,44 @@
 <template>
   <div class="class-manage">
     <div class="page-header">
-      <h2>班级管理</h2>
-      <p>维护班级信息</p>
+      <h2>{{ userStore.t('admin.classManagement') }}</h2>
+      <p>{{ userStore.t('admin.classManagementDesc') }}</p>
     </div>
 
     <div class="card">
       <div class="toolbar">
         <div class="search-row">
-          <el-select v-model="params.departmentId" placeholder="选择院系" style="width: 180px" clearable @change="loadData">
+          <el-select v-model="params.departmentId" :placeholder="userStore.t('admin.selectDepartment')" style="width: 180px" clearable @change="loadData">
             <el-option v-for="d in departments" :key="d.id" :label="d.name" :value="d.id" />
           </el-select>
-          <el-input v-model="params.keyword" placeholder="搜索班级" style="width: 200px" clearable @change="loadData" />
-          <el-button type="danger" @click="loadData">搜索</el-button>
+          <el-input v-model="params.keyword" :placeholder="userStore.t('admin.searchClass')" style="width: 200px" clearable @change="loadData" />
+          <el-button type="danger" @click="loadData">{{ userStore.t('common.search') }}</el-button>
         </div>
         <div class="action-row">
-          <el-button type="danger" @click="handleCreate">新增班级</el-button>
+          <el-button type="danger" @click="handleCreate">{{ userStore.t('admin.createClass') }}</el-button>
         </div>
       </div>
 
       <el-table :data="tableData" v-loading="loading" stripe>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="className" label="班级名称" />
-        <el-table-column prop="code" label="班级代码" width="150" />
-        <el-table-column prop="inviteCode" label="群号" width="120">
+        <el-table-column prop="id" :label="userStore.t('common.id')" width="80" />
+        <el-table-column prop="className" :label="userStore.t('admin.className')" />
+        <el-table-column prop="code" :label="userStore.t('admin.classCode')" width="150" />
+        <el-table-column prop="inviteCode" :label="userStore.t('admin.inviteCode')" width="120">
           <template #default="{ row }">
             <span v-if="row.inviteCode">{{ row.inviteCode }}</span>
             <span v-else class="text-gray">-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="departmentId" label="所属院系" width="180">
+        <el-table-column prop="departmentId" :label="userStore.t('admin.department')" width="180">
           <template #default="{ row }">
             {{ getDepartmentName(row.departmentId) }}
           </template>
         </el-table-column>
-        <el-table-column prop="grade" label="年级" width="120" />
-        <el-table-column label="操作" width="200">
+        <el-table-column prop="grade" :label="userStore.t('admin.grade')" width="120" />
+        <el-table-column :label="userStore.t('common.operation')" width="200">
           <template #default="{ row }">
-            <el-button type="danger" link @click="handleEdit(row)">编辑</el-button>
-            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+            <el-button type="danger" link @click="handleEdit(row)">{{ userStore.t('common.edit') }}</el-button>
+            <el-button type="danger" link @click="handleDelete(row)">{{ userStore.t('common.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -55,26 +55,26 @@
       />
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑班级' : '新增班级'" width="500px">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? userStore.t('admin.editClass') : userStore.t('admin.createClass')" width="500px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="班级名称" prop="className">
-          <el-input v-model="form.className" />
+        <el-form-item :label="userStore.t('admin.className')" prop="className">
+          <el-input v-model="form.className" :placeholder="userStore.t('admin.enterClassName')" />
         </el-form-item>
-        <el-form-item label="班级代码" prop="code">
+        <el-form-item :label="userStore.t('admin.classCode')" prop="code">
           <el-input v-model="form.code" />
         </el-form-item>
-        <el-form-item label="所属院系" prop="departmentId">
+        <el-form-item :label="userStore.t('admin.department')" prop="departmentId">
           <el-select v-model="form.departmentId" style="width: 100%">
             <el-option v-for="d in departments" :key="d.id" :label="d.name" :value="d.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="年级" prop="grade">
-          <el-input v-model="form.grade" placeholder="如：2021" />
+        <el-form-item :label="userStore.t('admin.grade')" prop="grade">
+          <el-input v-model="form.grade" :placeholder="userStore.t('admin.enterGrade')" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="danger" @click="handleSubmit">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ userStore.t('common.cancel') }}</el-button>
+        <el-button type="danger" @click="handleSubmit">{{ userStore.t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -84,6 +84,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { classApi, departmentApi } from '../../utils/api'
+import { useUserStore } from '../../store'
+
+const userStore = useUserStore()
 
 const loading = ref(false)
 const tableData = ref([])
@@ -97,7 +100,7 @@ const formRef = ref()
 
 const params = reactive({ departmentId: null, keyword: '' })
 const form = reactive({ id: null, className: '', code: '', departmentId: null, grade: '' })
-const rules = { className: [{ required: true, message: '请输入班级名称', trigger: 'blur' }] }
+const rules = { className: [{ required: true, message: userStore.t('admin.enterClassName'), trigger: 'blur' }] }
 
 const getDepartmentName = (id) => departments.value.find(d => d.id === id)?.name || ''
 
@@ -116,7 +119,6 @@ const loadDepartments = async () => {
 
 const handleCreate = () => {
   isEdit.value = false
-  // 自动生成班级代码（格式：CLS+8位数字）
   const code = 'CLS' + Math.floor(Math.random() * 90000000 + 10000000)
   Object.assign(form, { id: null, className: '', code: code, departmentId: null, grade: '' })
   dialogVisible.value = true
@@ -133,17 +135,17 @@ const handleSubmit = async () => {
   if (!valid) return
   try {
     const res = isEdit.value ? await classApi.update(form) : await classApi.create(form)
-    if (res.code === 200) { ElMessage.success('操作成功'); dialogVisible.value = false; loadData() }
-    else ElMessage.error(res.message)
-  } catch (e) { ElMessage.error(e.message) }
+    if (res.code === 200) { ElMessage.success(userStore.t('common.success')); dialogVisible.value = false; loadData() }
+    else ElMessage.error(res.message || userStore.t('common.failed'))
+  } catch (e) { ElMessage.error(e.message || userStore.t('common.failed')) }
 }
 
 const handleDelete = async (row) => {
-  await ElMessageBox.confirm('确定要删除该班级吗？')
+  await ElMessageBox.confirm(userStore.t('admin.confirmDeleteClass'))
   try {
     const res = await classApi.delete(row.id)
-    if (res.code === 200) { ElMessage.success('删除成功'); loadData() }
-  } catch (e) { ElMessage.error(e.message) }
+    if (res.code === 200) { ElMessage.success(userStore.t('common.success')); loadData() }
+  } catch (e) { ElMessage.error(e.message || userStore.t('common.failed')) }
 }
 
 onMounted(() => { loadData(); loadDepartments() })

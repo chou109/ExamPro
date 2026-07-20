@@ -1,190 +1,277 @@
 /**
  * UniApp请求封装
- * 替代axios，使用uni.request
+ * 优先使用本地API，实现完全离线运行
  */
 
-// API基础URL配置
-// 在H5环境下使用代理，其他环境直接使用服务器地址
-// #ifndef H5
-const BASE_URL = 'http://192.168.1.92:8081/api' // 替换为你的电脑IP地址
-// const BASE_URL = 'http://192.168.34.49:8081/api' 
-// #endif
+import localApi from './local-api'
 
-/**
- * 请求拦截器
- * @param {Object} config - 请求配置
- */
-const requestInterceptor = (config) => {
-  console.log('请求拦截器 - 原始配置:', JSON.stringify(config))
+const USE_LOCAL_API = true
 
-  // 确保 config 和 header 对象存在
-  if (!config) {
-    config = {}
+const PUBLIC_PATHS = ['/auth/login', '/auth/register']
+
+const apiRoutes = {
+  'POST /auth/login': 'auth.login',
+  'POST /auth/register': 'auth.register',
+  'GET /auth/info': 'auth.getUserInfo',
+  'POST /auth/changePassword': 'auth.changePassword',
+  
+  'GET /users/page': 'user.page',
+  'GET /users/:id': 'user.getById',
+  'POST /users': 'user.create',
+  'PUT /users': 'user.update',
+  'DELETE /users/:id': 'user.delete',
+  'GET /users/students': 'user.getStudents',
+  'GET /users/teachers': 'user.getTeachers',
+  'PUT /users/:id/status': 'user.changeStatus',
+  
+  'GET /departments/tree': 'department.tree',
+  'GET /departments': 'department.list',
+  'GET /departments/:id': 'department.getById',
+  'POST /departments': 'department.create',
+  'PUT /departments': 'department.update',
+  'DELETE /departments/:id': 'department.delete',
+  
+  'GET /classes/page': 'class.page',
+  'GET /classes': 'class.list',
+  'GET /classes/:id': 'class.getById',
+  'POST /classes': 'class.create',
+  'POST /class/create': 'class.create',
+  'PUT /classes': 'class.update',
+  'DELETE /classes/:id': 'class.delete',
+  'GET /class/my-classes': 'class.getMyClasses',
+  'POST /class/join-by-code': 'class.joinByCode',
+  'GET /class/:id/members': 'class.getMembers',
+  'GET /class/:id/messages': 'class.getMessages',
+  'POST /class/:id/message': 'class.sendMessage',
+  'GET /class/:id/member/:userId/check': 'class.checkMemberRole',
+  
+  'GET /logs/page': 'log.page',
+  
+  'GET /subjects/page': 'subject.page',
+  'GET /subjects': 'subject.list',
+  'GET /subjects/:id': 'subject.getById',
+  'POST /subjects': 'subject.create',
+  'PUT /subjects': 'subject.update',
+  'DELETE /subjects/:id': 'subject.delete',
+  
+  'GET /knowledge-points': 'knowledgePoint.list',
+  'GET /knowledge-points/tree': 'knowledgePoint.tree',
+  'GET /knowledge-points/:id': 'knowledgePoint.getById',
+  'POST /knowledge-points': 'knowledgePoint.create',
+  'PUT /knowledge-points': 'knowledgePoint.update',
+  'DELETE /knowledge-points/:id': 'knowledgePoint.delete',
+  
+  'GET /questions/page': 'question.page',
+  'GET /questions/list': 'question.list',
+  'GET /questions/:id': 'question.getById',
+  'POST /questions': 'question.create',
+  'PUT /questions': 'question.update',
+  'DELETE /questions/:id': 'question.delete',
+  'GET /questions/:id/correct-rate': 'question.getCorrectRate',
+  'POST /questions/generate-paper': 'question.generatePaper',
+  'POST /questions/import': 'question.import',
+  
+  'GET /papers/page': 'paper.page',
+  'GET /papers/:id': 'paper.getById',
+  'GET /papers/:id/questions': 'paper.getQuestions',
+  'POST /papers': 'paper.create',
+  'PUT /papers': 'paper.update',
+  'PUT /papers/:id/publish': 'paper.publish',
+  'DELETE /papers/:id': 'paper.delete',
+  
+  'GET /exams/page': 'exam.page',
+  'GET /exams/student/page': 'exam.studentPage',
+  'GET /exams/:id': 'exam.getById',
+  'POST /exams': 'exam.create',
+  'PUT /exams': 'exam.update',
+  'PUT /exams/:id/publish': 'exam.publish',
+  'PUT /exams/:id/start': 'exam.start',
+  'PUT /exams/:id/finish': 'exam.finish',
+  'PUT /exams/:id/extend': 'exam.extend',
+  'DELETE /exams/:id': 'exam.delete',
+  'GET /exams/:id/statistics': 'exam.getStatistics',
+  
+  'GET /exam-records/page': 'examRecord.page',
+  'GET /exam-records/:id': 'examRecord.getById',
+  'POST /exam-records/start': 'examRecord.start',
+  'POST /exam-records/answer': 'examRecord.saveAnswer',
+  'POST /exam-records/auto-save': 'examRecord.autoSave',
+  'POST /exam-records/submit/:id': 'examRecord.submit',
+  'POST /exam-records/auto-submit/:id': 'examRecord.autoSubmit',
+  'POST /exam-records/screen-switch': 'examRecord.screenSwitch',
+  'POST /exam-records/report-leave': 'examRecord.reportLeave',
+  'GET /exam-records/:id/answers': 'examRecord.getAnswers',
+  'GET /exam-records/student/history': 'examRecord.getStudentHistory',
+  'GET /exam-records/analysis': 'examRecord.getAnalysis',
+  'GET /exam-records/student/stats': 'examRecord.getStudentStats',
+  'GET /exam-records/student/subject-scores': 'examRecord.getStudentSubjectScores',
+  'GET /exam-records/student/score-trend': 'examRecord.getScoreTrend',
+  'GET /exam-records/student/knowledge-mastery': 'examRecord.getKnowledgeMastery',
+  'GET /exam-records/teacher/exam-stats/:examId': 'examRecord.getExamStats',
+  'GET /exam-records/teacher/question-analysis/:examId': 'examRecord.getQuestionAnalysis',
+  'GET /exam-records/teacher/export/:examId': 'examRecord.exportExamScores',
+  'PUT /exam-records/:id/grade': 'examRecord.grade',
+  
+  'GET /wrong-questions/page': 'wrongQuestion.page',
+  'GET /wrong-questions/:id': 'wrongQuestion.getById',
+  'POST /wrong-questions/:id/practice': 'wrongQuestion.practice',
+  'POST /wrong-questions/:id/correct': 'wrongQuestion.correct',
+  'PUT /wrong-questions/:id/mastered': 'wrongQuestion.updateMastered',
+  
+  'GET /statistics/overview': 'statistics.overview',
+  'GET /statistics/teacher/stats': 'statistics.teacherStats'
+}
+
+function getLocalApiMethod(method, url) {
+  const cleanUrl = url.split('?')[0]
+  const key = `${method.toUpperCase()} ${cleanUrl}`
+  if (apiRoutes[key]) {
+    return apiRoutes[key]
   }
+  
+  const patternKey = Object.keys(apiRoutes).find(k => {
+    const [routeMethod, routePath] = k.split(' ')
+    if (routeMethod !== method.toUpperCase()) return false
+    
+    const routeParts = routePath.split('/')
+    const urlParts = cleanUrl.split('/')
+    
+    if (routeParts.length !== urlParts.length) return false
+    
+    for (let i = 0; i < routeParts.length; i++) {
+      if (routeParts[i].startsWith(':')) continue
+      if (routeParts[i] !== urlParts[i]) return false
+    }
+    
+    return true
+  })
+  
+  return patternKey ? { method: apiRoutes[patternKey], pattern: patternKey } : null
+}
 
-  if (!config.header || typeof config.header !== 'object') {
-    config.header = {}
-  }
-
-  // 获取token
-  const token = uni.getStorageSync('token')
-  if (token) {
-    config.header['Authorization'] = `Bearer ${token}`
-  }
-
-  // 设置Content-Type
-  if (!config.header['Content-Type']) {
-    config.header['Content-Type'] = 'application/json;charset=UTF-8'
-  }
-
-  console.log('请求拦截器 - 处理后配置:', JSON.stringify(config))
-
-  // 添加防缓存头
-  config.header['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-  config.header['Pragma'] = 'no-cache'
-
-  // GET请求添加时间戳防止缓存
-  if (config.method === 'GET') {
-    config.data = {
-      ...config.data,
-      _t: Date.now()
+function parseUrlParams(url, pattern) {
+  const cleanUrl = url.split('?')[0]
+  const params = {}
+  const [, routePath] = pattern.split(' ')
+  const routeParts = routePath.split('/')
+  const urlParts = cleanUrl.split('/')
+  
+  for (let i = 0; i < routeParts.length; i++) {
+    if (routeParts[i].startsWith(':')) {
+      const paramName = routeParts[i].substring(1)
+      params[paramName] = isNaN(urlParts[i]) ? urlParts[i] : parseInt(urlParts[i])
     }
   }
-
-  return config
-}
-
-/**
- * 响应拦截器
- * @param {Object} response - 响应数据
- * @param {Object} config - 原请求配置
- */
-const responseInterceptor = (response, config) => {
-  const { statusCode, data } = response
-
-  // 成功响应
-  if (statusCode === 200) {
-    return data
+  
+  const queryString = url.split('?')[1]
+  if (queryString) {
+    queryString.split('&').forEach(pair => {
+      const [key, value] = pair.split('=')
+      params[key] = isNaN(value) ? value : parseInt(value)
+    })
   }
-
-  // 错误处理
-  handleError(statusCode, data)
-  return Promise.reject(response)
+  
+  return params
 }
 
-/**
- * 错误处理
- * @param {Number} statusCode - 状态码
- * @param {Object} data - 响应数据
- */
-const handleError = (statusCode, data) => {
-  switch (statusCode) {
-    case 401:
-      // 登录过期，清除状态并跳转登录页
-      uni.removeStorageSync('token')
-      uni.showToast({
-        title: '登录已过期',
-        icon: 'none'
+const request = async (options) => {
+  const { url, method = 'GET', data = {}, params = {} } = options
+  
+  if (USE_LOCAL_API) {
+    const apiMatch = getLocalApiMethod(method, url)
+    if (apiMatch) {
+      const apiMethod = typeof apiMatch === 'string' ? apiMatch : apiMatch.method
+      const pattern = typeof apiMatch === 'string' ? `${method.toUpperCase()} ${url}` : apiMatch.pattern
+      const [module, fn] = apiMethod.split('.')
+      const urlParams = typeof apiMatch === 'string' ? parseUrlParams(url, pattern) : parseUrlParams(url, pattern)
+      
+      const args = []
+      const routePath = pattern.split(' ')[1]
+      const routeParts = routePath.split('/')
+      routeParts.forEach(part => {
+        if (part.startsWith(':')) {
+          const paramName = part.substring(1)
+          if (urlParams[paramName] !== undefined) {
+            args.push(urlParams[paramName])
+          }
+        }
       })
-      setTimeout(() => {
-        uni.reLaunch({
-          url: '/pages/common/login'
-        })
-      }, 1500)
-      break
-    case 403:
-      uni.showToast({
-        title: '没有权限访问',
-        icon: 'none'
-      })
-      break
-    case 404:
-      uni.showToast({
-        title: '请求的资源不存在',
-        icon: 'none'
-      })
-      break
-    case 500:
-      uni.showToast({
-        title: '服务器错误',
-        icon: 'none'
-      })
-      break
-    default:
-      uni.showToast({
-        title: data?.message || '请求失败',
-        icon: 'none'
-      })
+      
+      const queryParams = { ...params, ...data }
+      const cleanUrl = url.split('?')[0]
+      if (url !== cleanUrl) {
+        const queryString = url.split('?')[1]
+        if (queryString) {
+          queryString.split('&').forEach(pair => {
+            const [key, value] = pair.split('=')
+            queryParams[key] = isNaN(value) ? value : parseInt(value)
+          })
+        }
+      }
+      if (Object.keys(queryParams).length > 0) args.push(queryParams)
+      
+      const token = uni.getStorageSync('token')
+      if (apiMethod === 'auth.getUserInfo') {
+        args.unshift(token)
+      }
+      
+      try {
+        const result = await localApi[module][fn](...args)
+        return result
+      } catch (e) {
+        console.error('Local API error:', e)
+        return { code: 500, message: e.message }
+      }
+    }
   }
-}
-
-/**
- * 统一请求方法
- * @param {Object} options - 请求选项
- * @returns {Promise}
- */
-const request = (options) => {
-  // 处理请求拦截
-  options = requestInterceptor(options)
-
-  // 设置基础URL
-  options.url = BASE_URL + options.url
-
-  // 设置超时时间
-  options.timeout = options.timeout || 60000
-
-  // 返回Promise
+  
+  const BASE_URL = 'http://localhost:8081/api'
+  
+  const skipAuth = options.skipAuth || PUBLIC_PATHS.includes(url)
+  
+  const header = {
+    'Content-Type': 'application/json;charset=UTF-8',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache'
+  }
+  
+  if (!skipAuth) {
+    const token = uni.getStorageSync('token')
+    if (token) {
+      header['Authorization'] = `Bearer ${token}`
+    }
+  }
+  
   return new Promise((resolve, reject) => {
     uni.request({
-      ...options,
+      url: BASE_URL + url,
+      method,
+      data,
+      header,
+      timeout: options.timeout || 60000,
       success: (response) => {
-        try {
-          const result = responseInterceptor(response, options)
-          resolve(result)
-        } catch (error) {
-          reject(error)
+        if (response.statusCode === 200) {
+          resolve(response.data)
+        } else {
+          reject(response)
         }
       },
       fail: (error) => {
-        // 网络错误处理
-        if (error.errMsg === 'request:fail') {
-          uni.showToast({
-            title: '网络连接失败',
-            icon: 'none'
-          })
-        } else {
-          uni.showToast({
-            title: '请求失败',
-            icon: 'none'
-          })
-        }
         reject(error)
       }
     })
   })
 }
 
-/**
- * GET请求
- * @param {String} url - 请求路径
- * @param {Object} data - 请求参数
- * @param {Object} options - 其他选项
- */
 export const get = (url, data = {}, options = {}) => {
   return request({
     url,
     method: 'GET',
-    data,
+    params: data,
     ...options
   })
 }
 
-/**
- * POST请求
- * @param {String} url - 请求路径
- * @param {Object} data - 请求体
- * @param {Object} options - 其他选项
- */
 export const post = (url, data = {}, options = {}) => {
   return request({
     url,
@@ -194,12 +281,6 @@ export const post = (url, data = {}, options = {}) => {
   })
 }
 
-/**
- * PUT请求
- * @param {String} url - 请求路径
- * @param {Object} data - 请求体
- * @param {Object} options - 其他选项
- */
 export const put = (url, data = {}, options = {}) => {
   return request({
     url,
@@ -209,12 +290,6 @@ export const put = (url, data = {}, options = {}) => {
   })
 }
 
-/**
- * DELETE请求
- * @param {String} url - 请求路径
- * @param {Object} data - 请求参数
- * @param {Object} options - 其他选项
- */
 export const del = (url, data = {}, options = {}) => {
   return request({
     url,
@@ -224,13 +299,14 @@ export const del = (url, data = {}, options = {}) => {
   })
 }
 
-/**
- * 上传文件
- * @param {String} url - 上传路径
- * @param {String} filePath - 文件路径
- * @param {Object} formData - 表单数据
- */
 export const upload = (url, filePath, formData = {}) => {
+  if (USE_LOCAL_API) {
+    const timestamp = Date.now()
+    const fakeUrl = `/uploads/avatar/${timestamp}.png`
+    return Promise.resolve({ code: 200, message: '上传成功', data: fakeUrl })
+  }
+  
+  const BASE_URL = 'http://localhost:8081/api'
   const token = uni.getStorageSync('token')
 
   return new Promise((resolve, reject) => {
@@ -251,15 +327,10 @@ export const upload = (url, filePath, formData = {}) => {
             resolve(response.data)
           }
         } else {
-          handleError(response.statusCode, response.data)
           reject(response)
         }
       },
       fail: (error) => {
-        uni.showToast({
-          title: '上传失败',
-          icon: 'none'
-        })
         reject(error)
       }
     })

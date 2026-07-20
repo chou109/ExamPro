@@ -1,50 +1,54 @@
 <template>
   <div class="paper-manage">
     <div class="page-header">
-      <h2>试卷管理</h2>
-      <p>创建和管理考试试卷，支持手动组卷和自动组卷</p>
+      <h2>{{ userStore.t('teacher.paperManagement') }}</h2>
+      <p>{{ userStore.t('teacher.paperManagementDesc') }}</p>
     </div>
 
     <div class="card">
       <div class="toolbar">
-        <el-select v-model="params.subjectId" placeholder="选择科目" style="width: 180px" clearable @change="loadData">
+        <el-select v-model="params.subjectId" :placeholder="userStore.t('teacher.selectSubject')" style="width: 180px" clearable @change="loadData">
           <el-option v-for="s in subjects" :key="s.id" :label="s.name" :value="s.id" />
         </el-select>
-        <el-select v-model="params.status" placeholder="状态" style="width: 120px" clearable @change="loadData">
-          <el-option label="草稿" value="DRAFT" />
-          <el-option label="已发布" value="PUBLISHED" />
+        <el-select v-model="params.status" :placeholder="userStore.t('common.status')" style="width: 120px" clearable @change="loadData">
+          <el-option :label="userStore.t('teacher.draft')" value="DRAFT" />
+          <el-option :label="userStore.t('teacher.published')" value="PUBLISHED" />
         </el-select>
-        <el-input v-model="params.keyword" placeholder="搜索试卷标题" style="width: 200px" clearable @change="loadData" />
-        <el-button type="danger" @click="loadData">搜索</el-button>
-        <el-button type="danger" @click="handleCreate">创建试卷</el-button>
-        <el-button type="success" @click="showGenerateDialog = true">自动组卷</el-button>
+        <el-input v-model="params.keyword" :placeholder="userStore.t('teacher.searchPaperTitle')" style="width: 200px" clearable @change="loadData" />
+        <el-button type="danger" @click="loadData">{{ userStore.t('common.search') }}</el-button>
+        <el-button type="danger" @click="handleCreate">{{ userStore.t('teacher.createPaper') }}</el-button>
+        <el-button type="success" @click="showGenerateDialog = true">{{ userStore.t('teacher.autoGenerate') }}</el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" stripe>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="title" label="试卷标题" show-overflow-tooltip />
-        <el-table-column prop="subjectId" label="科目" width="150">
+        <el-table-column prop="id" :label="userStore.t('teacher.id')" width="80" />
+        <el-table-column prop="title" :label="userStore.t('teacher.paperTitle')" show-overflow-tooltip />
+        <el-table-column prop="subjectId" :label="userStore.t('common.subject')" width="150">
           <template #default="{ row }">
             {{ getSubjectName(row.subjectId) }}
           </template>
         </el-table-column>
-        <el-table-column prop="questionCount" label="题数" width="80" />
-        <el-table-column prop="totalScore" label="总分" width="80" />
-        <el-table-column prop="passScore" label="及格分" width="80" />
-        <el-table-column prop="duration" label="时长(分钟)" width="100" />
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="questionCount" :label="userStore.t('teacher.questionCount')" width="80" />
+        <el-table-column prop="totalScore" :label="userStore.t('teacher.totalScore')" width="80" />
+        <el-table-column prop="passScore" :label="userStore.t('teacher.passScore')" width="80" />
+        <el-table-column prop="duration" :label="userStore.t('teacher.paperDuration')" width="100">
+          <template #default="{ row }">
+            {{ row.duration }}{{ userStore.t('teacher.minutes') }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" :label="userStore.t('common.status')" width="100">
           <template #default="{ row }">
             <el-tag :type="row.status === 'PUBLISHED' ? 'success' : 'info'">
-              {{ row.status === 'PUBLISHED' ? '已发布' : '草稿' }}
+              {{ row.status === 'PUBLISHED' ? userStore.t('teacher.published') : userStore.t('teacher.draft') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="240" fixed="right">
+        <el-table-column :label="userStore.t('common.operation')" width="240" fixed="right">
           <template #default="{ row }">
-            <el-button type="danger" link @click="handleEdit(row)">编辑</el-button>
-            <el-button type="danger" link @click="handlePreview(row)">预览</el-button>
-            <el-button type="danger" link v-if="row.status === 'DRAFT'" @click="handlePublish(row)">发布</el-button>
-            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+            <el-button type="danger" link @click="handleEdit(row)">{{ userStore.t('common.edit') }}</el-button>
+            <el-button type="danger" link @click="handlePreview(row)">{{ userStore.t('teacher.preview') }}</el-button>
+            <el-button type="danger" link v-if="row.status === 'DRAFT'" @click="handlePublish(row)">{{ userStore.t('common.publish') }}</el-button>
+            <el-button type="danger" link @click="handleDelete(row)">{{ userStore.t('common.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -61,81 +65,81 @@
       />
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑试卷' : '创建试卷'" width="900px" :close-on-click-modal="false">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? userStore.t('teacher.editPaper') : userStore.t('teacher.createPaper')" width="900px" :close-on-click-modal="false">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="试卷标题" prop="title">
-          <el-input v-model="form.title" placeholder="请输入试卷标题" />
+        <el-form-item :label="userStore.t('teacher.paperTitle')" prop="title">
+          <el-input v-model="form.title" :placeholder="userStore.t('teacher.enterPaperTitle')" />
         </el-form-item>
-        <el-form-item label="科目" prop="subjectId">
+        <el-form-item :label="userStore.t('common.subject')" prop="subjectId">
           <el-select v-model="form.subjectId" style="width: 100%" @change="handleSubjectChange">
             <el-option v-for="s in subjects" :key="s.id" :label="s.name" :value="s.id" />
           </el-select>
         </el-form-item>
         <el-row :gutter="20">
           <el-col :span="8">
-            <el-form-item label="总分">
+            <el-form-item :label="userStore.t('teacher.totalScore')">
               <el-input-number v-model="form.totalScore" :min="0" :max="200" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="及格分数">
+            <el-form-item :label="userStore.t('teacher.passScore')">
               <el-input-number v-model="form.passScore" :min="0" :max="form.totalScore" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="时长(分钟)">
+            <el-form-item :label="userStore.t('teacher.paperDuration')">
               <el-input-number v-model="form.duration" :min="1" :max="300" />
             </el-form-item>
           </el-col>
         </el-row>
 
-        <el-divider content-position="left">题目设置</el-divider>
+        <el-divider content-position="left">{{ userStore.t('teacher.questionSettings') }}</el-divider>
 
         <div v-if="form.subjectId" class="question-selector">
           <div class="selector-toolbar">
-            <el-input v-model="searchKeyword" placeholder="搜索题目" style="width: 200px" clearable />
-            <el-select v-model="searchType" placeholder="题目类型" style="width: 140px" clearable>
-              <el-option label="单选题" value="SINGLE_CHOICE" />
-              <el-option label="多选题" value="MULTIPLE_CHOICE" />
-              <el-option label="判断题" value="JUDGMENT" />
-              <el-option label="填空题" value="FILL_BLANK" />
-              <el-option label="简答题" value="ESSAY" />
-              <el-option label="编程题" value="PROGRAMMING" />
+            <el-input v-model="searchKeyword" :placeholder="userStore.t('teacher.searchQuestion')" style="width: 200px" clearable />
+            <el-select v-model="searchType" :placeholder="userStore.t('teacher.questionType')" style="width: 140px" clearable>
+              <el-option :label="userStore.t('teacher.singleChoice')" value="SINGLE_CHOICE" />
+              <el-option :label="userStore.t('teacher.multipleChoice')" value="MULTIPLE_CHOICE" />
+              <el-option :label="userStore.t('teacher.judgment')" value="JUDGMENT" />
+              <el-option :label="userStore.t('teacher.fillBlank')" value="FILL_BLANK" />
+              <el-option :label="userStore.t('teacher.essay')" value="ESSAY" />
+              <el-option :label="userStore.t('teacher.programming')" value="PROGRAMMING" />
             </el-select>
-            <el-button type="danger" @click="loadQuestions">搜索题目</el-button>
-            <el-button @click="clearSelection">清空选择</el-button>
-            <span class="subject-tip">当前科目：{{ getSubjectName(form.subjectId) }}</span>
+            <el-button type="danger" @click="loadQuestions">{{ userStore.t('teacher.searchQuestion') }}</el-button>
+            <el-button @click="clearSelection">{{ userStore.t('teacher.clearSelection') }}</el-button>
+            <span class="subject-tip">{{ userStore.t('teacher.currentSubject') }}：{{ getSubjectName(form.subjectId) }}</span>
           </div>
 
           <!-- 按题型批量设置分值 -->
           <div class="batch-score-setting" v-if="selectedQuestions.length > 0">
-            <span class="setting-title">批量设置分值：</span>
-            <el-select v-model="batchScoreType" placeholder="选择题型" style="width: 120px">
-              <el-option label="单选题" value="SINGLE_CHOICE" />
-              <el-option label="多选题" value="MULTIPLE_CHOICE" />
-              <el-option label="判断题" value="JUDGMENT" />
-              <el-option label="填空题" value="FILL_BLANK" />
-              <el-option label="简答题" value="ESSAY" />
-              <el-option label="编程题" value="PROGRAMMING" />
+            <span class="setting-title">{{ userStore.t('teacher.batchSetScore') }}：</span>
+            <el-select v-model="batchScoreType" :placeholder="userStore.t('teacher.selectQuestionType')" style="width: 120px">
+              <el-option :label="userStore.t('teacher.singleChoice')" value="SINGLE_CHOICE" />
+              <el-option :label="userStore.t('teacher.multipleChoice')" value="MULTIPLE_CHOICE" />
+              <el-option :label="userStore.t('teacher.judgment')" value="JUDGMENT" />
+              <el-option :label="userStore.t('teacher.fillBlank')" value="FILL_BLANK" />
+              <el-option :label="userStore.t('teacher.essay')" value="ESSAY" />
+              <el-option :label="userStore.t('teacher.programming')" value="PROGRAMMING" />
             </el-select>
-            <el-input-number v-model="batchScoreValue" :min="1" :max="100" style="width: 100px" placeholder="分值" />
-            <el-button type="primary" @click="applyBatchScore">应用到已选题目</el-button>
+            <el-input-number v-model="batchScoreValue" :min="1" :max="100" style="width: 100px" :placeholder="userStore.t('teacher.scoreHint')" />
+            <el-button type="primary" @click="applyBatchScore">{{ userStore.t('teacher.applyToSelected') }}</el-button>
           </div>
 
           <el-table :data="questions" height="350" @selection-change="handleSelectionChange" ref="questionTableRef" v-loading="questionsLoading" row-key="id">
             <el-table-column type="selection" width="55" />
-            <el-table-column prop="type" label="类型" width="100">
+            <el-table-column prop="type" :label="userStore.t('teacher.questionType')" width="100">
               <template #default="{ row }">
                 <el-tag size="small">{{ typeText(row.type) }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="content" label="题目内容" show-overflow-tooltip />
-            <el-table-column prop="difficulty" label="难度" width="70">
+            <el-table-column prop="content" :label="userStore.t('teacher.questionContent')" show-overflow-tooltip />
+            <el-table-column prop="difficulty" :label="userStore.t('teacher.difficulty')" width="70">
               <template #default="{ row }">
                 <el-tag size="small" :type="difficultyType(row.difficulty)">{{ difficultyText(row.difficulty) }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="设置分值" width="120">
+            <el-table-column :label="userStore.t('teacher.setScore')" width="120">
               <template #default="{ row }">
                 <el-input-number 
                   :model-value="questionScores[row.id] || 5"
@@ -150,112 +154,112 @@
 
           <div class="selected-info">
             <div class="info-row">
-              <span>已选择 {{ selectedQuestions.length }} 题</span>
-              <span>总分 {{ totalSelectedScore }}</span>
+              <span>{{ userStore.t('teacher.selected') }} {{ selectedQuestions.length }} {{ userStore.t('teacher.questions') }}</span>
+              <span>{{ userStore.t('teacher.totalScore') }} {{ totalSelectedScore }}</span>
             </div>
             <div v-if="selectedQuestions.length > 0" class="type-stats">
               <span v-for="(stat, type) in typeStatistics" :key="type">
-                {{ typeText(type) }}: {{ stat.count }}题 / {{ stat.score }}分
+                {{ typeText(type) }}: {{ stat.count }}{{ userStore.t('teacher.questions') }} / {{ stat.score }}{{ userStore.t('teacher.scoreUnit') }}
               </span>
             </div>
           </div>
         </div>
 
         <div v-else class="empty-hint">
-          <el-empty description="请先选择科目，才能添加题目" />
+          <el-empty :description="userStore.t('teacher.selectSubjectFirst')" />
         </div>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="danger" @click="handleSubmit">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ userStore.t('common.cancel') }}</el-button>
+        <el-button type="danger" @click="handleSubmit">{{ userStore.t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 自动组卷对话框 -->
-    <el-dialog v-model="showGenerateDialog" title="自动组卷" width="700px">
+    <el-dialog v-model="showGenerateDialog" :title="userStore.t('teacher.autoGenerate')" width="700px">
       <el-form ref="generateFormRef" :model="generateForm" label-width="120px">
-        <el-form-item label="试卷标题" prop="title">
-          <el-input v-model="generateForm.title" placeholder="请输入试卷标题" />
+        <el-form-item :label="userStore.t('teacher.paperTitle')" prop="title">
+          <el-input v-model="generateForm.title" :placeholder="userStore.t('teacher.enterPaperTitle')" />
         </el-form-item>
-        <el-form-item label="选择科目" prop="subjectId">
+        <el-form-item :label="userStore.t('teacher.selectSubject')" prop="subjectId">
           <el-select v-model="generateForm.subjectId" style="width: 100%">
             <el-option v-for="s in subjects" :key="s.id" :label="s.name" :value="s.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="总分">
-          <el-input v-model.number="generatedTotalScore" type="number" placeholder="自动计算" :disabled="true" />
+        <el-form-item :label="userStore.t('teacher.totalScore')">
+          <el-input v-model.number="generatedTotalScore" type="number" :placeholder="userStore.t('teacher.autoCalculate')" :disabled="true" />
         </el-form-item>
-        <el-form-item label="时长(分钟)" prop="duration">
-          <el-input v-model.number="generateForm.duration" type="number" placeholder="请输入考试时长" />
+        <el-form-item :label="userStore.t('teacher.paperDuration')" prop="duration">
+          <el-input v-model.number="generateForm.duration" type="number" :placeholder="userStore.t('teacher.enterDuration')" />
         </el-form-item>
-        <el-form-item label="及格百分比" prop="passRate">
-          <el-input v-model.number="generateForm.passRate" type="number" min="0" max="100" placeholder="请输入及格百分比" />
+        <el-form-item :label="userStore.t('teacher.passRate')" prop="passRate">
+          <el-input v-model.number="generateForm.passRate" type="number" min="0" max="100" :placeholder="userStore.t('teacher.enterPassRate')" />
           <span style="margin-left: 10px">{{ generateForm.passRate }}%</span>
         </el-form-item>
-        <el-form-item label="题目数量与分值">
+        <el-form-item :label="userStore.t('teacher.questionCountScore')">
           <div class="question-count-grid">
             <div class="count-item">
-              <label>单选题</label>
+              <label>{{ userStore.t('teacher.singleChoice') }}</label>
               <div class="count-score-row">
-                <el-input v-model.number="generateForm.questionCounts.SINGLE_CHOICE" type="number" min="0" placeholder="数量" />
-                <span class="score-label">每题</span>
-                <el-input v-model.number="generateForm.questionScores.SINGLE_CHOICE" type="number" min="1" max="100" placeholder="分值" />
-                <span class="score-label">分</span>
+                <el-input v-model.number="generateForm.questionCounts.SINGLE_CHOICE" type="number" min="0" :placeholder="userStore.t('teacher.count')" />
+                <span class="score-label">{{ userStore.t('teacher.perQuestion') }}</span>
+                <el-input v-model.number="generateForm.questionScores.SINGLE_CHOICE" type="number" min="1" max="100" :placeholder="userStore.t('teacher.scoreHint')" />
+                <span class="score-label">{{ userStore.t('teacher.scoreUnit') }}</span>
               </div>
             </div>
             <div class="count-item">
-              <label>多选题</label>
+              <label>{{ userStore.t('teacher.multipleChoice') }}</label>
               <div class="count-score-row">
-                <el-input v-model.number="generateForm.questionCounts.MULTIPLE_CHOICE" type="number" min="0" placeholder="数量" />
-                <span class="score-label">每题</span>
-                <el-input v-model.number="generateForm.questionScores.MULTIPLE_CHOICE" type="number" min="1" max="100" placeholder="分值" />
-                <span class="score-label">分</span>
+                <el-input v-model.number="generateForm.questionCounts.MULTIPLE_CHOICE" type="number" min="0" :placeholder="userStore.t('teacher.count')" />
+                <span class="score-label">{{ userStore.t('teacher.perQuestion') }}</span>
+                <el-input v-model.number="generateForm.questionScores.MULTIPLE_CHOICE" type="number" min="1" max="100" :placeholder="userStore.t('teacher.scoreHint')" />
+                <span class="score-label">{{ userStore.t('teacher.scoreUnit') }}</span>
               </div>
             </div>
             <div class="count-item">
-              <label>判断题</label>
+              <label>{{ userStore.t('teacher.judgment') }}</label>
               <div class="count-score-row">
-                <el-input v-model.number="generateForm.questionCounts.JUDGMENT" type="number" min="0" placeholder="数量" />
-                <span class="score-label">每题</span>
-                <el-input v-model.number="generateForm.questionScores.JUDGMENT" type="number" min="1" max="100" placeholder="分值" />
-                <span class="score-label">分</span>
+                <el-input v-model.number="generateForm.questionCounts.JUDGMENT" type="number" min="0" :placeholder="userStore.t('teacher.count')" />
+                <span class="score-label">{{ userStore.t('teacher.perQuestion') }}</span>
+                <el-input v-model.number="generateForm.questionScores.JUDGMENT" type="number" min="1" max="100" :placeholder="userStore.t('teacher.scoreHint')" />
+                <span class="score-label">{{ userStore.t('teacher.scoreUnit') }}</span>
               </div>
             </div>
             <div class="count-item">
-              <label>填空题</label>
+              <label>{{ userStore.t('teacher.fillBlank') }}</label>
               <div class="count-score-row">
-                <el-input v-model.number="generateForm.questionCounts.FILL_BLANK" type="number" min="0" placeholder="数量" />
-                <span class="score-label">每题</span>
-                <el-input v-model.number="generateForm.questionScores.FILL_BLANK" type="number" min="1" max="100" placeholder="分值" />
-                <span class="score-label">分</span>
+                <el-input v-model.number="generateForm.questionCounts.FILL_BLANK" type="number" min="0" :placeholder="userStore.t('teacher.count')" />
+                <span class="score-label">{{ userStore.t('teacher.perQuestion') }}</span>
+                <el-input v-model.number="generateForm.questionScores.FILL_BLANK" type="number" min="1" max="100" :placeholder="userStore.t('teacher.scoreHint')" />
+                <span class="score-label">{{ userStore.t('teacher.scoreUnit') }}</span>
               </div>
             </div>
             <div class="count-item">
-              <label>简答题</label>
+              <label>{{ userStore.t('teacher.essay') }}</label>
               <div class="count-score-row">
-                <el-input v-model.number="generateForm.questionCounts.ESSAY" type="number" min="0" placeholder="数量" />
-                <span class="score-label">每题</span>
-                <el-input v-model.number="generateForm.questionScores.ESSAY" type="number" min="1" max="100" placeholder="分值" />
-                <span class="score-label">分</span>
+                <el-input v-model.number="generateForm.questionCounts.ESSAY" type="number" min="0" :placeholder="userStore.t('teacher.count')" />
+                <span class="score-label">{{ userStore.t('teacher.perQuestion') }}</span>
+                <el-input v-model.number="generateForm.questionScores.ESSAY" type="number" min="1" max="100" :placeholder="userStore.t('teacher.scoreHint')" />
+                <span class="score-label">{{ userStore.t('teacher.scoreUnit') }}</span>
               </div>
             </div>
           </div>
         </el-form-item>
         <el-form-item>
-          <el-alert title="提示" type="warning" :closable="false">
-            <p>系统将从题库中随机抽取指定数量的题目自动生成试卷</p>
-            <p>如果题库中某题型数量不足，组卷将失败</p>
+          <el-alert :title="userStore.t('common.tip')" type="warning" :closable="false">
+            <p>{{ userStore.t('teacher.generateTip1') }}</p>
+            <p>{{ userStore.t('teacher.generateTip2') }}</p>
           </el-alert>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="showGenerateDialog = false">取消</el-button>
-        <el-button type="success" @click="handleGeneratePaper">生成试卷</el-button>
+        <el-button @click="showGenerateDialog = false">{{ userStore.t('common.cancel') }}</el-button>
+        <el-button type="success" @click="handleGeneratePaper">{{ userStore.t('teacher.generatePaper') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 组卷结果对话框 -->
-    <el-dialog v-model="showGenerateResult" title="组卷结果" width="500px">
+    <el-dialog v-model="showGenerateResult" :title="userStore.t('teacher.generateResult')" width="500px">
       <div v-if="generateResult">
         <div class="result-summary">
           <div :class="['result-icon', generateResult.success ? 'success' : 'error']">
@@ -264,31 +268,31 @@
           <div class="result-info">
             <p class="result-message">{{ generateResult.message }}</p>
             <div v-if="generateResult.success" class="result-stats">
-              <span class="stat-item">题目数量：<strong>{{ generateResult.questionCount }}</strong></span>
-              <span class="stat-item">总分：<strong>{{ generateResult.totalScore }}</strong></span>
+              <span class="stat-item">{{ userStore.t('teacher.questionCount') }}：<strong>{{ generateResult.questionCount }}</strong></span>
+              <span class="stat-item">{{ userStore.t('teacher.totalScore') }}：<strong>{{ generateResult.totalScore }}</strong></span>
             </div>
           </div>
         </div>
       </div>
       <template #footer>
-        <el-button v-if="!generateResult?.success" type="primary" @click="showGenerateResult = false">确定</el-button>
+        <el-button v-if="!generateResult?.success" type="primary" @click="showGenerateResult = false">{{ userStore.t('common.confirm') }}</el-button>
         <template v-else>
-          <el-button @click="showGenerateResult = false; showGenerateDialog = false">关闭</el-button>
-          <el-button type="success" @click="goToPaper(generateResult.paperId)">查看试卷</el-button>
+          <el-button @click="showGenerateResult = false; showGenerateDialog = false">{{ userStore.t('common.close') }}</el-button>
+          <el-button type="success" @click="goToPaper(generateResult.paperId)">{{ userStore.t('teacher.viewPaper') }}</el-button>
         </template>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="previewDialogVisible" :title="'学生视角预览: ' + previewTitle" width="95%" top="10px">
+    <el-dialog v-model="previewDialogVisible" :title="userStore.t('teacher.studentPreview') + ': ' + previewTitle" width="95%" top="10px">
       <div class="exam-preview-container">
         <!-- 试卷头部信息 -->
         <header class="exam-preview-header">
           <div class="header-left">
             <h2>{{ previewTitle }}</h2>
             <div class="exam-meta">
-              <span class="meta-item">总分：{{ previewTotalScore }}分</span>
-              <span class="meta-item">时长：{{ form.duration }}分钟</span>
-              <span class="meta-item">及格分：{{ form.passScore }}分</span>
+              <span class="meta-item">{{ userStore.t('teacher.totalScore') }}：{{ previewTotalScore }}{{ userStore.t('teacher.scoreUnit') }}</span>
+              <span class="meta-item">{{ userStore.t('teacher.duration') }}：{{ form.duration }}{{ userStore.t('teacher.minutes') }}</span>
+              <span class="meta-item">{{ userStore.t('teacher.passScore') }}：{{ form.passScore }}{{ userStore.t('teacher.scoreUnit') }}</span>
             </div>
           </div>
         </header>
@@ -297,7 +301,7 @@
           <!-- 左侧题目导航 -->
           <aside class="question-nav">
             <div class="nav-section" v-for="section in questionSections" :key="section.type">
-              <div class="section-title">{{ section.typeName }} ({{ section.questions.length }}题)</div>
+              <div class="section-title">{{ section.typeName }} ({{ section.questions.length }}{{ userStore.t('teacher.questions') }})</div>
               <div class="question-grid">
                 <div
                   v-for="(q, qIndex) in section.questions"
@@ -310,8 +314,8 @@
               </div>
             </div>
             <div class="nav-legend">
-              <div class="legend-item"><span class="dot current"></span>当前</div>
-              <div class="legend-item"><span class="dot unanswered"></span>未答</div>
+              <div class="legend-item"><span class="dot current"></span>{{ userStore.t('teacher.current') }}</div>
+              <div class="legend-item"><span class="dot unanswered"></span>{{ userStore.t('teacher.unanswered') }}</div>
             </div>
           </aside>
 
@@ -321,9 +325,9 @@
               <div class="question-header">
                 <div class="question-info">
                   <el-tag type="info">{{ getTypeName(currentPreviewQuestion.type) }}</el-tag>
-                  <span class="question-score">{{ currentPreviewQuestion.score }}分</span>
+                  <span class="question-score">{{ currentPreviewQuestion.score }}{{ userStore.t('teacher.scoreUnit') }}</span>
                 </div>
-                <div class="question-number">第 {{ getCurrentQuestionNumber() }} 题</div>
+                <div class="question-number">{{ userStore.t('teacher.question') }} {{ getCurrentQuestionNumber() }}</div>
               </div>
 
               <div class="question-text">{{ currentPreviewQuestion.content }}</div>
@@ -354,7 +358,7 @@
                 <el-input
                   type="textarea"
                   :rows="4"
-                  placeholder="请输入答案"
+                  :placeholder="userStore.t('teacher.enterAnswer')"
                   disabled
                 />
               </div>
@@ -364,20 +368,20 @@
                 <el-input
                   type="textarea"
                   :rows="8"
-                  placeholder="请输入答案"
+                  :placeholder="userStore.t('teacher.enterAnswer')"
                   disabled
                 />
               </div>
 
               <div class="question-actions">
-                <el-button @click="prevPreviewQuestion" :disabled="isFirstPreviewQuestion">上一题</el-button>
+                <el-button @click="prevPreviewQuestion" :disabled="isFirstPreviewQuestion">{{ userStore.t('teacher.prevQuestion') }}</el-button>
                 <span class="progress-text">{{ getCurrentQuestionNumber() }} / {{ previewQuestions.length }}</span>
-                <el-button @click="nextPreviewQuestion" :disabled="isLastPreviewQuestion">下一题</el-button>
+                <el-button @click="nextPreviewQuestion" :disabled="isLastPreviewQuestion">{{ userStore.t('teacher.nextQuestion') }}</el-button>
               </div>
             </div>
 
             <div v-else class="no-question">
-              <el-empty description="暂无题目" />
+              <el-empty :description="userStore.t('teacher.noQuestion')" />
             </div>
           </main>
         </div>
@@ -390,7 +394,9 @@
 import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox, ElEmpty } from 'element-plus'
 import { paperApi, subjectApi, questionApi } from '../../utils/api'
+import { useUserStore } from '../../store'
 
+const userStore = useUserStore()
 const loading = ref(false)
 const questionsLoading = ref(false)
 const tableData = ref([])
@@ -448,12 +454,12 @@ const generatedTotalScore = computed(() => {
 })
 
 const typeMap = {
-  SINGLE_CHOICE: '单选题',
-  MULTIPLE_CHOICE: '多选题',
-  JUDGMENT: '判断题',
-  FILL_BLANK: '填空题',
-  ESSAY: '简答题',
-  PROGRAMMING: '编程题'
+  SINGLE_CHOICE: userStore.t('common.singleChoice'),
+  MULTIPLE_CHOICE: userStore.t('common.multipleChoice'),
+  JUDGMENT: userStore.t('common.trueFalse'),
+  FILL_BLANK: userStore.t('common.fillBlank'),
+  ESSAY: userStore.t('common.shortAnswer'),
+  PROGRAMMING: userStore.t('student.programming')
 }
 
 const questionSections = computed(() => {
@@ -564,8 +570,8 @@ const form = reactive({
 })
 
 const rules = {
-  title: [{ required: true, message: '请输入试卷标题', trigger: 'blur' }],
-  subjectId: [{ required: true, message: '请选择科目', trigger: 'change' }]
+  title: [{ required: true, message: userStore.t('teacher.enterPaperTitle'), trigger: 'blur' }],
+  subjectId: [{ required: true, message: userStore.t('teacher.selectSubject'), trigger: 'change' }]
 }
 
 const totalSelectedScore = computed(() => {
@@ -588,9 +594,16 @@ const typeStatistics = computed(() => {
   return stats
 })
 
-const typeText = (type) => ({ SINGLE_CHOICE: '单选', MULTIPLE_CHOICE: '多选', JUDGMENT: '判断', FILL_BLANK: '填空', ESSAY: '简答', PROGRAMMING: '编程' }[type] || type)
+const typeText = (type) => ({ 
+  SINGLE_CHOICE: userStore.t('teacher.singleChoice'), 
+  MULTIPLE_CHOICE: userStore.t('teacher.multipleChoice'), 
+  JUDGMENT: userStore.t('teacher.judgment'), 
+  FILL_BLANK: userStore.t('teacher.fillBlank'), 
+  ESSAY: userStore.t('teacher.essay'), 
+  PROGRAMMING: userStore.t('teacher.programming') 
+}[type] || type)
 const difficultyType = (d) => ({ EASY: 'success', MEDIUM: 'warning', HARD: 'danger' }[d])
-const difficultyText = (d) => ({ EASY: '简单', MEDIUM: '中等', HARD: '困难' }[d])
+const difficultyText = (d) => ({ EASY: userStore.t('teacher.easy'), MEDIUM: userStore.t('teacher.medium'), HARD: userStore.t('teacher.hard') }[d])
 
 const getSubjectName = (id) => subjects.value.find(s => s.id === id)?.name || ''
 
@@ -600,11 +613,11 @@ const updateScore = (id, score) => {
 
 const applyBatchScore = () => {
   if (!batchScoreType.value) {
-    ElMessage.warning('请选择题型')
+    ElMessage.warning(userStore.t('teacher.selectQuestionType'))
     return
   }
   if (!batchScoreValue.value) {
-    ElMessage.warning('请输入分值')
+    ElMessage.warning(userStore.t('teacher.enterScore'))
     return
   }
   
@@ -614,7 +627,7 @@ const applyBatchScore = () => {
     }
   })
   
-  ElMessage.success('批量设置成功')
+  ElMessage.success(userStore.t('teacher.batchSetSuccess'))
 }
 
 const isSelected = (id) => {
@@ -639,7 +652,7 @@ const loadSubjects = async () => {
 
 const loadQuestions = async () => {
   if (!form.subjectId) {
-    ElMessage.warning('请先选择科目')
+    ElMessage.warning(userStore.t('teacher.selectSubjectFirst'))
     return
   }
   
@@ -737,7 +750,7 @@ const handleSubmit = async () => {
   if (!valid) return
   
   if (selectedQuestionIds.value.size === 0) {
-    ElMessage.warning('请至少选择一道题目')
+    ElMessage.warning(userStore.t('teacher.selectAtLeastOneQuestion'))
     return
   }
 
@@ -787,13 +800,13 @@ const handleSubmit = async () => {
       ? await paperApi.update(requestData) 
       : await paperApi.create(requestData)
     if (res.code === 200) {
-      ElMessage.success('操作成功')
+      ElMessage.success(userStore.t('common.success'))
       dialogVisible.value = false
       loadData()
     } else {
-      ElMessage.error(res.message)
+      ElMessage.error(res.message || userStore.t('common.failed'))
     }
-  } catch (e) { ElMessage.error(e.message) }
+  } catch (e) { ElMessage.error(e.message || userStore.t('common.failed')) }
 }
 
 const handlePreview = async (row) => {
@@ -809,41 +822,41 @@ const handlePreview = async (row) => {
 }
 
 const handlePublish = async (row) => {
-  await ElMessageBox.confirm('确定要发布该试卷吗？')
+  await ElMessageBox.confirm(userStore.t('teacher.confirmPublish'))
   try {
     const res = await paperApi.publish(row.id)
     if (res.code === 200) {
-      ElMessage.success('发布成功')
+      ElMessage.success(userStore.t('teacher.paperPublished'))
       loadData()
     }
-  } catch (e) { ElMessage.error(e.message) }
+  } catch (e) { ElMessage.error(e.message || userStore.t('common.failed')) }
 }
 
 const handleDelete = async (row) => {
-  await ElMessageBox.confirm('确定要删除该试卷吗？')
+  await ElMessageBox.confirm(userStore.t('teacher.confirmDelete'))
   try {
     const res = await paperApi.delete(row.id)
     if (res.code === 200) {
-      ElMessage.success('删除成功')
+      ElMessage.success(userStore.t('common.success'))
       loadData()
     }
-  } catch (e) { ElMessage.error(e.message) }
+  } catch (e) { ElMessage.error(e.message || userStore.t('common.failed')) }
 }
 
 // 自动组卷
 const handleGeneratePaper = async () => {
   if (!generateForm.title.trim()) {
-    ElMessage.warning('请输入试卷标题')
+    ElMessage.warning(userStore.t('teacher.enterPaperTitle'))
     return
   }
   if (!generateForm.subjectId) {
-    ElMessage.warning('请选择科目')
+    ElMessage.warning(userStore.t('teacher.selectSubject'))
     return
   }
   
   const totalCount = Object.values(generateForm.questionCounts).reduce((sum, count) => sum + (count || 0), 0)
   if (totalCount === 0) {
-    ElMessage.warning('请至少选择一种题型')
+    ElMessage.warning(userStore.t('teacher.selectAtLeastOneQuestionType'))
     return
   }
   
@@ -883,10 +896,10 @@ const goToPaper = async (paperId) => {
     if (res.code === 200) {
       handleEdit(res.data)
     } else {
-      ElMessage.error('获取试卷信息失败')
+      ElMessage.error(userStore.t('teacher.getPaperInfoFailed'))
     }
   } catch (e) {
-    ElMessage.error('获取试卷信息失败: ' + e.message)
+    ElMessage.error(userStore.t('teacher.getPaperInfoFailed') + ': ' + e.message)
   }
 }
 

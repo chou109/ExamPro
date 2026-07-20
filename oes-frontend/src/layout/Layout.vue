@@ -28,15 +28,18 @@
             <span class="top-bar-title">{{ currentPageTitle }}</span>
           </div>
           <div class="top-bar-right">
-            <span class="nav-link" @click="navigateToDashboard">进入空间</span>
+            <span class="nav-link" @click="navigateToDashboard">{{ userStore.t('common.welcome') }}</span>
             <span class="nav-divider">|</span>
-            <span class="nav-link">消息</span>
+            <span class="nav-link">{{ userStore.t('common.message') }}</span>
             <span class="nav-divider">|</span>
+            <el-button link size="small" @click="toggleLanguage" class="lang-btn">
+              {{ userStore.language === 'zh' ? 'EN' : '中文' }}
+            </el-button>
             <el-avatar :size="28" :src="userInfo.avatar || ''" class="top-avatar">
               {{ displayName?.charAt(0) }}
             </el-avatar>
             <span class="user-name-top">{{ displayName }}</span>
-            <el-button type="danger" size="small" plain @click="handleLogout" class="logout-btn">退出</el-button>
+            <el-button type="danger" size="small" plain @click="handleLogout" class="logout-btn">{{ userStore.t('common.logout') }}</el-button>
           </div>
         </header>
         <main class="content">
@@ -85,40 +88,40 @@ const displayName = computed(() => {
 })
 
 const roleName = computed(() => {
-  const map = { ADMIN: '管理员', TEACHER: '教师', STUDENT: '学生' }
+  const map = { ADMIN: userStore.t('common.admin'), TEACHER: userStore.t('common.teacher'), STUDENT: userStore.t('common.student') }
   return map[userInfo.value.role] || ''
 })
 
-const adminMenus = [
-  { path: '/dashboard', title: '首页概览', icon: 'DataBoard' },
-  { path: '/users', title: '用户管理', icon: 'User' },
-  { path: '/departments', title: '院系管理', icon: 'OfficeBuilding' },
-  { path: '/classes', title: '班级管理', icon: 'Collection' },
-  { path: '/statistics', title: '数据统计', icon: 'BarChart' },
-  { path: '/logs', title: '系统日志', icon: 'Document' }
-]
+const adminMenus = computed(() => [
+  { path: '/dashboard', title: userStore.t('common.dashboard'), icon: 'DataBoard' },
+  { path: '/users', title: userStore.t('common.userManage'), icon: 'User' },
+  { path: '/departments', title: userStore.t('common.departmentManage'), icon: 'OfficeBuilding' },
+  { path: '/classes', title: userStore.t('common.classManage'), icon: 'Collection' },
+  { path: '/statistics', title: userStore.t('common.dataStatistics'), icon: 'BarChart' },
+  { path: '/logs', title: userStore.t('common.systemLog'), icon: 'Document' }
+])
 
-const teacherMenus = [
-  { path: '/dashboard', title: '首页概览', icon: 'DataBoard' },
-  { path: '/teacher/my-classes', title: '我的班级', icon: 'UserFilled' },
-  { path: '/classes', title: '班级管理', icon: 'Collection' },
-  { path: '/subjects', title: '科目管理', icon: 'Books' },
-  { path: '/questions', title: '题库管理', icon: 'Memo' },
-  { path: '/papers', title: '试卷管理', icon: 'Files' },
-  { path: '/exams', title: '考试管理', icon: 'Calendar' },
-  { path: '/exam-records', title: '考试记录', icon: 'Tickets' },
-  { path: '/account', title: '账号管理', icon: 'User' }
-]
+const teacherMenus = computed(() => [
+  { path: '/dashboard', title: userStore.t('common.dashboard'), icon: 'DataBoard' },
+  { path: '/teacher/my-classes', title: userStore.t('common.myClasses'), icon: 'UserFilled' },
+  { path: '/classes', title: userStore.t('common.classManage'), icon: 'Collection' },
+  { path: '/subjects', title: userStore.t('common.subjectManage'), icon: 'Books' },
+  { path: '/questions', title: userStore.t('common.questionManage'), icon: 'Memo' },
+  { path: '/papers', title: userStore.t('common.paperManage'), icon: 'Files' },
+  { path: '/exams', title: userStore.t('common.examManage'), icon: 'Calendar' },
+  { path: '/exam-records', title: userStore.t('common.examRecord'), icon: 'Tickets' },
+  { path: '/account', title: userStore.t('common.account'), icon: 'User' }
+])
 
-const studentMenus = [
-  { path: '/dashboard', title: '首页概览', icon: 'DataBoard' },
-  { path: '/student/my-classes', title: '我的班级', icon: 'UserFilled' },
-  { path: '/student/exams', title: '考试列表', icon: 'Calendar' },
-  { path: '/student/history', title: '考试历史', icon: 'Clock' },
-  { path: '/student/statistics', title: '成绩分析', icon: 'DataAnalysis' },
-  { path: '/student/wrong', title: '错题本', icon: 'WarnTriangleFilled' },
-  { path: '/account', title: '账号管理', icon: 'User' }
-]
+const studentMenus = computed(() => [
+  { path: '/dashboard', title: userStore.t('common.dashboard'), icon: 'DataBoard' },
+  { path: '/student/my-classes', title: userStore.t('common.myClasses'), icon: 'UserFilled' },
+  { path: '/student/exams', title: userStore.t('common.examList'), icon: 'Calendar' },
+  { path: '/student/history', title: userStore.t('common.history'), icon: 'Clock' },
+  { path: '/student/statistics', title: userStore.t('dashboard.scoreAnalysis'), icon: 'DataAnalysis' },
+  { path: '/student/wrong', title: userStore.t('common.wrongQuestions'), icon: 'WarnTriangleFilled' },
+  { path: '/account', title: userStore.t('common.account'), icon: 'User' }
+])
 
 const iconMap = {
   DataBoard: Document,
@@ -145,8 +148,8 @@ const menuMap = {
 }
 
 const currentMenus = computed(() => {
-  const role = userInfo.value.role
-  return menuMap[role] || []
+  const role = userInfo.value.role || ''
+  return (menuMap[role] && menuMap[role].value) || []
 })
 
 const activeMenu = computed(() => {
@@ -158,9 +161,9 @@ const activeMenu = computed(() => {
 
 const currentPageTitle = computed(() => {
   const path = route.path
-  const allMenus = [...adminMenus, ...teacherMenus, ...studentMenus]
+  const allMenus = [...adminMenus.value, ...teacherMenus.value, ...studentMenus.value]
   const menu = allMenus.find(item => item.path === path)
-  return menu?.title || '在线考试系统'
+  return menu?.title || (userStore.language === 'zh' ? '在线考试系统' : 'ExamPro')
 })
 
 const handleSidebarSelect = (index) => {
@@ -182,6 +185,12 @@ const navigateToAccount = () => {
   if (role !== 'ADMIN') {
     router.push('/account')
   }
+}
+
+const toggleLanguage = () => {
+  const newLang = userStore.language === 'zh' ? 'en' : 'zh'
+  userStore.changeLanguage(newLang)
+  location.reload()
 }
 
 onMounted(() => {
@@ -389,6 +398,17 @@ onMounted(() => {
 
 .logout-btn:hover {
   background: linear-gradient(135deg, #FF5252, #C44040) !important;
+}
+
+.lang-btn {
+  color: #FF6A6A !important;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 6px 12px !important;
+}
+
+.lang-btn:hover {
+  background-color: rgba(255, 106, 106, 0.1) !important;
 }
 
 .content {

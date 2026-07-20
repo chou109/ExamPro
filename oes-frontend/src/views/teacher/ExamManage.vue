@@ -1,54 +1,54 @@
 <template>
   <div class="exam-manage">
     <div class="page-header">
-      <h2>考试管理</h2>
-      <p>发布和管理考试，监控考生状态</p>
+      <h2>{{ userStore.t('teacher.examManagement') }}</h2>
+      <p>{{ userStore.t('teacher.examManagementDesc') }}</p>
     </div>
 
     <div class="card">
       <div class="toolbar">
-        <el-select v-model="params.subjectId" placeholder="选择科目" style="width: 180px" clearable @change="loadData">
+        <el-select v-model="params.subjectId" :placeholder="userStore.t('teacher.selectSubject')" style="width: 180px" clearable @change="loadData">
           <el-option v-for="s in subjects" :key="s.id" :label="s.name" :value="s.id" />
         </el-select>
-        <el-select v-model="params.status" placeholder="状态" style="width: 120px" clearable @change="loadData">
-          <el-option label="待开始" value="PENDING" />
-          <el-option label="进行中" value="ONGOING" />
-          <el-option label="已结束" value="FINISHED" />
+        <el-select v-model="params.status" :placeholder="userStore.t('common.status')" style="width: 120px" clearable @change="loadData">
+          <el-option :label="userStore.t('common.pending')" value="PENDING" />
+          <el-option :label="userStore.t('common.ongoing')" value="ONGOING" />
+          <el-option :label="userStore.t('common.finished')" value="FINISHED" />
         </el-select>
-        <el-input v-model="params.keyword" placeholder="搜索考试标题" style="width: 200px" clearable @change="loadData" />
-        <el-button type="danger" @click="loadData">搜索</el-button>
-        <el-button type="danger" @click="handleCreate">发布考试</el-button>
+        <el-input v-model="params.keyword" :placeholder="userStore.t('teacher.searchExamTitle')" style="width: 200px" clearable @change="loadData" />
+        <el-button type="danger" @click="loadData">{{ userStore.t('common.search') }}</el-button>
+        <el-button type="danger" @click="handleCreate">{{ userStore.t('teacher.publishExam') }}</el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" stripe>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="title" label="考试标题" show-overflow-tooltip />
-        <el-table-column prop="subjectId" label="科目" width="150">
+        <el-table-column prop="id" :label="userStore.t('teacher.id')" width="80" />
+        <el-table-column prop="title" :label="userStore.t('teacher.examTitle')" show-overflow-tooltip />
+        <el-table-column prop="subjectId" :label="userStore.t('common.subject')" width="150">
           <template #default="{ row }">
             {{ getSubjectName(row.subjectId) }}
           </template>
         </el-table-column>
-        <el-table-column label="开始时间" width="160">
+        <el-table-column :label="userStore.t('common.startTime')" width="160">
           <template #default="{ row }">{{ formatDateTime(row.startTime) }}</template>
         </el-table-column>
-        <el-table-column label="结束时间" width="160">
+        <el-table-column :label="userStore.t('common.endTime')" width="160">
           <template #default="{ row }">{{ formatDateTime(row.endTime) }}</template>
         </el-table-column>
-        <el-table-column prop="duration" label="时长" width="80" />
-        <el-table-column prop="totalScore" label="总分" width="80" />
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="duration" :label="userStore.t('common.duration')" width="80" />
+        <el-table-column prop="totalScore" :label="userStore.t('teacher.totalScore')" width="80" />
+        <el-table-column prop="status" :label="userStore.t('common.status')" width="100">
           <template #default="{ row }">
             <el-tag :type="statusType(row.status)">{{ statusText(row.status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="340" fixed="right">
+        <el-table-column :label="userStore.t('common.operation')" width="340" fixed="right">
           <template #default="{ row }">
-            <el-button type="danger" link @click="handleMonitor(row)">监控</el-button>
-            <el-button type="danger" link @click="handleEdit(row)">修改</el-button>
-            <el-button type="danger" link v-if="row.status === 'PENDING'" @click="handleStart(row)">开始</el-button>
-            <el-button type="danger" link v-if="row.status === 'ONGOING'" @click="handleExtend(row)">延时</el-button>
-            <el-button type="danger" link v-if="row.status === 'ONGOING'" @click="handleFinish(row)">结束</el-button>
-            <el-button type="danger" link @click="handleStats(row)">统计</el-button>
+            <el-button type="danger" link @click="handleMonitor(row)">{{ userStore.t('teacher.monitor') }}</el-button>
+            <el-button type="danger" link @click="handleEdit(row)">{{ userStore.t('common.edit') }}</el-button>
+            <el-button type="danger" link v-if="row.status === 'PENDING'" @click="handleStart(row)">{{ userStore.t('common.start') }}</el-button>
+            <el-button type="danger" link v-if="row.status === 'ONGOING'" @click="handleExtend(row)">{{ userStore.t('teacher.extend') }}</el-button>
+            <el-button type="danger" link v-if="row.status === 'ONGOING'" @click="handleFinish(row)">{{ userStore.t('common.finish') }}</el-button>
+            <el-button type="danger" link @click="handleStats(row)">{{ userStore.t('teacher.stats') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -65,122 +65,112 @@
       />
     </div>
 
-    <el-dialog v-model="dialogVisible" :title="editMode ? '修改考试' : '发布考试'" width="600px">
+    <el-dialog v-model="dialogVisible" :title="editMode ? userStore.t('teacher.editExam') : userStore.t('teacher.publishExam')" width="600px">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
-        <el-form-item label="考试标题" prop="title">
+        <el-form-item :label="userStore.t('teacher.examTitle')" prop="title">
           <el-input v-model="form.title" />
         </el-form-item>
-        <el-form-item label="选择试卷" prop="paperId">
+        <el-form-item :label="userStore.t('teacher.selectPaper')" prop="paperId">
           <el-select v-model="form.paperId" style="width: 100%" @change="onPaperChange">
             <el-option v-for="p in papers" :key="p.id" :label="p.title" :value="p.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="选择班级" prop="classIds" :rules="[{ required: true, message: '请选择至少一个班级', trigger: 'change' }]">
-          <el-select v-model="form.classIds" multiple placeholder="选择发布班级" style="width: 100%">
+        <el-form-item :label="userStore.t('teacher.selectClass')" prop="classIds" :rules="[{ required: true, message: userStore.t('teacher.selectAtLeastOneClass'), trigger: 'change' }]">
+          <el-select v-model="form.classIds" multiple :placeholder="userStore.t('teacher.selectPublishClass')" style="width: 100%">
             <el-option v-for="c in classes" :key="c.id" :label="c.name" :value="c.id" />
           </el-select>
         </el-form-item>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="开始时间">
-              <el-date-picker v-model="form.startTime" type="datetime" placeholder="选择开始时间" style="width: 100%" />
+            <el-form-item :label="userStore.t('common.startTime')">
+              <el-date-picker v-model="form.startTime" type="datetime" :placeholder="userStore.t('teacher.selectStartTime')" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="结束时间">
-              <el-date-picker v-model="form.endTime" type="datetime" placeholder="选择结束时间" style="width: 100%" />
+            <el-form-item :label="userStore.t('common.endTime')">
+              <el-date-picker v-model="form.endTime" type="datetime" :placeholder="userStore.t('teacher.selectEndTime')" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="考试时长">
+            <el-form-item :label="userStore.t('teacher.examDuration')">
               <el-input-number v-model="form.duration" :min="1" :max="300" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="及格比例">
+            <el-form-item :label="userStore.t('common.passRate')">
               <el-input-number v-model="form.passRate" :min="0" :max="100" style="width: 100%" />
               <span style="margin-left: 8px; color: #909399">%</span>
             </el-form-item>
           </el-col>
         </el-row>
-        <el-divider>防作弊设置</el-divider>
-        <el-form-item label="题目乱序">
+        <el-divider>{{ userStore.t('teacher.antiCheatSettings') }}</el-divider>
+        <el-form-item :label="userStore.t('common.shuffleQuestions')">
           <el-switch v-model="form.config.shuffleQuestions" />
         </el-form-item>
-        <el-form-item label="选项乱序">
+        <el-form-item :label="userStore.t('common.shuffleOptions')">
           <el-switch v-model="form.config.shuffleOptions" />
         </el-form-item>
-        <el-form-item label="离开检测">
+        <el-form-item :label="userStore.t('common.leaveDetection')">
           <el-switch v-model="form.config.leaveDetection" />
         </el-form-item>
-        <el-form-item label="离开次数上限" v-if="form.config.leaveDetection">
+        <el-form-item :label="userStore.t('teacher.maxLeaveCount')" v-if="form.config.leaveDetection">
           <el-input-number v-model="form.config.maxLeaveCount" :min="1" :max="10" style="width: 100%" />
-          <span style="margin-left: 8px; color: #909399">次，超过将自动收卷</span>
+          <span style="margin-left: 8px; color: #909399">{{ userStore.t('teacher.exceedAutoSubmit') }}</span>
         </el-form-item>
-        <el-divider>考后设置</el-divider>
-        <el-form-item label="允许考后查看试卷">
+        <el-divider>{{ userStore.t('teacher.postExamSettings') }}</el-divider>
+        <el-form-item :label="userStore.t('teacher.allowViewAfterExam')">
           <el-switch v-model="form.config.allowViewAfterExam" />
-          <span style="margin-left: 8px; color: #909399">开启后学生交卷即可查看试卷和得分</span>
+          <span style="margin-left: 8px; color: #909399">{{ userStore.t('teacher.viewAfterExamDesc') }}</span>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="danger" @click="handleSubmit">{{ editMode ? '保存修改' : '发布' }}</el-button>
+        <el-button @click="dialogVisible = false">{{ userStore.t('common.cancel') }}</el-button>
+        <el-button type="danger" @click="handleSubmit">{{ editMode ? userStore.t('teacher.saveChanges') : userStore.t('common.publish') }}</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="monitorVisible" title="考试监控" width="900px">
-      <el-row :gutter="20" class="monitor-stats">
-        <el-col :span="6">
-          <div class="stat-item">
-            <span class="label">总考生</span>
-            <span class="value">{{ monitorStats.totalStudents }}</span>
-          </div>
-        </el-col>
-        <el-col :span="6">
-          <div class="stat-item">
-            <span class="label">已交卷</span>
-            <span class="value">{{ monitorStats.submitted }}</span>
-          </div>
-        </el-col>
-        <el-col :span="6">
-          <div class="stat-item">
-            <span class="label">强制收卷</span>
-            <span class="value danger">{{ monitorStats.autoSubmitted }}</span>
-          </div>
-        </el-col>
-        <el-col :span="6">
-          <div class="stat-item">
-            <span class="label">进行中</span>
-            <span class="value">{{ monitorStats.ongoing }}</span>
-          </div>
-        </el-col>
-        <el-col :span="6">
-          <div class="stat-item">
-            <span class="label">可疑试卷</span>
-            <span class="value warning">{{ monitorStats.suspicious }}</span>
-          </div>
-        </el-col>
-      </el-row>
+    <el-dialog v-model="monitorVisible" :title="userStore.t('teacher.examMonitor')" width="900px">
+      <div class="monitor-stats">
+        <div class="stat-item">
+          <span class="label">{{ userStore.t('teacher.totalStudents') }}</span>
+          <span class="value">{{ monitorStats.totalStudents }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="label">{{ userStore.t('teacher.submitted') }}</span>
+          <span class="value">{{ monitorStats.submitted }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="label">{{ userStore.t('teacher.autoSubmitted') }}</span>
+          <span class="value danger">{{ monitorStats.autoSubmitted }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="label">{{ userStore.t('common.ongoing') }}</span>
+          <span class="value">{{ monitorStats.ongoing }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="label">{{ userStore.t('teacher.suspicious') }}</span>
+          <span class="value warning">{{ monitorStats.suspicious }}</span>
+        </div>
+      </div>
       <el-table :data="monitorRecords" size="small">
-        <el-table-column prop="studentName" label="学生" />
-        <el-table-column prop="status" label="状态">
+        <el-table-column prop="studentName" :label="userStore.t('common.student')" />
+        <el-table-column prop="status" :label="userStore.t('common.status')">
           <template #default="{ row }">
             <el-tag size="small" :type="getStatusType(row)">
               {{ getStatusText(row) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="leaveCount" label="离开次数" />
-        <el-table-column prop="isSuspicious" label="可疑">
+        <el-table-column prop="leaveCount" :label="userStore.t('common.leaveCount')" />
+        <el-table-column prop="isSuspicious" :label="userStore.t('teacher.suspicious')">
           <template #default="{ row }">
-            <el-tag size="small" type="warning" v-if="row.status !== 'AUTO_SUBMITTED' && row.leaveCount > 0">可疑</el-tag>
+            <el-tag size="small" type="warning" v-if="row.status !== 'AUTO_SUBMITTED' && row.leaveCount > 0">{{ userStore.t('teacher.suspicious') }}</el-tag>
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="score" label="得分" />
+        <el-table-column prop="score" :label="userStore.t('teacher.score')" />
       </el-table>
     </el-dialog>
   </div>
@@ -229,12 +219,12 @@ const form = reactive({
 })
 
 const rules = {
-  title: [{ required: true, message: '请输入考试标题', trigger: 'blur' }],
-  paperId: [{ required: true, message: '请选择试卷', trigger: 'change' }]
+  title: [{ required: true, message: userStore.t('teacher.enterExamTitle'), trigger: 'blur' }],
+  paperId: [{ required: true, message: userStore.t('teacher.selectPaper'), trigger: 'change' }]
 }
 
 const statusType = (s) => ({ PENDING: 'warning', ONGOING: 'success', FINISHED: 'info' }[s])
-const statusText = (s) => ({ PENDING: '待开始', ONGOING: '进行中', FINISHED: '已结束' }[s])
+const statusText = (s) => ({ PENDING: userStore.t('common.pending'), ONGOING: userStore.t('common.ongoing'), FINISHED: userStore.t('common.finished') }[s])
 const getSubjectName = (id) => subjects.value.find(s => s.id === id)?.name || ''
 const formatDateTime = (dateStr) => {
   if (!dateStr) return ''
@@ -323,7 +313,7 @@ const handleEdit = async (row) => {
       dialogVisible.value = true
     }
   } catch (e) {
-    ElMessage.error('获取考试信息失败')
+    ElMessage.error(userStore.t('teacher.getExamInfoFailed'))
   }
 }
 
@@ -355,21 +345,21 @@ const handleSubmit = async () => {
     }
     
     if (res.code === 200) { 
-      ElMessage.success(editMode.value ? '修改成功' : '发布成功')
+      ElMessage.success(editMode.value ? userStore.t('common.success') : userStore.t('teacher.publishSuccess'))
       dialogVisible.value = false
       loadData() 
     } else {
-      ElMessage.error(res.message)
+      ElMessage.error(res.message || userStore.t('common.failed'))
     }
-  } catch (e) { ElMessage.error(e.message) }
+  } catch (e) { ElMessage.error(e.message || userStore.t('common.failed')) }
 }
 
 const handleStart = async (row) => {
-  await ElMessageBox.confirm('确定要开始该考试吗？')
+  await ElMessageBox.confirm(userStore.t('teacher.confirmStartExam'))
   try {
     const res = await examApi.start(row.id)
     if (res.code === 200) { 
-      ElMessage.success('考试已开始')
+      ElMessage.success(userStore.t('teacher.examStarted'))
       loadData()
       
       const examInfo = await examApi.getById(row.id)
@@ -389,24 +379,24 @@ const handleStart = async (row) => {
         }
       }
     }
-  } catch (e) { ElMessage.error(e.message) }
+  } catch (e) { ElMessage.error(e.message || userStore.t('common.failed')) }
 }
 
 const handleFinish = async (row) => {
-  await ElMessageBox.confirm('确定要结束该考试吗？所有未交卷考生将自动交卷')
+  await ElMessageBox.confirm(userStore.t('teacher.confirmFinishExam'))
   try {
     const res = await examApi.finish(row.id)
-    if (res.code === 200) { ElMessage.success('考试已结束'); loadData() }
-  } catch (e) { ElMessage.error(e.message) }
+    if (res.code === 200) { ElMessage.success(userStore.t('teacher.examFinished')); loadData() }
+  } catch (e) { ElMessage.error(e.message || userStore.t('common.failed')) }
 }
 
 const handleExtend = async (row) => {
-  await ElMessageBox.prompt('请输入延长时间（分钟）', '延长考试时间', { confirmButtonText: '确定', cancelButtonText: '取消' })
+  await ElMessageBox.prompt(userStore.t('teacher.enterExtendMinutes'), userStore.t('teacher.extendExamTime'), { confirmButtonText: userStore.t('common.confirm'), cancelButtonText: userStore.t('common.cancel') })
     .then(async ({ value }) => {
       try {
         const res = await examApi.extend(row.id, parseInt(value))
-        if (res.code === 200) { ElMessage.success('已延长考试时间'); loadData() }
-      } catch (e) { ElMessage.error(e.message) }
+        if (res.code === 200) { ElMessage.success(userStore.t('teacher.extendSuccess')); loadData() }
+      } catch (e) { ElMessage.error(e.message || userStore.t('common.failed')) }
     })
 }
 
@@ -447,13 +437,13 @@ const getStatusType = (row) => {
 
 const getStatusText = (row) => {
   if (row.status === 'AUTO_SUBMITTED') {
-    return '强制收卷'
+    return userStore.t('teacher.autoSubmitted')
   }
   if (row.status === 'SUBMITTED') {
-    return '已交卷'
+    return userStore.t('teacher.submitted')
   }
-  if (row.status === 'ONGOING') return '进行中'
-  return '未开始'
+  if (row.status === 'ONGOING') return userStore.t('common.ongoing')
+  return userStore.t('teacher.notStarted')
 }
 
 const handleStats = async (row) => {
@@ -461,7 +451,8 @@ const handleStats = async (row) => {
     const res = await examApi.getStatistics(row.id)
     if (res.code === 200) {
       const stats = res.data
-      ElMessageBox.alert(`考试统计：<br>总分：${stats.totalStudents}<br>平均分：${stats.avgScore}<br>最高分：${stats.maxScore}<br>最低分：${stats.minScore}<br>及格率：${stats.passRate}%`, '考试统计', { dangerouslyUseHTMLString: true })
+      const t = userStore.t
+      ElMessageBox.alert(`${t('teacher.examStats')}：<br>${t('teacher.totalStudents')}：${stats.totalStudents}<br>${t('teacher.avgScore')}：${stats.avgScore}<br>${t('teacher.maxScore')}：${stats.maxScore}<br>${t('teacher.minScore')}：${stats.minScore}<br>${t('common.passRate')}：${stats.passRate}%`, t('teacher.examStats'), { dangerouslyUseHTMLString: true })
     }
   } catch (e) { console.error(e) }
 }
@@ -521,7 +512,7 @@ onUnmounted(() => { if (monitorTimer) clearInterval(monitorTimer) })
 .monitor-stats {
   margin-bottom: 20px;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
 }
 

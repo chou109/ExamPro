@@ -357,12 +357,9 @@ CREATE TABLE IF NOT EXISTS `sys_user` (
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
-INSERT IGNORE INTO `sys_user` VALUES ('1', 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt7lCPO', '系统管理员', 'admin@oes.com', null, null, 'ADMIN', '1', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT IGNORE INTO `sys_user` VALUES ('2', 'teacher1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt7lCPO', '张教授', 'teacher1@oes.com', null, null, 'TEACHER', '1', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT IGNORE INTO `sys_user` VALUES ('4', 'student1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt7lCPO', '王小明', 'student1@oes.com', null, null, 'STUDENT', '1', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
-INSERT IGNORE INTO `sys_user` VALUES ('7', 's', '$2a$10$dJe2H25mue3bYssjH5G0MOwyJmP3FrGMSL7bJeJs9IaE0zIKHU5ui', '丁真珍珠', '111@ex.com', '1145141919810', null, 'STUDENT', '1', '0', '2026-04-23 22:45:05', '2026-04-23 22:45:05');
-INSERT IGNORE INTO `sys_user` VALUES ('8', 't', '$2a$10$ISZAOF.J5BydJ/jzjcDPX.6Vxs8AIjU/imCA8UKL7TjpcQFaAnBCi', '范教授', '222@ex.com', '1919810', null, 'TEACHER', '1', '0', '2026-04-27 19:14:11', '2026-04-27 19:14:11');
-INSERT IGNORE INTO `sys_user` VALUES ('9', 'a', '$2a$10$LCoumND.3G44LOletcd08OnGdm7I3mfPybtoxa9L4C0aNr5PH8zKG', 'Administrator', '333@ex.com', '123456789', null, 'ADMIN', '1', '0', '2026-04-27 19:15:02', '2026-04-27 19:15:02');
+INSERT IGNORE INTO `sys_user` VALUES ('1', 'admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt7lCPO', '系统管理员', 'admin@oes.com', null, null, 'ADMIN', '1', '0', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `sys_user` VALUES ('2', 'teacher1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt7lCPO', '张教授', 'teacher1@oes.com', null, null, 'TEACHER', '1', '0', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
+INSERT IGNORE INTO `sys_user` VALUES ('4', 'student1', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt7lCPO', '王小明', 'student1@oes.com', null, null, 'STUDENT', '1', '0', '0', '2026-04-23 12:34:35', '2026-04-23 12:34:35');
 
 -- ----------------------------
 -- Table structure for sys_class_member

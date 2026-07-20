@@ -1,23 +1,23 @@
 <template>
   <div class="log-manage">
     <div class="page-header">
-      <h2>系统日志</h2>
-      <p>查看系统操作记录</p>
+      <h2>{{ userStore.t('admin.systemLogs') }}</h2>
+      <p>{{ userStore.t('admin.systemLogsDesc') }}</p>
     </div>
 
     <div class="card">
       <div class="toolbar">
-        <el-input v-model="params.username" placeholder="操作用户" style="width: 160px" clearable @change="loadData" />
-        <el-input v-model="params.operation" placeholder="操作描述" style="width: 200px" clearable @change="loadData" />
-        <el-button type="danger" @click="loadData">搜索</el-button>
+        <el-input v-model="params.username" :placeholder="userStore.t('admin.operator')" style="width: 160px" clearable @change="loadData" />
+        <el-input v-model="params.operation" :placeholder="userStore.t('admin.operationDesc')" style="width: 200px" clearable @change="loadData" />
+        <el-button type="danger" @click="loadData">{{ userStore.t('common.search') }}</el-button>
       </div>
 
       <el-table :data="tableData" v-loading="loading" stripe>
-        <el-table-column prop="username" label="操作用户" width="120" />
-        <el-table-column prop="operation" label="操作描述" />
-        <el-table-column prop="method" label="请求方法" width="150" />
-        <el-table-column prop="ip" label="IP地址" width="140" />
-        <el-table-column prop="createTime" label="操作时间" width="180" />
+        <el-table-column prop="username" :label="userStore.t('admin.operator')" width="120" />
+        <el-table-column prop="operation" :label="userStore.t('admin.operationDesc')" />
+        <el-table-column prop="method" :label="userStore.t('admin.requestMethod')" width="150" />
+        <el-table-column prop="ip" :label="userStore.t('admin.ipAddress')" width="140" />
+        <el-table-column prop="createTime" :label="userStore.t('admin.operationTime')" width="180" />
       </el-table>
 
       <el-pagination
@@ -37,7 +37,9 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { logApi } from '../../utils/api'
+import { useUserStore } from '../../store'
 
+const userStore = useUserStore()
 const loading = ref(false)
 const tableData = ref([])
 const current = ref(1)
