@@ -251,7 +251,7 @@ return 'http://YOUR_COMPUTER_IP:8081' + avatar
 
 ## Feature Modules
 
-### 🖥️ PC端 (oes-frontend)
+### 🖥️ PC Version (oes-frontend)
 
 #### Admin
 - User management (Student, Teacher, Admin CRUD)
@@ -287,7 +287,7 @@ return 'http://YOUR_COMPUTER_IP:8081' + avatar
 
 ---
 
-### 📱 Mobile端 (oes-uniapp)
+### 📱 Mobile Version (oes-uniapp)
 
 #### 🔐 Authentication Module
 - **Login**
